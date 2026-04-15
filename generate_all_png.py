@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+"""ЕВГЕНИЯ — Run PNG sprite visualizations."""
+
+import os
+import sys
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, script_dir)
+sys.path.insert(0, os.path.join(script_dir, "script"))
+
+from script.common_png import run_all_visualizations
+
+run_all_visualizations()
