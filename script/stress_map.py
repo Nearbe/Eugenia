@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""13: Ландшафт Персистенции."""
+"""Stress map (gradient magnitude)."""
 
 import numpy as np
 import matplotlib
@@ -21,13 +21,18 @@ def render(data, sweep, out_dir):
     for i in range(n_show):
         d_img = symbols[i].cpu().numpy()
         H, W = d_img.shape
-        persist = (d_img - d_img.min()) / (d_img.max() - d_img.min() + 1e-10)
-        mask = persist > 0.1
+        if H < 2 or W < 2:
+            axes[i].scatter([0], [0], [d_img.flatten().mean()], c="red", s=50)
+            axes[i].set_title(f"#{i} (микробъект)")
+            continue
+        gy, gx = np.gradient(d_img)
+        grad_mag = np.sqrt(gx**2 + gy**2)
         X, Y = np.meshgrid(range(W), range(H))
-        Z = np.where(mask, d_img, np.nan)
-        axes[i].plot_surface(X, Y, Z, cmap=v["cmap_3d"], alpha=0.9, edgecolor="none")
-        axes[i].set_title(f"#{i} (Скелет)")
-        axes[i].set_zlim(d_img.min(), d_img.max())
+        axes[i].plot_surface(
+            X, Y, grad_mag, cmap=v["cmap_heatmap"], alpha=0.9, edgecolor="none"
+        )
+        axes[i].set_title(f"#{i} (Напряжение)")
+        axes[i].set_zlim(0, grad_mag.max())
     plt.tight_layout()
-    plt.savefig(f"{out_dir}/13_persistence_landscape.png", dpi=v["dpi_default"])
+    plt.savefig(f"{out_dir}/stress_map.png", dpi=v["dpi_default"])
     plt.close()

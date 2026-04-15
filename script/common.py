@@ -33,12 +33,6 @@ def _load_mnist():
 
 def _load_png():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    filename = SOURCE_FILE or "cyrillic.png"
-    path = os.path.join(script_dir, filename)
-
-
-def _load_png():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
     parent_dir = os.path.dirname(script_dir)
     filename = SOURCE_FILE or "cyrillic.png"
 
@@ -219,23 +213,23 @@ def run_all_visualizations():
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
     scripts = [
-        ("00a_delta_histograms_by_class", "render"),
-        ("individual_delta_hists", "render"),
-        ("01_horizon_heatmap", "render"),
-        ("02_horizon_animation", "render"),
-        ("03_scatter_mean_std", "render"),
-        ("04_jumps_analysis", "render"),
-        ("05_tsne_binary_profiles", "render"),
-        ("06_3d_surface", "render"),
-        ("07_cdf_by_class", "render"),
-        ("08_entropy_analysis", "render"),
-        ("09_original_vs_binary", "render"),
-        ("10_betti0_components", "render"),
-        ("11_betti1_holes", "render"),
-        ("12_euler_persistence_complexity", "render"),
-        ("13_persistence_landscape", "render"),
-        ("14_stress_map", "render"),
-        ("15_phase_volume", "render"),
+        ("delta_histograms_by_class", "render"),
+        ("individual_delta_histograms", "render"),
+        ("horizon_heatmap", "render"),
+        ("horizon_animation", "render"),
+        ("scatter_mean_std", "render"),
+        ("jumps_analysis", "render"),
+        ("tsne_binary_profiles", "render"),
+        ("surface_3d", "render"),
+        ("cdf_by_class", "render"),
+        ("entropy_analysis", "render"),
+        ("original_vs_binary", "render"),
+        ("betti0_components", "render"),
+        ("betti1_holes", "render"),
+        ("euler_persistence", "render"),
+        ("persistence_landscape", "render"),
+        ("stress_map", "render"),
+        ("phase_volume", "render"),
     ]
 
     print(f"\n{'=' * 60}")

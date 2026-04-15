@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""02: Анимация горизонта."""
+"""Horizon animation."""
 
 import numpy as np
 import matplotlib
@@ -70,7 +70,7 @@ def render(data, sweep, out_dir):
 
         frames = [Image.open(f"{anim_dir}/frame_{i:04d}.png") for i in range(n_frames)]
         frames[0].save(
-            f"{out_dir}/02_horizon_animation.gif",
+            f"{out_dir}/horizon_animation.gif",
             save_all=True,
             append_images=frames[1:],
             duration=100,

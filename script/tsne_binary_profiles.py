@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""05: t-SNE бинарных профилей."""
+"""t-SNE binary profiles."""
 
 import numpy as np
 import matplotlib
@@ -27,5 +27,5 @@ def render(data, sweep, out_dir):
             )
     ax.set_title(f"t-SNE профилей ({n_classes} классов)")
     plt.tight_layout()
-    plt.savefig(f"{out_dir}/05_tsne_binary_profiles.png", dpi=v["dpi_default"])
+    plt.savefig(f"{out_dir}/tsne_binary_profiles.png", dpi=v["dpi_default"])
     plt.close()

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""01: Тепловая карта горизонта."""
+"""Horizon heatmap."""
 
 import numpy as np
 import matplotlib
@@ -28,5 +28,5 @@ def render(data, sweep, out_dir):
     ax.set_xlabel("Порог Δ")
     fig.colorbar(im, ax=ax)
     plt.tight_layout()
-    plt.savefig(f"{out_dir}/01_horizon_heatmap.png", dpi=v["dpi_default"])
+    plt.savefig(f"{out_dir}/horizon_heatmap.png", dpi=v["dpi_default"])
     plt.close()

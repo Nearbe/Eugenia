@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""07: CDF по классам."""
+"""CDF by class."""
 
 import numpy as np
 import matplotlib
@@ -23,5 +23,5 @@ def render(data, sweep, out_dir):
     ax.legend(fontsize=8, ncol=(n_classes + 4) // 5)
     ax.grid(alpha=v["grid_alpha"])
     plt.tight_layout()
-    plt.savefig(f"{out_dir}/07_cdf_by_class.png", dpi=v["dpi_default"])
+    plt.savefig(f"{out_dir}/cdf_by_class.png", dpi=v["dpi_default"])
     plt.close()

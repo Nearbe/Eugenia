@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""11: Betti-1 дырки."""
+"""Betti-1 holes detection."""
 
 import numpy as np
 import matplotlib
@@ -32,5 +32,5 @@ def render(data, sweep, out_dir):
     ax.legend(fontsize=8)
     ax.grid(alpha=v["grid_alpha"])
     plt.tight_layout()
-    plt.savefig(f"{out_dir}/11_betti1_holes.png", dpi=v["dpi_high"])
+    plt.savefig(f"{out_dir}/betti1_holes.png", dpi=v["dpi_high"])
     plt.close()

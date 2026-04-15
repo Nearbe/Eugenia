@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""06: 3D поверхности Δ."""
+"""3D surface visualization."""
 
 import numpy as np
 import matplotlib
@@ -40,5 +40,5 @@ def render(data, sweep, out_dir):
         else:
             ax.set_zlim(d_img.min(), d_img.max())
     plt.tight_layout()
-    plt.savefig(f"{out_dir}/06_3d_surface.png", dpi=v["dpi_default"])
+    plt.savefig(f"{out_dir}/surface_3d.png", dpi=v["dpi_default"])
     plt.close()

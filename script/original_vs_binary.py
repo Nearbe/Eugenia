@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""09: Сравнение исходного vs бинаризация."""
+"""Original vs binary comparison."""
 
 import numpy as np
 import matplotlib
@@ -69,5 +69,5 @@ def render(data, sweep, out_dir):
             axes[i, j + 1].set_title(f"Δ>{t:+.0f}", fontsize=8)
             axes[i, j + 1].axis("off")
     plt.tight_layout()
-    plt.savefig(f"{out_dir}/09_original_vs_binary.png", dpi=v["dpi_high"])
+    plt.savefig(f"{out_dir}/original_vs_binary.png", dpi=v["dpi_high"])
     plt.close()

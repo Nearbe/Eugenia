@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""15: Фазовый Объем."""
+"""Phase volume visualization."""
 
 import numpy as np
 import matplotlib
@@ -30,5 +30,5 @@ def render(data, sweep, out_dir):
         ax.set_title(f"#{i}")
         ax.set_zlim(0, len(key_thresholds) + 1)
     plt.tight_layout()
-    plt.savefig(f"{out_dir}/15_phase_volume.png", dpi=v["dpi_default"])
+    plt.savefig(f"{out_dir}/phase_volume.png", dpi=v["dpi_default"])
     plt.close()

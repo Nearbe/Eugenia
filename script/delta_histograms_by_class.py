@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""00a: Гистограммы Δ по классам."""
+"""Delta histograms by class."""
 
 import numpy as np
 import matplotlib
@@ -34,5 +34,5 @@ def render(data, sweep, out_dir):
     for c in range(n_classes, len(axes)):
         axes[c].axis("off")
     plt.tight_layout()
-    plt.savefig(f"{out_dir}/00a_delta_histograms_by_class.png", dpi=v["dpi_default"])
+    plt.savefig(f"{out_dir}/delta_histograms_by_class.png", dpi=v["dpi_default"])
     plt.close()

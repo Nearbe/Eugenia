@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""10: Betti-0 компоненты."""
+"""Betti-0 connected components."""
 
 import numpy as np
 import matplotlib
@@ -29,5 +29,5 @@ def render(data, sweep, out_dir):
     ax.legend(fontsize=8)
     ax.grid(alpha=v["grid_alpha"])
     plt.tight_layout()
-    plt.savefig(f"{out_dir}/10_betti0_components.png", dpi=v["dpi_high"])
+    plt.savefig(f"{out_dir}/betti0_components.png", dpi=v["dpi_high"])
     plt.close()

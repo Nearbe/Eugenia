@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""individual: Отдельные гистограммы Δ по классам."""
+"""Individual delta histograms per class."""
 
 import numpy as np
 import matplotlib
