@@ -4,6 +4,79 @@ Scatter plot of mean vs standard deviation by class.
 
 Visualizes the distribution of delta field values for each class
 by plotting mean (x-axis) vs standard deviation (y-axis).
+
+========================================
+WHAT DOES THIS VISUALIZE?
+========================================
+
+This scatter plot shows each class as a single point in
+a 2D space defined by:
+
+    X-axis: Mean (μ) of delta values
+    Y-axis: Standard Deviation (σ) of delta values
+
+Each class is represented by ONE point:
+    - Position = (μ_class, σ_class)
+
+========================================
+MATHEMATICAL DEFINITIONS
+========================================
+
+MEAN (μ) - Average delta value:
+
+    μ = (1/N) Σ δᵢ
+        where δᵢ is the delta value of pixel i
+
+Interpretation:
+    - μ < 0: Image is predominantly dark
+    - μ > 0: Image is predominantly bright
+    - μ ≈ 0: Balanced light/dark distribution
+
+STANDARD DEVIATION (σ) - Spread of delta values:
+
+    σ = √[(1/N) Σ (δᵢ - μ)²]
+
+Interpretation:
+    - σ large: Wide range of contrast (both very dark and very bright)
+    - σ small: Uniform contrast (mostly mid-tones)
+    - σ ≈ 0: Entire image has same value
+
+VARIANCE (σ²) - The squared standard deviation:
+    Measures "energy" in the contrast distribution
+
+========================================
+WHY IS THIS USEFUL?
+========================================
+
+This plot reveals PATTERNS in digits based on their
+contrast distribution, not their shape:
+
+QUADRANT ANALYSIS:
+
+    High σ, High μ (top-right):
+        Bright AND high contrast - possibly bold digits
+        Example: "8", "9", "0"
+
+    High σ, Low μ (bottom-right):
+        Dark AND high contrast - possibly filled digits
+        Example: "1", "4", "7"
+
+    Low σ, High μ (top-left):
+        Bright AND low contrast - possibly sparse digits
+        Example: "7" (thin stroke)
+
+    Low σ, Low μ (bottom-left):
+        Dark AND low contrast - possibly noisy/artifact
+
+CLUSTERING:
+    - Digits with similar stroke width → similar (μ, σ)
+    - This provides a "contrast-based fingerprint"
+    - Different from shape-based classification
+
+Example for MNIST:
+    "0": Low μ (dark), High σ (ring structure)
+    "1": Near 0 μ (minimal area), Low σ (thin line)
+    "8": Low μ, High σ (two circles with holes)
 """
 
 import numpy as np

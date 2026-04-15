@@ -5,6 +5,80 @@ Jump analysis.
 Visualizes the distribution of significant threshold changes ("jumps")
 across the threshold sweep. Shows where the occupancy rate changes
 dramatically between adjacent thresholds.
+
+========================================
+WHAT IS A "JUMP"?
+========================================
+
+A "jump" is when the occupancy rate (percentage of pixels
+above threshold) changes by more than 1% between adjacent
+thresholds.
+
+Mathematically:
+    jump = |occupancy[t+1] - occupancy[t]|
+
+If jump > 1.0% (configurable via jump_threshold):
+    → Significant change detected!
+
+This is analogous to finding "critical points" in the
+threshold sweep where the topology changes rapidly.
+
+========================================
+WHY ARE JUMPS IMPORTANT?
+========================================
+
+Jumps indicate TOPOLOGICAL TRANSITIONS where:
+
+1. NEW FEATURES EMERGE:
+   - A threshold was crossed that reveals new structure
+   - Example: When threshold = 0, the "hole" in digit "0" appears
+
+2. FEATURES MERGE:
+   - Previously separate regions become connected
+   - Example: Two strokes join at a certain threshold
+
+3. FEATURES DISAPPEAR:
+   - A region shrinks below visibility
+   - Example: Thin stroke disappears at high threshold
+
+Location of jumps reveals:
+   - Characteristic contrast levels of each digit
+   - Stroke widths and spacing
+   - Presence of holes
+
+Example for digit "8":
+    - Jump at T ≈ -3: Outer contour appears
+    - Jump at T ≈ 0: Top hole becomes visible
+    - Jump at T ≈ 0: Bottom hole becomes visible
+    - Jump at T ≈ +2: Inner regions merge
+    - Multiple jumps → complex structure
+
+Example for digit "1":
+    - Single simple jump
+    - One stroke with consistent width
+    - No holes → fewer jumps
+
+========================================
+WHAT DOES THE PLOT SHOW?
+========================================
+
+X-axis: Threshold value (-5.546 to +5.546)
+Y-axis: Number of jumps at each threshold
+
+The histogram shows where in the threshold space
+the significant changes occur.
+
+PEAKS in the histogram:
+    - Many topological transitions at that threshold
+    - A major feature boundary exists
+
+FLAT regions:
+    - Smooth transitions
+    - No major structure changes
+
+The vertical RED LINE at threshold = 0 divides:
+    - Left side: Dark-dominant pixels
+    - Right side: Bright-dominant pixels
 """
 
 import numpy as np

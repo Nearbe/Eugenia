@@ -5,6 +5,60 @@ Original vs binary comparison.
 Displays each class/symbol alongside its binary thresholded versions
 at multiple threshold values, allowing visual comparison of how the
 binary mask changes as the threshold varies.
+
+========================================
+WHAT IS THIS VISUALIZATION?
+========================================
+
+This module provides a direct side-by-side comparison between:
+
+1. THE ORIGINAL DELTA FIELD (Column 0)
+   - Shows the continuous contrast landscape.
+   - Represents the "ground truth" of the image structure.
+
+2. BINARY MASKS (Remaining Columns)
+   - Shows the discretized version at specific thresholds.
+   - Represents what is "visible" to a topological algorithm.
+
+========================================
+WHY COMPARE THEM?
+========================================
+
+The comparison helps us understand how much information is lost
+during thresholding:
+
+1. THRESHOLD SENSITIVITY:
+   - How quickly do features appear or disappear as we move
+     from negative to positive thresholds?
+   - Does a single threshold capture the essence of the digit,
+     or are multiple levels needed?
+
+2. TOPOLOGICAL FIDELITY:
+   - At which threshold does the binary mask most accurately
+     represent the "shape" seen in the delta field?
+   - For example, at what threshold do the holes in an '8'
+     become clearly defined?
+
+3. CONTRAST BOUNDARIES:
+   - The transition from the original (continuous) to binary
+     (discrete) highlights where the most critical contrast
+     boundaries lie.
+
+========================================
+VISUALIZATION DETAILS
+========================================
+
+Thresholds used are defined in `params.py` under
+`comparison_thresholds`.
+
+Coloring:
+- Grayscale: Uses standard grayscale colormap.
+- CMYK/RGB: Each channel is colored with its characteristic color
+  to make the binary mask intuitive (e.g., Cyan channel shows
+  cyan binary masks).
+
+The grid layout allows us to see the "evolution" of a digit's
+topology as we sweep through the threshold range.
 """
 
 import numpy as np

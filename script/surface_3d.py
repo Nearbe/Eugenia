@@ -4,6 +4,77 @@
 
 Displays delta field values as 3D surface plots for each class,
 showing the topological structure of the delta field.
+
+========================================
+WHAT IS A 3D SURFACE PLOT?
+========================================
+
+This visualization shows the delta field as a 3D surface:
+
+    X-axis: Column (pixel position in width)
+    Y-axis: Row (pixel position in height)
+    Z-axis: Delta value (contrast intensity)
+
+The surface height represents contrast:
+    - Z > 0: Bright region (positive contrast)
+    - Z < 0: Dark region (negative contrast)
+    - Z = 0: Mid-gray
+
+========================================
+INTERPRETATION
+========================================
+
+PEAKS (Z > 0):
+    - Brightest pixels in the image
+    - White strokes, highlights
+    - "Mountains" in the landscape
+
+VALLEYS (Z < 0):
+    - Darkest pixels in the image
+    - Black strokes, shadows
+    - "Canyons" in the landscape
+
+FLAT REGIONS:
+    - Uniform areas
+    - Consistent contrast
+
+The topological FEATURES are visible as peaks and valleys:
+    - Stroke center = highest point (peak)
+    - Stroke edge = slope
+    - Background = valley floor
+    - Holes = depressions surrounded by peaks
+
+Example for digit "8":
+    - TWO peaks (top and bottom loops)
+    - TWO valleys (the holes inside)
+    - Complex topology visible as dual peaks
+
+Example for digit "1":
+    - Single ridge (the stroke)
+    - Simple, monotonic surface
+
+========================================
+WHY IS THIS USEFUL?
+========================================
+
+1. INTUITIVE VISUALIZATION:
+   - Easy to understand the image structure
+   - No complex math required
+
+2. TOPOLOGY INSPECTION:
+   - See holes (depressions)
+   - See connectivity (ridges)
+   - Visualize "shape" mathematically
+
+3. COMPARISON:
+   - Different digits have different landscapes
+   - Build intuition for mathematical representation
+   - Compare visually without pixel comparison
+
+This is the "geometric" counterpart to the
+"topological" analysis in betti0/betti1.
+The surface shows WHAT exists, topology shows
+HOW IT'S CONNECTED.
 """
 
 import numpy as np
