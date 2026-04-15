@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""CDF by class."""
+"""
+Cumulative distribution function (CDF) by class.
+
+Displays the cumulative distribution function of delta field values
+for each class, showing what percentage of pixels are below each threshold.
+"""
 
 import numpy as np
 import matplotlib
@@ -9,19 +14,41 @@ import matplotlib.pyplot as plt
 
 
 def render(data, sweep, out_dir):
-    v = data["viz"]
-    symbols = data["symbols_delta"]
-    n_classes = data["n_classes"]
-    thr = sweep["thresholds"]
-    fig, ax = plt.subplots(figsize=(v["fig_cdf_w"], v["fig_cdf_h"]))
-    for c in range(n_classes):
-        vals = symbols[c].cpu().numpy().flatten()
-        cdf = np.array([np.mean(vals <= t) for t in thr])
-        ax.plot(thr, cdf, label=str(c), linewidth=1.5)
-    ax.set_xlabel("Δ")
-    ax.set_ylabel("CDF")
-    ax.legend(fontsize=8, ncol=(n_classes + 4) // 5)
-    ax.grid(alpha=v["grid_alpha"])
+    """
+    Render CDF visualization for each class.
+
+    Args:
+        data: Dictionary containing loaded data and configuration
+        sweep: Dictionary containing threshold sweep results
+        out_dir: Output directory for saving the figure
+    """
+    configuration = data["viz"]
+    symbols = data["symbol_delta_fields"]
+    number_of_classes = data["number_of_classes"]
+    threshold_values = sweep["thresholds"]
+
+    figure, axis = plt.subplots(figsize=configuration["figure_cdf"])
+
+    for class_id in range(number_of_classes):
+        values = symbols[class_id].cpu().numpy().flatten()
+
+        # Compute CDF: percentage of values <= threshold
+        cumulative_distribution = np.array(
+            [np.mean(values <= threshold) for threshold in threshold_values]
+        )
+
+        axis.plot(
+            threshold_values,
+            cumulative_distribution,
+            label=str(class_id),
+            linewidth=1.5,
+        )
+
+    axis.set_xlabel("Delta Value")
+    axis.set_ylabel("Cumulative Probability")
+    axis.legend(fontsize=8, ncol=(number_of_classes + 4) // 5)
+    axis.grid(alpha=configuration["alpha_grid"])
+
     plt.tight_layout()
-    plt.savefig(f"{out_dir}/cdf_by_class.png", dpi=v["dpi_default"])
+    plt.savefig(f"{out_dir}/cdf_by_class.png", dpi=configuration["dpi_default"])
     plt.close()

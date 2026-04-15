@@ -1,263 +1,427 @@
 #!/usr/bin/env python3
 """
-common.py — Unified data loader for all sources: mnist, png, cmyk.
+Data loading and sweep computation for all visualization sources.
+
+This module handles loading data from different sources (MNIST, PNG images, CMYK images),
+computes the delta field transformation, and runs the threshold sweep to generate
+binary masks at various threshold levels.
+
+Main functions:
+- load_data(): Loads and preprocesses data from the configured source
+- compute_sweep(): Runs threshold sweep and detects jump events
+- run_all_visualizations(): Executes all visualization scripts in sequence
 """
 
 import os
+import sys
 import time
-import torch
+from typing import Dict, List, Tuple, Optional
+
 import numpy as np
+import torch
 from PIL import Image
 from scipy import ndimage
 from dataclasses import asdict
-from params import VIZ
 
-SOURCE = os.environ.get("VIZ_SOURCE", "mnist")
+from params import CONFIG
+
+
+# Environment variables for source selection
+SOURCE_NAME = os.environ.get("VIZ_SOURCE", "mnist")
 SOURCE_FILE = os.environ.get("VIZ_SOURCE_FILE", "")
 
-_data = None
+
+# Global cache for loaded data and computed sweep
+_cached_data: Optional[Dict] = None
+_cached_sweep: Optional[Dict] = None
 
 
-def _load_mnist():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    mnist_path = os.path.join(script_dir, "..", "..", "eugenia_data", "mnist.npz")
-    f = np.load(mnist_path)
-    y_all = f["y_train"]
-    indices = [np.where(y_all == c)[0][0] for c in range(VIZ.hist_n_classes)]
-    indices = np.array(indices)
-    X_train = torch.from_numpy(f["x_train"][indices].astype(np.float32))
-    y_train = torch.arange(VIZ.hist_n_classes, dtype=torch.int32)
-    H, W, C = 28, 28, 1
-    return X_train, y_train, H, W, C
+def _get_script_directory() -> str:
+    """Get the directory containing this script."""
+    return os.path.dirname(os.path.abspath(__file__))
 
 
-def _load_png():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    parent_dir = os.path.dirname(script_dir)
-    filename = SOURCE_FILE or "cyrillic.png"
+def _get_parent_directory() -> str:
+    """Get the parent directory of the script directory."""
+    return os.path.dirname(_get_script_directory())
 
-    # Check script dir and parent dir
-    for d in [script_dir, parent_dir]:
-        path = os.path.join(d, filename)
+
+def load_mnist_data() -> Tuple[torch.Tensor, torch.Tensor, int, int, int]:
+    """
+    Load one sample per class from MNIST dataset.
+
+    Returns:
+        Tuple of (images, labels, height, width, channels)
+        - images: Tensor of shape (n_classes, height, width)
+        - labels: Tensor of class indices
+        - height, width: Image dimensions
+        - channels: Number of channels (1 for grayscale)
+    """
+    script_dir = _get_script_directory()
+    data_dir = os.path.join(script_dir, "..", "..", "eugenia_data")
+    mnist_path = os.path.join(data_dir, "mnist.npz")
+
+    data_file = np.load(mnist_path)
+    all_labels = data_file["y_train"]
+
+    # Select one sample per class
+    class_indices = []
+    for class_id in range(CONFIG.number_of_classes):
+        indices = np.where(all_labels == class_id)[0]
+        class_indices.append(indices[0])
+
+    class_indices = np.array(class_indices)
+    images = torch.from_numpy(data_file["x_train"][class_indices].astype(np.float32))
+    labels = torch.arange(CONFIG.number_of_classes, dtype=torch.int32)
+
+    height = CONFIG.image_height
+    width = CONFIG.image_width
+    channels = CONFIG.image_channels
+
+    return images, labels, height, width, channels
+
+
+def load_png_image() -> Tuple[torch.Tensor, torch.Tensor, int, int, int]:
+    """
+    Load PNG image and extract symbols via connected components.
+
+    Returns:
+        Tuple of (images, labels, height, width, channels)
+    """
+    script_dir = _get_script_directory()
+    parent_dir = _get_parent_directory()
+
+    # Try to find the image file
+    filename = SOURCE_FILE if SOURCE_FILE else "cyrillic.png"
+
+    for search_dir in [script_dir, parent_dir]:
+        path = os.path.join(search_dir, filename)
         if os.path.exists(path):
             break
     else:
         path = os.path.join(script_dir, filename)
 
+    # Try .jpeg if .png not found
     if not os.path.exists(path):
         path = path.replace(".png", ".jpeg")
-    img = Image.open(path).convert("L")
-    arr = np.array(img).astype(np.float32)
-    H, W = arr.shape
-    X_train = torch.from_numpy(255.0 - arr)
-    y_train = None
 
-    threshold = -4.0
-    mask = (X_train.numpy() > threshold).astype(np.uint8)
-    labeled, n = ndimage.label(mask)
-    symbols = []
-    for i in range(1, n + 1):
-        coords = np.where(labeled == i)
-        y1, y2 = coords[0].min(), coords[0].max() + 1
-        x1, x2 = coords[1].min(), coords[1].max() + 1
-        symbols.append(X_train[y1:y2, x1:x2])
-    X_train = symbols[0] if symbols else X_train.view(1, H, W)
-    y_train = torch.arange(len(symbols) if symbols else 1)
-    return (
-        X_train.unsqueeze(0),
-        y_train,
-        symbols[0].shape[0] if symbols else H,
-        symbols[0].shape[1] if symbols else W,
-        1,
-    )
+    # Load and preprocess image
+    image = Image.open(path).convert("L")  # Convert to grayscale
+    image_array = np.array(image).astype(np.float32)
+    height, width = image_array.shape
+
+    # Invert: white background becomes black, symbols become white
+    images = torch.from_numpy(255.0 - image_array)
+
+    # Extract symbols using connected components on delta field
+    threshold_value = -4.0
+    images_cpu = images.numpy()
+    binary_mask = (images_cpu > threshold_value).astype(np.uint8)
+    labeled_array, num_components = ndimage.label(binary_mask)
+
+    extracted_symbols = []
+    for component_id in range(1, num_components + 1):
+        coords = np.where(labeled_array == component_id)
+        row_min = coords[0].min()
+        row_max = coords[0].max() + 1
+        col_min = coords[1].min()
+        col_max = coords[1].max() + 1
+        extracted_symbols.append(images[row_min:row_max, col_min:col_max])
+
+    # Use first symbol or full image if no symbols found
+    if extracted_symbols:
+        images = extracted_symbols[0]
+        labels = torch.arange(len(extracted_symbols))
+        height = extracted_symbols[0].shape[0]
+        width = extracted_symbols[0].shape[1]
+    else:
+        labels = torch.tensor([0])
+        images = images.view(1, height, width)
+
+    return images.unsqueeze(0), labels, height, width, 1
 
 
-def _load_cmyk():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    parent_dir = os.path.dirname(script_dir)
-    filename = SOURCE_FILE or "Eugene_cmyk.tiff"
+def load_cmyk_image() -> Tuple[torch.Tensor, torch.Tensor, int, int, int]:
+    """
+    Load CMYK image and treat each channel as a separate symbol.
 
-    # Check script dir and parent dir
-    for d in [script_dir, parent_dir]:
-        path = os.path.join(d, filename)
+    Returns:
+        Tuple of (images, labels, height, width, channels)
+    """
+    script_dir = _get_script_directory()
+    parent_dir = _get_parent_directory()
+
+    filename = SOURCE_FILE if SOURCE_FILE else "Eugene_cmyk.tiff"
+
+    for search_dir in [script_dir, parent_dir]:
+        path = os.path.join(search_dir, filename)
         if os.path.exists(path):
             break
     else:
         path = os.path.join(script_dir, filename)
 
+    # Create from JPEG if TIFF doesn't exist
     if not os.path.exists(path):
         jpeg_path = os.path.join(parent_dir, "Eugene.jpeg")
         if os.path.exists(jpeg_path):
-            img = Image.open(jpeg_path).convert("CMYK")
-            img.save(path)
-    img = Image.open(path).convert("CMYK")
-    arr = np.array(img).astype(np.float32)
-    H, W, C = arr.shape
-    X_train = torch.from_numpy(arr)
-    y_train = torch.arange(C)
-    return X_train, y_train, H, W, C
+            image = Image.open(jpeg_path).convert("CMYK")
+            image.save(path)
+
+    # Load CMYK image
+    image = Image.open(path).convert("CMYK")
+    image_array = np.array(image).astype(np.float32)
+    height, width, channels = image_array.shape
+
+    images = torch.from_numpy(image_array)
+    labels = torch.arange(channels)
+
+    return images, labels, height, width, channels
 
 
-def _ensure_loaded():
-    global _data
-    if _data is not None:
-        return _data
+def load_data() -> Dict:
+    """
+    Load data from the configured source and compute delta field.
 
-    t0 = time.time()
-    device = torch.device("mps")
-    print(f"[{time.strftime('%H:%M:%S')}] Загрузка {SOURCE}...", flush=True)
+    Returns:
+        Dictionary containing:
+        - device: torch device (MPS or CPU)
+        - original_data: original input tensor
+        - delta_field: computed delta field tensor
+        - labels: class labels tensor
+        - height, width, channels: image dimensions
+        - number_of_classes: count of symbols/classes
+        - symbol_delta_fields: list of delta fields per symbol
+        - is_color: whether data is color (CMYK)
+        - color_space: "CMYK" or "RGB"
+        - symbol_names: list of channel names for color data
+        - delta_min, delta_max: range of delta field values
+        - config: visualization configuration
+    """
+    global _cached_data
+    if _cached_data is not None:
+        return _cached_data
 
-    if SOURCE == "mnist":
-        X_train, y_train, H, W, C = _load_mnist()
-    elif SOURCE == "png":
-        X_train, y_train, H, W, C = _load_png()
-    elif SOURCE == "cmyk":
-        X_train, y_train, H, W, C = _load_cmyk()
+    start_time = time.time()
+    print(f"[{time.strftime('%H:%M:%S')}] Loading {SOURCE_NAME}...", flush=True)
+
+    # Select loader based on source
+    if SOURCE_NAME == "mnist":
+        images, labels, height, width, channels = load_mnist_data()
+    elif SOURCE_NAME == "png":
+        images, labels, height, width, channels = load_png_image()
+    elif SOURCE_NAME == "cmyk":
+        images, labels, height, width, channels = load_cmyk_image()
     else:
-        raise ValueError(f"Unknown source: {SOURCE}")
+        raise ValueError(f"Unknown source: {SOURCE_NAME}")
 
-    X_train = X_train.to(device)
-    D = torch.log(X_train + 1) - torch.log(256.0 - X_train)
-
-    if SOURCE == "cmyk":
-        symbols_delta = [D[:, :, c] for c in range(C)]
+    # Use GPU if available (Apple MPS)
+    if torch.backends.mps.is_available():
+        device = torch.device("mps")
     else:
-        symbols_delta = [D[i] for i in range(D.shape[0])]
+        device = torch.device("cpu")
 
-    n_classes = len(symbols_delta)
+    images = images.to(device)
+
+    # Compute delta field: D = log(X + 1) - log(256 - X)
+    delta_field = torch.log(images + 1.0) - torch.log(256.0 - images)
+
+    # Extract individual symbol delta fields
+    if SOURCE_NAME == "cmyk":
+        symbol_delta_fields = [
+            delta_field[:, :, channel] for channel in range(channels)
+        ]
+    else:
+        symbol_delta_fields = [
+            delta_field[index] for index in range(delta_field.shape[0])
+        ]
+
+    number_of_classes = len(symbol_delta_fields)
+
     print(
-        f"[{time.strftime('%H:%M:%S')}] Данные: {X_train.shape}, Δ=[{D.min():.2f}, {D.max():.2f}] ({time.time() - t0:.1f}s)"
+        f"[{time.strftime('%H:%M:%S')}] Data: {images.shape}, "
+        f"Delta=[{delta_field.min():.2f}, {delta_field.max():.2f}] "
+        f"({time.time() - start_time:.1f}s)"
     )
 
-    is_color = SOURCE == "cmyk"
-    symbol_names = ["C", "M", "Y", "K"] if is_color else None
+    # Determine color properties
+    is_color = SOURCE_NAME == "cmyk"
+    color_space = "CMYK" if is_color else "Grayscale"
+    symbol_names = ["Cyan", "Magenta", "Yellow", "Key"] if is_color else None
 
-    _data = {
+    _cached_data = {
         "device": device,
-        "D": D,
-        "X": X_train,
-        "y_train": y_train,
-        "H": H,
-        "W": W,
-        "C": C,
-        "n_classes": n_classes,
-        "symbols_delta": symbols_delta,
+        "original_data": images,
+        "delta_field": delta_field,
+        "labels": labels,
+        "height": height,
+        "width": width,
+        "channels": channels,
+        "number_of_classes": number_of_classes,
+        "n_classes": number_of_classes,  # backward compatibility
+        "symbol_delta_fields": symbol_delta_fields,
+        "symbols_delta": symbol_delta_fields,  # backward compatibility
         "is_color": is_color,
-        "color_space": "CMYK" if is_color else "RGB",
+        "color_space": color_space,
         "symbol_names": symbol_names,
-        "delta_min": D.min().item(),
-        "delta_max": D.max().item(),
-        "viz": asdict(VIZ),
+        "delta_min": delta_field.min().item(),
+        "delta_max": delta_field.max().item(),
+        "config": asdict(CONFIG),
+        "viz": asdict(CONFIG),  # backward compatibility
     }
-    return _data
+
+    return _cached_data
 
 
-_sweep = None
+def compute_sweep() -> Dict:
+    """
+    Compute threshold sweep across the delta field.
 
+    For each threshold value, computes the percentage of pixels above threshold
+    for each symbol/class. Also detects significant "jump" events where
+    occupancy changes dramatically between adjacent thresholds.
 
-def _ensure_sweep():
-    global _sweep
-    if _sweep is not None:
-        return _sweep
+    Returns:
+        Dictionary containing:
+        - thresholds: array of threshold values
+        - occupancy_rates: tensor of shape (n_thresholds, n_classes)
+          with percentage of pixels above threshold per class
+        - jump_events: list of (threshold, class, before, after, change) tuples
+        - jump_count: total number of detected jumps
+    """
+    global _cached_sweep
+    if _cached_sweep is not None:
+        return _cached_sweep
 
-    d = _ensure_loaded()
-    device = d["device"]
-    symbols = d["symbols_delta"]
-    n_classes = d["n_classes"]
+    data = load_data()
+    device = data["device"]
+    symbol_delta_fields = data["symbol_delta_fields"]
+    number_of_classes = data["number_of_classes"]
 
-    print(f"[{time.strftime('%H:%M:%S')}] Sweep...", flush=True)
-    t0 = time.time()
+    print(f"[{time.strftime('%H:%M:%S')}] Computing sweep...", flush=True)
+    start_time = time.time()
 
-    thresholds = np.arange(VIZ.sweep_min, VIZ.sweep_max, VIZ.sweep_step)
-    n_thr = len(thresholds)
+    # Generate threshold values
+    thresholds = np.arange(CONFIG.sweep_min, CONFIG.sweep_max, CONFIG.sweep_step)
+    num_thresholds = len(thresholds)
 
-    bits = torch.zeros(n_thr, n_classes, device=device)
-    for c in range(n_classes):
-        sym = symbols[c].cpu().numpy().flatten()
-        hist, _ = np.histogram(
-            sym, bins=np.linspace(VIZ.sweep_min, VIZ.sweep_max, n_thr + 1)
+    # Compute occupancy rates for each class
+    occupancy_rates = torch.zeros(num_thresholds, number_of_classes, device=device)
+
+    for class_id in range(number_of_classes):
+        symbol = symbol_delta_fields[class_id].cpu().numpy().flatten()
+
+        # Create histogram and compute cumulative distribution
+        histogram, bin_edges = np.histogram(
+            symbol,
+            bins=np.linspace(CONFIG.sweep_min, CONFIG.sweep_max, num_thresholds + 1),
         )
-        cumsum = np.cumsum(hist[::-1])[::-1]
-        bits[:, c] = torch.from_numpy(cumsum / len(sym) * 100)
+        # Reverse cumulative sum: what percentage is above each threshold
+        cumulative = np.cumsum(histogram[::-1])[::-1]
+        occupancy_rates[:, class_id] = torch.from_numpy(cumulative / len(symbol) * 100)
 
-    jumps = []
-    delta = torch.abs(bits[1:] - bits[:-1])
-    mask = delta > VIZ.jump_threshold
-    idxs = torch.where(mask)
-    for i, c in zip(idxs[0].tolist(), idxs[1].tolist()):
-        jumps.append(
-            (
-                round(thresholds[i + 1], 4),
-                c,
-                bits[i, c].item(),
-                bits[i + 1, c].item(),
-                abs(bits[i + 1, c].item() - bits[i, c].item()),
-            )
-        )
+    # Detect jump events: significant changes in occupancy
+    jump_events = []
+    occupancy_change = torch.abs(occupancy_rates[1:] - occupancy_rates[:-1])
+    jump_mask = occupancy_change > CONFIG.jump_threshold
+    jump_indices = torch.where(jump_mask)
 
-    _sweep = {
+    for idx, class_id in zip(jump_indices[0].tolist(), jump_indices[1].tolist()):
+        threshold_value = round(thresholds[idx + 1], 4)
+        before = occupancy_rates[idx, class_id].item()
+        after = occupancy_rates[idx + 1, class_id].item()
+        change = abs(after - before)
+        jump_events.append((threshold_value, class_id, before, after, change))
+
+    _cached_sweep = {
         "thresholds": thresholds,
-        "bits_tr_all": bits,
-        "jump_events": jumps,
-        "jump_count": len(jumps),
+        "occupancy_rates": occupancy_rates,
+        "bits_tr_all": occupancy_rates,  # backward compatibility
+        "jump_events": jump_events,
+        "jump_count": len(jump_events),
     }
-    print(f"  {n_thr} thresholds, {len(jumps)} jumps ({time.time() - t0:.1f}s)")
-    return _sweep
+
+    print(
+        f"  {num_thresholds} thresholds, {len(jump_events)} jumps "
+        f"({time.time() - start_time:.1f}s)"
+    )
+
+    return _cached_sweep
 
 
-def run_all_visualizations():
-    d = _ensure_loaded()
-    s = _ensure_sweep()
+def run_all_visualizations() -> None:
+    """
+    Execute all visualization scripts in sequence.
 
-    out_dir = os.environ.get("VIZ_OUT_DIR", os.path.dirname(os.path.abspath(__file__)))
-    script_dir = os.path.dirname(os.path.abspath(__file__))
+    Loads data, computes sweep, then iterates through all visualization modules
+    and calls their render() function with the data and sweep results.
+    """
+    data = load_data()
+    sweep = compute_sweep()
 
-    scripts = [
-        ("delta_histograms_by_class", "render"),
-        ("individual_delta_histograms", "render"),
-        ("horizon_heatmap", "render"),
-        ("horizon_animation", "render"),
-        ("scatter_mean_std", "render"),
-        ("jumps_analysis", "render"),
-        ("tsne_binary_profiles", "render"),
-        ("surface_3d", "render"),
-        ("cdf_by_class", "render"),
-        ("entropy_analysis", "render"),
-        ("original_vs_binary", "render"),
-        ("betti0_components", "render"),
-        ("betti1_holes", "render"),
-        ("euler_persistence", "render"),
-        ("persistence_landscape", "render"),
-        ("stress_map", "render"),
-        ("phase_volume", "render"),
+    output_directory = os.environ.get("VIZ_OUTPUT_DIR", _get_script_directory())
+    script_directory = _get_script_directory()
+
+    # List of visualization modules to execute
+    visualization_modules = [
+        "delta_histograms_by_class",
+        "individual_delta_histograms",
+        "horizon_heatmap",
+        "horizon_animation",
+        "scatter_mean_std",
+        "jumps_analysis",
+        "tsne_binary_profiles",
+        "surface_3d",
+        "cdf_by_class",
+        "entropy_analysis",
+        "original_vs_binary",
+        "betti0_components",
+        "betti1_holes",
+        "euler_persistence",
+        "persistence_landscape",
+        "stress_map",
+        "phase_volume",
     ]
 
     print(f"\n{'=' * 60}")
-    print(f"[{time.strftime('%H:%M:%S')}] Rendering {len(scripts)} visualizations")
+    print(
+        f"[{time.strftime('%H:%M:%S')}] Rendering {len(visualization_modules)} visualizations"
+    )
     print(f"{'=' * 60}")
 
-    t0 = time.time()
-    for i, (name, fn) in enumerate(scripts):
-        path = os.path.join(script_dir, f"{name}.py")
-        if not os.path.exists(path):
-            print(f"  ⚠ {name}.py not found")
+    start_time = time.time()
+
+    for index, module_name in enumerate(visualization_modules):
+        module_path = os.path.join(script_directory, f"{module_name}.py")
+
+        if not os.path.exists(module_path):
+            print(f"  Warning: {module_name}.py not found")
             continue
-        spec = __import__("importlib.util").util.spec_from_file_location(name, path)
-        mod = __import__("importlib.util").util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        render_fn = getattr(mod, fn, None)
-        if not render_fn:
-            print(f"  ✗ {name}: no {fn}()")
+
+        # Dynamically import module
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(module_name, module_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        render_function = getattr(module, "render", None)
+
+        if not render_function:
+            print(f"  Error: {module_name} missing render() function")
             continue
-        print(f"\n[{time.strftime('%H:%M:%S')}] ({i + 1}/{len(scripts)}) {name}")
+
+        print(
+            f"\n[{time.strftime('%H:%M:%S')}] ({index + 1}/{len(visualization_modules)}) {module_name}"
+        )
+
         try:
-            render_fn(data=d, sweep=s, out_dir=out_dir)
-            print(f"  ✓ done")
-        except Exception as e:
-            print(f"  ✗ error: {e}")
+            render_function(data=data, sweep=sweep, out_dir=output_directory)
+            print(f"  Success")
+        except Exception as error:
+            print(f"  Error: {error}")
 
     print(f"\n{'=' * 60}")
-    print(f"Total: {time.time() - t0:.0f}s")
+    print(f"Total: {time.time() - start_time:.0f}s")
     print(f"{'=' * 60}")
 
 

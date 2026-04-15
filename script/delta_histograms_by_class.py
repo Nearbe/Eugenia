@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Delta histograms by class."""
+"""
+Delta histograms by class.
+
+Displays histogram of delta field values for each class in a grid layout.
+"""
 
 import numpy as np
 import matplotlib
@@ -9,30 +13,54 @@ import matplotlib.pyplot as plt
 
 
 def render(data, sweep, out_dir):
-    v = data["viz"]
-    symbols = data["symbols_delta"]
-    n_classes = data["n_classes"]
-    n_cols = v["hist_grid_cols"]
-    n_rows = (n_classes + n_cols - 1) // n_cols
-    fig_h = max(v["fig_hist_wide_h"], n_rows * v["hist_row_height"])
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(v["fig_hist_wide_w"], fig_h))
+    """
+    Render delta field histograms for all classes.
+
+    Args:
+        data: Dictionary containing loaded data and configuration
+        sweep: Dictionary containing threshold sweep results
+        out_dir: Output directory for saving the figure
+    """
+    configuration = data["viz"]
+    symbols = data["symbol_delta_fields"]
+    number_of_classes = data["number_of_classes"]
+
+    columns = configuration["grid_columns"]
+    rows = (number_of_classes + columns - 1) // columns
+    figure_height = max(
+        configuration["figure_wide"][1], rows * configuration["grid_row_height"]
+    )
+    figure_width = configuration["figure_wide"][0]
+
+    figure, axes = plt.subplots(rows, columns, figsize=(figure_width, figure_height))
     axes = axes.flatten() if hasattr(axes, "flatten") else [axes]
-    for c in range(n_classes):
-        vals = symbols[c].cpu().numpy().flatten()
-        axes[c].hist(vals, bins=v["hist_bins_default"], color="steelblue", alpha=0.7)
-        axes[c].set_title(
-            f"Класс {c} (n={vals.size})", fontsize=v["hist_title_fontsize"]
+
+    for class_id in range(number_of_classes):
+        values = symbols[class_id].cpu().numpy().flatten()
+        axes[class_id].hist(
+            values,
+            bins=configuration["histogram_bins"],
+            color=configuration["color_histogram"],
+            alpha=configuration["alpha_default"],
         )
-        axes[c].set_xlabel("Δ")
-        axes[c].set_ylabel("count")
-        axes[c].axvline(
-            x=v["hist_ref_line_x"],
-            color=v["ref_line_color"],
-            ls=v["ref_line_ls"],
-            lw=v["ref_line_lw"],
+        axes[class_id].set_title(
+            f"Class {class_id} (n={values.size})",
+            fontsize=configuration["figure_title_fontsize"],
         )
-    for c in range(n_classes, len(axes)):
-        axes[c].axis("off")
+        axes[class_id].set_xlabel("Delta")
+        axes[class_id].set_ylabel("Count")
+        axes[class_id].axvline(
+            x=configuration["reference_line_position"],
+            color=configuration["color_reference_line"],
+            ls=configuration["reference_line_style"],
+            lw=configuration["reference_line_width"],
+        )
+
+    for class_id in range(number_of_classes, len(axes)):
+        axes[class_id].axis("off")
+
     plt.tight_layout()
-    plt.savefig(f"{out_dir}/delta_histograms_by_class.png", dpi=v["dpi_default"])
+    plt.savefig(
+        f"{out_dir}/delta_histograms_by_class.png", dpi=configuration["dpi_default"]
+    )
     plt.close()

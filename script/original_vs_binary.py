@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Original vs binary comparison."""
+"""
+Original vs binary comparison.
+
+Displays each class/symbol alongside its binary thresholded versions
+at multiple threshold values, allowing visual comparison of how the
+binary mask changes as the threshold varies.
+"""
 
 import numpy as np
 import matplotlib
@@ -8,66 +14,93 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 
+# Color schemes for different data types
+CMYK_COLORS = ["#00FFFF", "#FF00FF", "#FFFF00", "#808080"]
+RGB_COLORS = ["#FF0000", "#00FF00", "#0000FF"]
+
+
 def render(data, sweep, out_dir):
-    v = data["viz"]
-    symbols = data["symbols_delta"]
-    n_classes = data["n_classes"]
+    """
+    Render original vs binary comparison visualization.
+
+    Args:
+        data: Dictionary containing loaded data and configuration
+        sweep: Dictionary containing threshold sweep results
+        out_dir: Output directory for saving the figure
+    """
+    configuration = data["viz"]
+    symbols = data["symbol_delta_fields"]
+    number_of_classes = data["number_of_classes"]
     is_color = data.get("is_color", False)
-    color_space = data.get("color_space", "RGB")
+    color_space = data.get("color_space", "Grayscale")
     symbol_names = data.get("symbol_names", None)
 
+    # Select colors based on data type
     if is_color:
         if color_space == "CMYK":
-            channel_colors = ["#00FFFF", "#FF00FF", "#FFFF00", "#808080"]
+            channel_colors = CMYK_COLORS
         else:
-            channel_colors = ["#FF0000", "#00FF00", "#0000FF"]
+            channel_colors = RGB_COLORS
     else:
-        channel_colors = [v["cmap_gray"]] * n_classes
+        channel_colors = [configuration["colormap_grayscale"]] * number_of_classes
 
-    cthr = v["original_vs_binary"]
-    n_cols = len(cthr) + 1
-    fig, axes = plt.subplots(
-        n_classes, n_cols, figsize=(2 * n_cols, max(1.2 * n_classes, 3))
+    comparison_thresholds = configuration["comparison_thresholds"]
+    number_of_columns = len(comparison_thresholds) + 1
+
+    figure, axes = plt.subplots(
+        number_of_classes,
+        number_of_columns,
+        figsize=(2 * number_of_columns, max(1.2 * number_of_classes, 3)),
     )
-    if n_classes == 1:
+
+    if number_of_classes == 1:
         axes = axes.reshape(1, -1)
 
-    for i in range(n_classes):
-        d_img = symbols[i].cpu().numpy()
+    for class_id in range(number_of_classes):
+        delta_image = symbols[class_id].cpu().numpy()
 
+        # First column: original delta field
         if is_color:
-            axes[i, 0].imshow(
-                d_img,
+            axes[class_id, 0].imshow(
+                delta_image,
                 cmap=plt.cm.colors.LinearSegmentedColormap.from_list(
-                    "channel_cmap", ["black", channel_colors[i]]
+                    "channel_cmap", ["black", channel_colors[class_id]]
                 ),
             )
         else:
-            axes[i, 0].imshow(d_img, cmap=v["cmap_gray"])
+            axes[class_id, 0].imshow(
+                delta_image, cmap=configuration["colormap_grayscale"]
+            )
 
-        label = symbol_names[i] if symbol_names else f"#{i}"
-        axes[i, 0].set_ylabel(label, rotation=0, ha="right")
-        axes[i, 0].set_xticks([])
-        axes[i, 0].set_yticks([])
+        label = symbol_names[class_id] if symbol_names else f"#{class_id}"
+        axes[class_id, 0].set_ylabel(label, rotation=0, ha="right")
+        axes[class_id, 0].set_xticks([])
+        axes[class_id, 0].set_yticks([])
 
-        for j, t in enumerate(cthr):
-            mask = (d_img > t).astype(float)
+        # Remaining columns: binary masks at different thresholds
+        for threshold_index, threshold_value in enumerate(comparison_thresholds):
+            binary_mask = (delta_image > threshold_value).astype(float)
+
             if is_color:
-                rgb = np.zeros((mask.shape[0], mask.shape[1], 3))
-                hex_color = channel_colors[i].lstrip("#")
-                r, g, b = (
-                    int(hex_color[0:2], 16) / 255,
-                    int(hex_color[2:4], 16) / 255,
-                    int(hex_color[4:6], 16) / 255,
-                )
-                rgb[:, :, 0] = mask * r
-                rgb[:, :, 1] = mask * g
-                rgb[:, :, 2] = mask * b
-                axes[i, j + 1].imshow(rgb)
+                rgb_image = np.zeros((binary_mask.shape[0], binary_mask.shape[1], 3))
+                hex_color = channel_colors[class_id].lstrip("#")
+                red_value = int(hex_color[0:2], 16) / 255
+                green_value = int(hex_color[2:4], 16) / 255
+                blue_value = int(hex_color[4:6], 16) / 255
+                rgb_image[:, :, 0] = binary_mask * red_value
+                rgb_image[:, :, 1] = binary_mask * green_value
+                rgb_image[:, :, 2] = binary_mask * blue_value
+                axes[class_id, threshold_index + 1].imshow(rgb_image)
             else:
-                axes[i, j + 1].imshow(mask, cmap=v["cmap_binary"])
-            axes[i, j + 1].set_title(f"Δ>{t:+.0f}", fontsize=8)
-            axes[i, j + 1].axis("off")
+                axes[class_id, threshold_index + 1].imshow(
+                    binary_mask, cmap=configuration["colormap_binary"]
+                )
+
+            axes[class_id, threshold_index + 1].set_title(
+                f"Threshold>{threshold_value:+.0f}", fontsize=8
+            )
+            axes[class_id, threshold_index + 1].axis("off")
+
     plt.tight_layout()
-    plt.savefig(f"{out_dir}/original_vs_binary.png", dpi=v["dpi_high"])
+    plt.savefig(f"{out_dir}/original_vs_binary.png", dpi=configuration["dpi_high"])
     plt.close()

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-ЕВГЕНИЯ — Параметры визуализации.
-Все числовые константы собраны в одном месте.
-Структура кода отражает геометрию Соленоида (фазовое пространство системы).
+Configuration parameters for all visualizations.
+
+This module centralizes all numeric constants used across the visualization pipeline.
+Each parameter includes a docstring explaining its purpose and effect.
 """
 
 from dataclasses import dataclass, field
@@ -10,174 +11,261 @@ from typing import List
 
 
 @dataclass(frozen=True)
-class SolenoidVizParams:
+class VisualizationConfig:
     """
-    Параметры визуализации Δ-поля.
-    Структура привязана к геометрии Соленоида (фазовое пространство).
+    Central configuration for all visualizations.
+
+    All parameters are documented with their purpose and typical values.
+    Use the default instance 'CONFIG' or create custom instances as needed.
     """
 
-    # ─── 1. ГЕОМЕТРИЯ СОЛЕНОИДА (Фазовое пространство) ─────────────────────
-    # Соленоид S — пространство всех согласованных последовательностей масштабирований.
-    # Каждая точка соленоида — целая история (траектория), а не одно число.
-    # Двоичная координата ξ кодирует выбор ветви на каждом шаге.
+    # =========================================================================
+    # THRESHOLD SWEEP PARAMETERS
+    # =========================================================================
+    # The delta field is thresholded at many values to generate binary masks.
+    # These control the range and resolution of the sweep.
 
-    # Фокус на конкретном пороге Δ.
-    # Δ = -5.5452 — нижний предел контраста (z → 0).
-    # В логарифмической координате ℓ: Re(ℓ) → -∞.
-    # Это "дно" соленоида, где вся информация сжата в точку (z=0).
-    delta_focus: float = -5.5452
-
-    # ─── 2. СДВИГ БЕРНУЛЛИ (Динамика системы) ──────────────────────────────
-    # Действие деления на 0 в координатах (φ, ξ): φ не меняется, ξ ↦ 2ξ mod 1.
-    # Это сдвиг влево по двоичной записи: 0.ε₀ε₁ε₂… ↦ 0.ε₁ε₂ε₃…
-    # Визуально это проявляется как "скачки" при изменении порога Δ.
-
-    # Диапазон сканирования порога Δ (ось сдвига).
-    # От -5.546 (z=0) до +5.546 (z=∞, граница B).
-    # За пределами — пустота (система не определена).
     sweep_min: float = -5.546
+    """Minimum threshold value for delta field sweep."""
+
     sweep_max: float = 5.546
+    """Maximum threshold value for delta field sweep."""
 
-    # Шаг сканирования (разрешение по ξ).
-    # 0.0001 — позволяет различить тонкие сдвиги Бернулли.
     sweep_step: float = 0.0001
+    """Step size between consecutive thresholds."""
 
-    # Порог детекции скачка (%).
-    # Аналог чувствительности к сдвигу Бернулли.
-    # 1.0 — ловит значимые фазовые переходы, игнорирует шум канторова множества.
     jump_threshold: float = 1.0
+    """Percentage change threshold for detecting significant jumps in occupancy."""
 
-    # ─── 3. МАСШТАБЫ ИНФОРМАЦИОННОГО ПОЛЯ (I, Q, ρ, M) ─────────────────────
-    # Четыре термина для разных уровней наблюдения за соленоидом.
+    # =========================================================================
+    # DATA LOADING PARAMETERS
+    # =========================================================================
 
-    # I — Информационная ёмкость (Глобальный масштаб).
-    # Сколько всего "вмещает" система на данном уровне ξ.
-    hist_bins_default: int = 100
-    hist_bins_min: int = 20
-    hist_bins_max: int = 500
+    number_of_classes: int = 10
+    """Number of distinct classes/symbols in the dataset (e.g., 10 for digits)."""
 
-    # Q — Структурная сложность (Локальный масштаб).
-    # Мера плотности связей внутри слоя соленоида.
-    heatmap_n_points: int = 100
-    heatmap_max_samples: int = 5
+    image_height: int = 28
+    """Expected height of input images in pixels."""
 
-    # ρ — Плотность состояния (Точечный масштаб).
-    # Напряжение в конкретном узле бифуркации.
-    betti_max_samples: int = 50
-    betti_n_thr_default: int = 96
-    betti_n_thr_min: int = 20
-    betti_n_thr_max: int = 200
+    image_width: int = 28
+    """Expected width of input images in pixels."""
 
-    # M — Мера поля (Интегральный масштаб).
-    # Общий баланс потоков Re и Im.
-    betti_pad: int = 1
-    betti_holes_min: int = 0
+    image_channels: int = 1
+    """Number of color channels (1 for grayscale, 3 for RGB, 4 for CMYK)."""
 
-    # ─── 4. КОМПАКТИФИКАЦИЯ (Граница B) ────────────────────────────────────
-    # Граница соленоида B ≃ ℝ/2πℤ — окружность, параметризованная аргументом.
-    # Точки на границе — это "проценты" (p% от ∞).
-    # Визуализация: тепловые карты и гистограммы.
+    # =========================================================================
+    # HISTOGRAM PARAMETERS
+    # =========================================================================
 
-    # Число классов (10 цифр) — дискретные уровни на границе B.
-    # Аналогия: 10 дискретных энергетических уровней (n=1..10).
-    hist_n_classes: int = 10
-    hist_rows: int = 2
-    hist_cols: int = 5
-    hist_title_fontsize: int = 9
+    histogram_bins: int = 100
+    """Default number of bins for histogram visualization."""
 
-    # Сетка для гистограмм и анимаций
-    hist_grid_cols: int = 5
-    anim_grid_cols: int = 5
-    hist_row_height: float = 1.5
-    individual_fig_w_factor: float = 2.5
-    individual_fig_h_factor: float = 1.8
+    histogram_bins_min: int = 20
+    """Minimum allowed number of histogram bins."""
 
-    # Позиция референсной линии (Δ = 0).
-    hist_ref_line_x: float = 0.0
+    histogram_bins_max: int = 500
+    """Maximum allowed number of histogram bins."""
 
-    # ─── 5. ВИЗУАЛЬНЫЕ МАППЕРЫ (Проекция на экран) ─────────────────────────
-    # Цвета и стили.
-    hist_color: str = "steelblue"
-    hist_alpha: float = 0.7
-    grid_alpha: float = 0.3
-    marker_size: int = 2
-    cmap_heatmap: str = "hot"
-    cmap_3d: str = "coolwarm"
-    cmap_3d_alpha: float = 0.8
-    cmap_binary: str = "binary"
-    cmap_gray: str = "gray"
-    ref_line_color: str = "r"
-    ref_line_ls: str = "--"
-    ref_line_lw: float = 0.5
+    reference_line_position: float = 0.0
+    """Position of vertical reference line (e.g., delta = 0)."""
 
-    # Размеры фигур.
-    fig_wide_w: int = 16
-    fig_wide_h: int = 6
-    fig_heatmap_w: int = 12
-    fig_heatmap_h: int = 5
-    fig_betti_w: int = 14
-    fig_betti_h: int = 4
-    fig_3d_w: int = 8
-    fig_3d_h: int = 6
-    fig_tab1_cols: int = 9
-    fig_tab1_h: int = 3
+    # =========================================================================
+    # GRID LAYOUT PARAMETERS
+    # =========================================================================
 
-    # Алиасы
-    heatmap_vmin: float = 0.0
-    heatmap_vmax: float = 100.0
-    hist_bins: int = 100
-    anim_n_frames: int = 60
+    grid_columns: int = 5
+    """Number of columns in grid layout for subplots."""
+
+    grid_rows: int = 2
+    """Number of rows in grid layout for subplots."""
+
+    grid_row_height: float = 1.5
+    """Height factor for each row in grid layout."""
+
+    animation_frames: int = 60
+    """Number of frames in output animation."""
+
+    animation_grid_columns: int = 5
+    """Number of columns in animation grid layout."""
+
+    # =========================================================================
+    # TOPOLOGY ANALYSIS PARAMETERS (Betti numbers)
+    # =========================================================================
+
+    topology_threshold_min: float = -5.0
+    """Minimum threshold for topology analysis."""
+
+    topology_threshold_max: float = 4.5
+    """Maximum threshold for topology analysis."""
+
+    topology_num_thresholds: int = 96
+    """Number of threshold levels for topology analysis."""
+
+    topology_padding: int = 1
+    """Padding pixels for hole detection algorithm."""
+
+    topology_holes_min: int = 0
+    """Minimum holes to display (used as floor value)."""
+
+    topology_max_samples: int = 50
+    """Maximum number of samples for topology analysis."""
+
+    # =========================================================================
+    # DIMENSIONALITY REDUCTION PARAMETERS
+    # =========================================================================
+
     tsne_max_samples: int = 2000
+    """Maximum number of samples for t-SNE visualization."""
+
     tsne_per_class: int = 200
+    """Number of samples per class for t-SNE."""
+
     tsne_perplexity: int = 30
-    surface_n_samples: int = 5
-    original_vs_binary: List[float] = field(
+    """Perplexity parameter for t-SNE algorithm."""
+
+    # =========================================================================
+    # VISUALIZATION SAMPLING
+    # =========================================================================
+
+    surface_samples: int = 5
+    """Number of classes/symbols to display in surface plots."""
+
+    persistence_threshold: float = 0.1
+    """Threshold for filtering persistence diagram."""
+
+    # =========================================================================
+    # COLOR CONFIGURATION
+    # =========================================================================
+
+    color_histogram: str = "steelblue"
+    """Default color for histograms."""
+
+    color_reference_line: str = "red"
+    """Color for reference lines."""
+
+    color_grid: str = "gray"
+    """Color for grid lines."""
+
+    alpha_default: float = 0.7
+    """Default transparency (alpha) for filled areas."""
+
+    alpha_grid: float = 0.3
+    """Transparency for grid lines."""
+
+    colormap_heatmap: str = "hot"
+    """Colormap for heatmap visualization."""
+
+    colormap_3d: str = "coolwarm"
+    """Colormap for 3D surface plots."""
+
+    colormap_3d_alpha: float = 0.8
+    """Transparency for 3D surface plots."""
+
+    colormap_binary: str = "binary"
+    """Colormap for binary masks."""
+
+    colormap_grayscale: str = "gray"
+    """Colormap for grayscale images."""
+
+    reference_line_style: str = "--"
+    """Line style for reference lines (e.g., '--', ':')."""
+
+    reference_line_width: float = 0.5
+    """Line width for reference lines."""
+
+    marker_size: int = 2
+    """Default marker size for scatter plots."""
+
+    # =========================================================================
+    # FIGURE SIZES (width, height in inches)
+    # =========================================================================
+
+    figure_wide: tuple = (16, 6)
+    """Default wide figure size."""
+
+    figure_heatmap: tuple = (12, 5)
+    """Heatmap figure size."""
+
+    figure_heatmap_wide: tuple = (16, 8)
+    """Wide heatmap figure size."""
+
+    figure_scatter: tuple = (10, 7)
+    """Scatter plot figure size."""
+
+    figure_jumps: tuple = (14, 4)
+    """Jumps analysis figure size."""
+
+    figure_cdf: tuple = (10, 6)
+    """CDF plot figure size."""
+
+    figure_betti: tuple = (12, 7)
+    """Betti numbers figure size."""
+
+    figure_euler: tuple = (15, 4)
+    """Euler characteristic figure size."""
+
+    figure_tsne: tuple = (10, 8)
+    """t-SNE figure size."""
+
+    figure_3d_multi: tuple = (16, 4)
+    """Multi-panel 3D figure size."""
+
+    figure_animation: tuple = (15, 7)
+    """Animation frame figure size."""
+
+    figure_individual_histogram: tuple = (8, 4)
+    """Individual histogram figure size."""
+
+    figure_individual_histogram_factor: tuple = (2.5, 1.8)
+    """Scaling factors for individual histograms."""
+
+    figure_entropy: tuple = (16, 10)
+    """Entropy analysis figure size."""
+
+    figure_phase: tuple = (16, 10)
+    """Phase volume figure size."""
+
+    figure_original_vs_binary: tuple = (16, 12)
+    """Original vs binary comparison figure size."""
+
+    figure_title_fontsize: int = 9
+    """Fontsize for subplot titles."""
+
+    # =========================================================================
+    # RESOLUTION (DPI - dots per inch)
+    # =========================================================================
+
+    dpi_default: int = 120
+    """Default DPI for most visualizations."""
+
+    dpi_high: int = 150
+    """High DPI for detailed visualizations."""
+
+    dpi_low: int = 80
+    """Low DPI for animations (smaller file size)."""
+
+    dpi_individual: int = 100
+    """DPI for individual histogram files."""
+
+    # =========================================================================
+    # THRESHOLD VALUES FOR COMPARISON
+    # =========================================================================
+
+    comparison_thresholds: List[float] = field(
         default_factory=lambda: [-5, -3, -1, 0, 1, 2, 3, 4]
     )
-    betti_n_samples: int = 100
-    betti_thr_min: float = -5.0
-    betti_thr_max: float = 4.5
-    betti_n_thr: int = 96
-    euler_n_samples: int = 500
+    """List of threshold values for original vs binary comparison."""
 
-    # DPI
-    dpi_default: int = 120
-    dpi_high: int = 150
-    dpi_low: int = 80
-    dpi_individual: int = 100
+    # =========================================================================
+    # HEATMAP RANGES
+    # =========================================================================
 
-    # Размеры фигур (переопределяемые)
-    fig_scatter_w: int = 10
-    fig_scatter_h: int = 7
-    fig_jumps_w: int = 14
-    fig_jumps_h: int = 4
-    fig_cdf_w: int = 10
-    fig_cdf_h: int = 6
-    fig_betti_w: int = 12
-    fig_betti_h: int = 7
-    fig_euler_w: int = 15
-    fig_euler_h: int = 4
-    fig_tsne_w: int = 10
-    fig_tsne_h: int = 8
-    fig_3d_multi_w: int = 16
-    fig_3d_multi_h: int = 4
-    fig_3d_grid_w: int = 20
-    fig_3d_grid_h: int = 8
-    fig_heatmap_wide_w: int = 16
-    fig_heatmap_wide_h: int = 8
-    fig_animation_w: int = 15
-    fig_animation_h: int = 7
-    fig_orig_binary_w_factor: int = 2
-    fig_orig_binary_h: int = 12
-    fig_individual_w: int = 8
-    fig_individual_h: int = 4
-    fig_hist_wide_w: int = 16
-    fig_hist_wide_h: int = 6
-    fig_entropy_w: int = 16
-    fig_entropy_h: int = 10
-    fig_phase_w: int = 16
-    fig_phase_h: int = 10
+    heatmap_vmin: float = 0.0
+    """Minimum value for heatmap color scale."""
+
+    heatmap_vmax: float = 100.0
+    """Maximum value for heatmap color scale."""
 
 
-# Экземпляр по умолчанию
-VIZ = SolenoidVizParams()
+# Default configuration instance
+CONFIG = VisualizationConfig()

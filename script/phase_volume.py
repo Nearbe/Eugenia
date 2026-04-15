@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Phase volume visualization."""
+"""
+Phase volume visualization.
+
+Displays multiple binary threshold layers stacked in 3D, showing how the
+volume occupied by the delta field changes as the threshold increases.
+Each layer represents a different threshold level.
+"""
 
 import numpy as np
 import matplotlib
@@ -10,25 +16,55 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 def render(data, sweep, out_dir):
-    v = data["viz"]
-    symbols = data["symbols_delta"]
-    n_classes = data["n_classes"]
-    n_show = min(v["surface_n_samples"], n_classes)
+    """
+    Render phase volume visualization.
+
+    Args:
+        data: Dictionary containing loaded data and configuration
+        sweep: Dictionary containing threshold sweep results
+        out_dir: Output directory for saving the figure
+    """
+    configuration = data["viz"]
+    symbols = data["symbol_delta_fields"]
+    number_of_classes = data["number_of_classes"]
+
+    # Limit number of displayed classes
+    display_count = min(configuration["surface_samples"], number_of_classes)
+
+    # Key threshold levels to visualize
     key_thresholds = [-5.0, -2.0, 0.0, 2.0, 4.0]
-    fig = plt.figure(figsize=(v["fig_phase_w"], v["fig_phase_h"]))
-    gs = fig.add_gridspec(1, n_show)
-    for i in range(n_show):
-        d_img = symbols[i].cpu().numpy()
-        H, W = d_img.shape
-        ax = fig.add_subplot(gs[i], projection="3d")
-        X, Y = np.meshgrid(range(W), range(H))
-        for j, t in enumerate(key_thresholds):
-            mask = (d_img > t).astype(float)
-            if mask.sum() > 0:
-                Z = mask * (j + 1)
-                ax.plot_surface(X, Y, Z, cmap="viridis", alpha=0.3)
-        ax.set_title(f"#{i}")
-        ax.set_zlim(0, len(key_thresholds) + 1)
+
+    figure = plt.figure(figsize=configuration["figure_phase"])
+    grid_layout = figure.add_gridspec(1, display_count)
+
+    for index in range(display_count):
+        delta_image = symbols[index].cpu().numpy()
+        image_height, image_width = delta_image.shape
+
+        axis = figure.add_subplot(grid_layout[index], projection="3d")
+
+        horizontal_axis, vertical_axis = np.meshgrid(
+            range(image_width), range(image_height)
+        )
+
+        # Plot each threshold level as a layer
+        for layer_index, threshold_value in enumerate(key_thresholds):
+            binary_mask = (delta_image > threshold_value).astype(float)
+
+            if binary_mask.sum() > 0:
+                # Elevate each layer to its position in the stack
+                layer_elevation = binary_mask * (layer_index + 1)
+                axis.plot_surface(
+                    horizontal_axis,
+                    vertical_axis,
+                    layer_elevation,
+                    cmap="viridis",
+                    alpha=0.3,
+                )
+
+        axis.set_title(f"Class {index}")
+        axis.set_zlim(0, len(key_thresholds) + 1)
+
     plt.tight_layout()
-    plt.savefig(f"{out_dir}/phase_volume.png", dpi=v["dpi_default"])
+    plt.savefig(f"{out_dir}/phase_volume.png", dpi=configuration["dpi_default"])
     plt.close()
