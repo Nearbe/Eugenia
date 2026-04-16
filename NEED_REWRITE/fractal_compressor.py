@@ -16,7 +16,6 @@
 """
 
 import numpy as np
-import struct
 
 
 class RadicalCompressor:
@@ -156,13 +155,13 @@ def realistic_llm_weights():
     k2 = 64
     W_ffn_approx = U2[:, :k2] @ np.diag(S2[:k2]) @ Vt2[:k2, :]
 
-    print(f"Attention (4096x4096):")
+    print("Attention (4096x4096):")
     original = W_attn.nbytes
     compressed = U[:, :k].nbytes + S[:k].nbytes + Vt[:k, :].nbytes
     ratio = original / compressed
     print(f"  k={k}: ratio={ratio:.0f}x, 111GB->{111 / ratio:.2f}GB")
 
-    print(f"FFN (4096x16384):")
+    print("FFN (4096x16384):")
     original2 = W_ffn.nbytes
     compressed2 = U2[:, :k2].nbytes + S2[:k2].nbytes + Vt2[:k2, :].nbytes
     ratio2 = original2 / compressed2
@@ -183,29 +182,29 @@ def final_analysis():
 
     print("""
     Вывод из тестов:
-    
+
     1. Standard compression (zlib, lzma): ~1x (веса несжимаемы)
     2. Quantization (int8, fp16): 2-4x (линейное)
     3. SVD k=N: ratio = O(m*n) / O(k*(m+n))
-    
+
     Для 111GB -> 1GB (111x) нужен k small:
     - k=8 для 4096x4096: 4096*4096 / (8*4096*2) = 256x
     - k=4: 512x
-    
+
     Но тогда error ~99% — модель нерабочая.
-    
+
     Решение: использовать domain-specific knowledge
-    
+
     В реальности веса LLM:
     - Имеют low-rank структуру
     - Можно использовать quantization (llama.cpp Q4)
     - Можно использовать pruning
-    
+
     Практически:
     - 7B fp16: 14GB
     - Q4_K_M: 4GB (3.5x)
     - Q5_K_M: 5.5GB (2.5x)
-    
+
     Для 111GB -> 1GB нужен custom формат с:
     1. Extremely low k (2-4) для SVD
     2. Aggressive quantization

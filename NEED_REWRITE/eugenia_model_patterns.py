@@ -125,9 +125,7 @@ class ModelLoader:
             print(f"  Не удалось загрузить: {e}")
             return {}
 
-    def load_layer(
-        self, path: str, layer_name: Optional[str] = None
-    ) -> Optional[np.ndarray]:
+    def load_layer(self, path: str, layer_name: Optional[str] = None) -> Optional[np.ndarray]:
         ext = Path(path).suffix.lower()
 
         if ext == ".safetensors":
@@ -248,9 +246,7 @@ class PatternExtractor:
             "compression_ratio": profile.compression_ratio,
         }
 
-    def generate_profile_image(
-        self, profile: ModelProfile, size: int = 128
-    ) -> np.ndarray:
+    def generate_profile_image(self, profile: ModelProfile, size: int = 128) -> np.ndarray:
         """Генерирует изображение профиля паттерна"""
 
         S = profile.svd_S[: min(len(profile.svd_S), size)]

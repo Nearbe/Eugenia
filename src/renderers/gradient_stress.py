@@ -63,13 +63,17 @@ The height of each peak corresponds to the local rate of change.
 This allows us to see the "structural skeleton" of the digit's edges.
 """
 
+import os
+
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+
+# from utils.image_utils import compute_gradient_magnitude # Commented out to resolve Ruff F811 redefinition warning
 from utils.viz_utils import save_visualization, get_symbol_label
-from utils.image_utils import compute_gradient_magnitude
+# from utils.image_utils import compute_gradient_magnitude # Commented out to resolve Ruff F811 redefinition warning
 
 
 def render(data, sweep, out_dir):
@@ -85,40 +89,54 @@ def render(data, sweep, out_dir):
     symbols = data.symbol_delta_fields
     number_of_classes = data.number_of_classes
 
-    # Limit number of displayed classes
-    display_count = min(configuration["surface_samples"], number_of_classes)
+    # Create folder for individual stress map images
+    stress_dir = os.path.join(out_dir, "14_stress_maps")
+    os.makedirs(stress_dir, exist_ok=True)
 
-    plt.figure(figsize=(display_count * 4, 5))
-
-    for idx in range(display_count):
+    for idx in range(number_of_classes):
         delta_image = symbols[idx].cpu().numpy()
         h, w = delta_image.shape
 
-        ax = plt.subplot(1, display_count, idx + 1, projection="3d")
+        plt.figure(figsize=(6, 5))
+
+        ax = plt.subplot(1, 1, 1, projection="3d")
 
         # Skip very small images that can't have a gradient
         if h < 2 or w < 2:
-            ax.text(0.5, 0.5, 0.5, "Too small", transform=ax.transAxes)
+            ax.text(0.5, 0.5, 0.5, "Too small", transform=ax.transAxes)  # type: ignore
             ax.set_title(f"{get_symbol_label(idx, data)}")
-            continue
+        else:
+            # Compute gradient magnitude using utility function
+            stress_map = compute_gradient_magnitude(delta_image)
 
-        # Compute gradient magnitude using utility function
-        stress_map = compute_gradient_magnitude(delta_image)
+            # Create mesh grid
+            x, y = np.meshgrid(np.arange(w), np.arange(h))
 
-        # Create mesh grid
-        x, y = np.meshgrid(np.arange(w), np.arange(h))
+            ax.plot_surface(  # type: ignore[attr-defined]
+                x,
+                y,
+                stress_map,
+                cmap=configuration["colormap_heatmap"],
+                alpha=configuration.get("colormap_3d_alpha", 0.9),
+                edgecolor="none",
+            )
 
-        ax.plot_surface(
-            x, y, stress_map,
-            cmap=configuration["colormap_heatmap"],
-            alpha=configuration.get("colormap_3d_alpha", 0.9),
-            edgecolor="none",
+            ax.set_title(f"{get_symbol_label(idx, data)} (Stress)")
+            ax.set_zlim(0, max(0.1, stress_map.max()))  # type: ignore[attr-defined]
+            ax.set_xlabel("X")
+            ax.set_ylabel("Y")
+            ax.set_zlabel("||\u2207\u0394||")
+
+        label = get_symbol_label(idx, data)
+        description = (
+            f"3D Stress Map for class {label}: Shows the gradient magnitude (||∇Δ||) of the delta field. "
+            "Higher values indicate areas of rapid change in contrast."
         )
-
-        ax.set_title(f"{get_symbol_label(idx, data)} (Stress)")
-        ax.set_zlim(0, max(0.1, stress_map.max()))
-        ax.set_xlabel("X")
-        ax.set_ylabel("Y")
-        ax.set_zlabel("||\u2207\u0394||")
-
-    save_visualization("14_stress_map.png", out_dir, configuration, "dpi_default")
+        save_visualization(
+            f"{idx}_{label}.png",
+            stress_dir,
+            configuration,
+            "dpi_default",
+            description=description,
+        )
+        plt.close()

@@ -43,6 +43,8 @@ This histogram reveals the "contrast profile" of each
 digit - how it's constructed from light and dark parts.
 """
 
+import os
+
 import matplotlib
 
 matplotlib.use("Agg")
@@ -63,19 +65,15 @@ def render(data, sweep, out_dir):
     symbols = data.symbol_delta_fields
     number_of_classes = data.number_of_classes
 
-    columns = configuration["grid_columns"]
-    rows = (number_of_classes + columns - 1) // columns
-
-    # Calculate figure size based on grid
-    fig_w, fig_h = configuration["figure_wide"]
-    fig_h = max(fig_h, rows * configuration["grid_row_height"])
-
-    plt.figure(figsize=(fig_w, fig_h))
+    # Create folder for individual histogram images
+    hist_dir = os.path.join(out_dir, "00a_delta_histograms")
+    os.makedirs(hist_dir, exist_ok=True)
 
     for class_id in range(number_of_classes):
         values = symbols[class_id].cpu().numpy().flatten()
 
-        plt.subplot(rows, columns, class_id + 1)
+        plt.figure(figsize=(6, 4))
+
         plt.hist(
             values,
             bins=configuration["histogram_bins"],
@@ -83,8 +81,9 @@ def render(data, sweep, out_dir):
             alpha=configuration["alpha_default"],
         )
 
+        label = get_symbol_label(class_id, data)
         plt.title(
-            f"{get_symbol_label(class_id, data)} (n={values.size})",
+            f"{label} (n={values.size})",
             fontsize=configuration["figure_title_fontsize"],
         )
         plt.xlabel("Delta Value")
@@ -98,10 +97,16 @@ def render(data, sweep, out_dir):
         )
         plt.grid(alpha=configuration["alpha_grid"])
 
-    description = (
-        "Distribution of Delta values for each class. Values < 0 indicate darker pixels, values > 0 indicate brighter pixels. "
-        "The red line at 0 marks the 'mid-gray' threshold. The shape of these histograms reveals the unique contrast "
-        "profile and stroke characteristics of each digit/symbol."
-    )
-    save_visualization("00a_delta_histograms_by_class.png", out_dir, configuration, "dpi_default",
-                       description=description)
+        description = (
+            f"Distribution of Delta values for class {label}. Values < 0 indicate darker pixels, values > 0 indicate brighter pixels. "
+            "The red line at 0 marks the 'mid-gray' threshold. The shape of this histogram reveals the unique contrast "
+            "profile and stroke characteristics of the digit/symbol."
+        )
+        save_visualization(
+            f"{class_id}_{label}.png",
+            hist_dir,
+            configuration,
+            "dpi_default",
+            description=description,
+        )
+        plt.close()

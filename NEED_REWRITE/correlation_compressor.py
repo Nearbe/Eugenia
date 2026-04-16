@@ -169,7 +169,7 @@ def test_methods():
     delta_size = delta.nbytes
 
     # Качество delta
-    print(f"\n1. Delta от Xavier инициализации:")
+    print("\n1. Delta от Xavier инициализации:")
     print(f"   Delta size: {delta_size / 1024**2:.1f} MB")
 
     # Проверим — можно ли восстановить?
@@ -187,7 +187,7 @@ def test_methods():
     W_rec = comp.decompress_correlation_svd()
     error = np.linalg.norm(W - W_rec) / np.linalg.norm(W)
 
-    print(f"\n2. Correlation SVD (k=8):")
+    print("\n2. Correlation SVD (k=8):")
     print(f"   Size: {size / 1024**2:.2f} MB")
     print(f"   Ratio: {ratio:.0f}x")
     print(f"   Error: {error * 100:.1f}%")
@@ -207,7 +207,7 @@ def test_methods():
         print(f"\n   k={k}: ratio={ratio2:.0f}x, error={error2 * 100:.1f}%")
 
     # Метод 3: Graph
-    print(f"\n3. Graph representation:")
+    print("\n3. Graph representation:")
     comp3 = CorrelationCompressor()
     data, sparsity = comp3.compress_graph(W, threshold=0.3)
     print(f"   Sparsity: {(1 - sparsity) * 100:.1f}% нулей")

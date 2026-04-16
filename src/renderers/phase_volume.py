@@ -68,11 +68,14 @@ This is essentially a "3D slice" of the filtration process used in
 Topological Data Analysis (TDA).
 """
 
+import os
+
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+
 from utils.viz_utils import save_visualization, get_symbol_label
 
 
@@ -89,24 +92,21 @@ def render(data, sweep, out_dir):
     symbols = data.symbol_delta_fields
     number_of_classes = data.number_of_classes
 
-    # Ограничение количества отображаемых классов для сохранения читаемости 3D-графиков.
-    # При большом количестве символов визуализация становится перегруженной.
-    display_count = min(configuration["surface_samples"], number_of_classes)
+    # Create folder for individual phase volume images
+    phase_dir = os.path.join(out_dir, "15_phase_volumes")
+    os.makedirs(phase_dir, exist_ok=True)
 
     # Выбор ключевых пороговых значений ("фаз"), которые равномерно покрывают
     # диапазон дельта-поля и показывают основные этапы эволюции структуры.
     key_thresholds = [-5.0, -2.5, 0.0, 2.5, 5.0]
 
-    plt.figure(figsize=configuration["figure_phase"])
-
-    # Предварительная конвертация в numpy для ускорения работы с 3D-поверхностями в matplotlib.
-    symbol_numpy = [s.cpu().numpy() for s in symbols[:display_count]]
-
-    for idx in range(display_count):
-        delta_image = symbol_numpy[idx]
+    for idx in range(number_of_classes):
+        delta_image = symbols[idx].cpu().numpy()
         h, w = delta_image.shape
 
-        ax = plt.subplot(1, display_count, idx + 1, projection="3d")
+        plt.figure(figsize=(6, 5))
+
+        ax = plt.subplot(1, 1, 1, projection="3d")
         x, y = np.meshgrid(np.arange(w), np.arange(h))
 
         # Plot each threshold level as a stacked layer
@@ -119,27 +119,25 @@ def render(data, sweep, out_dir):
                 # пустые области, где пиксели не прошли порог.
                 z_layer = np.where(binary_mask > 0, layer_idx + 1, np.nan)
 
-                ax.plot_surface(
-                    x, y, z_layer,
-                    cmap="viridis",
-                    alpha=0.4,
-                    vmin=0, vmax=len(key_thresholds)
+                ax.plot_surface(  # type: ignore[attr-defined]
+                    x, y, z_layer, cmap="viridis", alpha=0.4, vmin=0, vmax=len(key_thresholds)
                 )
 
-        ax.set_title(get_symbol_label(idx, data))
-        ax.set_zlim(0, len(key_thresholds) + 1)
+        label = get_symbol_label(idx, data)
+        ax.set_title(f"{label} Phase Volume")
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
-        ax.set_zlabel("Phase (T)")
+        ax.set_zlabel("Phase")  # type: ignore[attr-defined]
 
-        # Customize Z-ticks to show actual threshold values
-        ax.set_zticks(np.arange(1, len(key_thresholds) + 1))
-        ax.set_zticklabels([f"{t:+.1f}" for t in key_thresholds])
-
-    description = (
-        "Phase Volume Stack showing multiple threshold layers in 3D. "
-        "The Z-axis represents the 'phase' or threshold level. "
-        "Taller stacks indicate robust features that persist across many levels, "
-        "providing a visual representation of the filtration process in TDA."
-    )
-    save_visualization("15_phase_volume.png", out_dir, configuration, "dpi_default", description=description)
+        description = (
+            f"Phase Volume for class {label}: Shows stacked binary occupancy layers at key thresholds "
+            f"{-5.0, -2.5, 0.0, 2.5, 5.0}, visualizing the topological filtration process."
+        )
+        save_visualization(
+            f"{idx}_{label}.png",
+            phase_dir,
+            configuration,
+            "dpi_default",
+            description=description,
+        )
+        plt.close()

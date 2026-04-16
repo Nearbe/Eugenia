@@ -80,14 +80,13 @@ def render(data, sweep, out_dir):
         aspect="auto",
         cmap=configuration["colormap_heatmap"],
         origin="lower",
-        extent=[threshold_values[0], threshold_values[-1], -0.5, number_of_classes - 0.5],
+        extent=(threshold_values[0], threshold_values[-1], -0.5, number_of_classes - 0.5),
         vmin=configuration["heatmap_vmin"],
         vmax=configuration["heatmap_vmax"],
     )
 
     plt.yticks(
-        range(number_of_classes),
-        [get_symbol_label(i, data) for i in range(number_of_classes)]
+        range(number_of_classes), [get_symbol_label(i, data) for i in range(number_of_classes)]
     )
     plt.xlabel("Threshold Value (Delta)")
     plt.ylabel("Class / Symbol")
@@ -101,4 +100,6 @@ def render(data, sweep, out_dir):
         "X-axis is the threshold (Delta), Y-axis is the symbol, and color is the occupancy percentage. "
         "Reveals when each symbol's structure emerges from the background as the threshold sweeps."
     )
-    save_visualization("01_horizon_heatmap.png", out_dir, configuration, "dpi_default", description=description)
+    save_visualization(
+        "01_horizon_heatmap.png", out_dir, configuration, "dpi_default", description=description
+    )

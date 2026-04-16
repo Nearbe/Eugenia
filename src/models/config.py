@@ -286,9 +286,7 @@ class VisualizationConfig:
     # THRESHOLD VALUES FOR COMPARISON
     # =========================================================================
 
-    comparison_thresholds: List[float] = field(
-        default_factory=lambda: [-5, -3, -1, 0, 1, 2, 3, 4]
-    )
+    comparison_thresholds: List[float] = field(default_factory=lambda: [-5, -3, -1, 0, 1, 2, 3, 4])
     """List of threshold values for original vs binary comparison."""
 
     # =========================================================================

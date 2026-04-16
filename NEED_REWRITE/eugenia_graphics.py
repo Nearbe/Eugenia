@@ -14,7 +14,6 @@ from enum import Enum
 from typing import Tuple, Optional
 
 import numpy as np
-from core.division import safe_divide, resolve_potential
 from core.math.topology import (
     compute_betti_numbers,
     compute_euler_characteristic,
@@ -224,7 +223,6 @@ class GeometricEngine:
         if profile is not None:
             for i, threshold in enumerate(profile.thresholds[::5]):
                 mask = profile.bits[i * 5] > 0.5
-                dist = self._sdf_shape(Z, profile.betti[0], profile.betti[1])
                 result[mask] = self._color_by_capacity(profile.capacity)
         else:
             result = self._render_mandelbrot(Z, params)
@@ -361,8 +359,11 @@ class GeometricEngine:
         return np.stack([m, m**0.5, m**0.3], axis=-1)
 
     def _render_newton(self, Z: np.ndarray, params: RenderParams) -> np.ndarray:
-        f = lambda z: z**3 - 1
-        df = lambda z: 3 * z**2
+        def f(z):
+            return z**3 - 1
+
+        def df(z):
+            return 3 * z**2
 
         m = np.zeros(Z.shape, dtype=np.float32)
 

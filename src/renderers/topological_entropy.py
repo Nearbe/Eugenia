@@ -25,7 +25,7 @@ def compute_moment(occupancy_rates: np.ndarray, power: int) -> np.ndarray:
     Returns:
         Array of shape (n_thresholds,) containing the sums.
     """
-    return np.sum(occupancy_rates ** power, axis=1)
+    return np.sum(occupancy_rates**power, axis=1)  # type: ignore[no-any-return]
 
 
 def _plot_moment(ax, threshold_values, values, params, configuration):
@@ -108,7 +108,7 @@ def render(data, sweep, out_dir):
     axes_flat = axes.flatten()
 
     for i, params in enumerate(measures):
-        values = compute_moment(occupancy_rates, params["power"])
+        values = compute_moment(occupancy_rates, int(params["power"]))
         _plot_moment(axes_flat[i], threshold_values, values, params, configuration)
 
     plt.tight_layout()
@@ -119,4 +119,6 @@ def render(data, sweep, out_dir):
         "rho (k=3) is state density, and M (k=4) is the field measure. "
         "These metrics capture the higher-order statistical properties of the topological filtration."
     )
-    save_visualization("08_entropy_analysis.png", out_dir, configuration, "dpi_default", description=description)
+    save_visualization(
+        "08_entropy_analysis.png", out_dir, configuration, "dpi_default", description=description
+    )

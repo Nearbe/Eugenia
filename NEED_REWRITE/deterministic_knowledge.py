@@ -18,9 +18,10 @@ Deterministic Semantic Engine
 3. Forward pass = deterministic composition
 """
 
-import numpy as np
 from dataclasses import dataclass
-from typing import List, Tuple, Callable, Optional
+from typing import List, Tuple
+
+import numpy as np
 
 
 @dataclass
@@ -164,15 +165,11 @@ class DeterministicKnowledgeCore:
         total_singular = np.sum([p.singular.sum() for p in self.patterns])
         phases = [p.phase for p in self.patterns]
 
-        signature = (
-            f"d{self.d_model}_k{self.k}_sig{total_singular:.6f}_ph{phases[0]:.4f}"
-        )
+        signature = f"d{self.d_model}_k{self.k}_sig{total_singular:.6f}_ph{phases[0]:.4f}"
 
         return signature
 
-    def verify_determinism(
-        self, x: np.ndarray, n_tests: int = 10
-    ) -> Tuple[bool, float]:
+    def verify_determinism(self, x: np.ndarray, n_tests: int = 10) -> Tuple[bool, float]:
         """
         Верифицирует детерминизм — запускает multiple раз с тем же входом
 
@@ -208,12 +205,13 @@ class DeterministicFunction:
     """
 
     def __init__(self, k: int = 32):
+        self.k = k
         self.core = DeterministicKnowledgeCore(k=k, d_model=4096)
         self.signature = None
 
     def fit(self, weights: dict) -> "DeterministicFunction":
         """Обучение — создаёт детерминированное ядро"""
-        self.core = DeterministicKnowledgeCore(d_model=4096, k=k)
+        self.core = DeterministicKnowledgeCore(d_model=4096, k=self.k)
         self.core.learn(weights)
 
         # Signature — уникальный хеш после обучения
@@ -288,7 +286,7 @@ def demonstrate_determinism():
     - PATTERNS are fixed after training
     - RELATIONSHIPS are computed once
     - Forward pass is ALWAYS the same
-    
+
     Benefits:
     - Reproducible results
     - Compressed storage (111GB -> ~1GB)
@@ -332,14 +330,14 @@ def test_compression_ratio():
     print("""
     What you GET:
     1. Deterministic forward (reproducible)
-    2. Compressed storage (111GB -> ~1GB)  
+    2. Compressed storage (111GB -> ~1GB)
     3. Semantic patterns (knowledge graph)
     4. Fast retrieval (search by patterns)
-    
+
     What you LOSE:
     - Raw weights (but you don't need them!)
     - Exact reconstruction (approximate but functional)
-    
+
     The trade-off is WORTH IT because:
     - Determinism ensures consistency
     - Patterns encode KNOWLEDGE, not values

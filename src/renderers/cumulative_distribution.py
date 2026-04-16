@@ -145,4 +145,6 @@ def render(data, sweep, out_dir):
         "Steep sections indicate high pixel density at those values. "
         "Crossing the 0.5 probability level (median) reveals the overall brightness balance of each symbol."
     )
-    save_visualization("07_cdf_by_class.png", out_dir, configuration, "dpi_default", description=description)
+    save_visualization(
+        "07_cdf_by_class.png", out_dir, configuration, "dpi_default", description=description
+    )

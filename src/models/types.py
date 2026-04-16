@@ -8,9 +8,10 @@ import torch
 @dataclass
 class VisualizationData:
     """
-    Контейнер для данных визуализации. 
+    Контейнер для данных визуализации.
     Используется датакласс вместо словаря для лучшей типизации.
     """
+
     device: torch.device
     original_data: torch.Tensor
     delta_field: torch.Tensor
@@ -48,6 +49,7 @@ class SweepResults:
     """
     Контейнер для результатов алгоритма развертки.
     """
+
     thresholds: np.ndarray
     occupancy_rates: torch.Tensor
     jump_events: List[Any]

@@ -86,7 +86,9 @@ def _plot_skeleton(ax, delta_image, data, idx, configuration):
     filtered_surface = np.where(persistence_mask, delta_image, np.nan)
 
     ax.plot_surface(
-        x, y, filtered_surface,
+        x,
+        y,
+        filtered_surface,
         cmap=configuration["colormap_3d"],
         alpha=configuration.get("colormap_3d_alpha", 0.9),
         edgecolor="none",
@@ -130,5 +132,10 @@ def render(data, sweep, out_dir):
         "Features with persistence below threshold (noise) are filtered out. "
         "Highlights the core structural components of each class in 3D."
     )
-    save_visualization("13_persistence_landscape.png", out_dir, configuration, "dpi_default",
-                       description=description)
+    save_visualization(
+        "13_persistence_landscape.png",
+        out_dir,
+        configuration,
+        "dpi_default",
+        description=description,
+    )

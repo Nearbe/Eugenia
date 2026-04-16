@@ -65,10 +65,10 @@ def render(data, sweep, out_dir):
 
     # Show difference
     diff = np.abs(noisy_vis - original_symbol)
-    im = ax2.imshow(diff, cmap='hot')
+    im = ax2.imshow(diff, cmap="hot")
     plt.colorbar(im, ax=ax2)
     ax2.set_title(f"Noise Impact ($\\sigma={sigma_vis}$)", fontsize=14)
-    ax2.axis('off')
+    ax2.axis("off")
 
     plt.tight_layout()
 
@@ -77,7 +77,9 @@ def render(data, sweep, out_dir):
         "The occupancy curves show stability under low noise, demonstrating the "
         "robustness of topological features."
     )
-    save_visualization("17_noise_robustness.png", out_dir, configuration, "dpi_default", description=description)
+    save_visualization(
+        "17_noise_robustness.png", out_dir, configuration, "dpi_default", description=description
+    )
     logger.info("  Created noise robustness analysis")
 
 

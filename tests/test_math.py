@@ -5,7 +5,7 @@ import pytest
 import torch
 
 # Добавляем директорию src в путь поиска модулей
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from core.sweep import compute_sweep
 from models.types import VisualizationData
@@ -50,7 +50,7 @@ def test_sweep_logic_structure(number_of_classes):
         symbol_names=None,
         delta_min=-5.0,
         delta_max=5.0,
-        config={"jump_threshold": 1.0}
+        config={"jump_threshold": 1.0},
     )
 
     sweep = compute_sweep(data)
@@ -82,7 +82,7 @@ def test_sweep_occupancy_limits():
         symbol_names=None,
         delta_min=-5.6,
         delta_max=5.6,
-        config={"jump_threshold": 1.0}
+        config={"jump_threshold": 1.0},
     )
 
     sweep = compute_sweep(data)

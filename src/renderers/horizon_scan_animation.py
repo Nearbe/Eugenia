@@ -123,8 +123,7 @@ def render(data, sweep, out_dir):
     print("  Assembling GIF...", flush=True)
     try:
         frames = [
-            Image.open(f"{frames_directory}/frame_{i:04d}.png")
-            for i in range(number_of_frames)
+            Image.open(f"{frames_directory}/frame_{i:04d}.png") for i in range(number_of_frames)
         ]
         frames[0].save(
             f"{out_dir}/02_horizon_animation.gif",

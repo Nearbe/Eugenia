@@ -80,11 +80,7 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='[%(asctime)s] %(message)s',
-    datefmt='%H:%M:%S'
-)
+logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger(__name__)
 
 # Determine script directory and Python interpreter
@@ -96,9 +92,16 @@ PYTHON_INTERPRETER = str(VENV_PYTHON) if VENV_PYTHON.exists() else sys.executabl
 AVAILABLE_SOURCES = ["mnist", "png", "cmyk", "fashion"]
 
 
-def run_source(source_name: str, source_file: str = "", num_workers: int = None,
-               sweep_min: float = None, sweep_max: float = None, sweep_step: float = None,
-               jump_threshold: float = None, renderers: str = None) -> bool:
+def run_source(
+    source_name: str,
+    source_file: str = "",
+    num_workers: int = None,
+    sweep_min: float = None,
+    sweep_max: float = None,
+    sweep_step: float = None,
+    jump_threshold: float = None,
+    renderers: str = None,
+) -> bool:
     """
     Run visualization generation for a specific source.
 
@@ -120,7 +123,7 @@ def run_source(source_name: str, source_file: str = "", num_workers: int = None,
     output_directory.mkdir(parents=True, exist_ok=True)
 
     # Run the eugenia orchestrator script
-    script_path = SCRIPT_DIRECTORY / "src" / "eugenia" / "orchestrator.py"
+    script_path = SCRIPT_DIRECTORY / "src" / "orchestrator.py"
 
     env = os.environ.copy()
     # Add src to PYTHONPATH so that 'from eugenia...' imports work
@@ -129,8 +132,17 @@ def run_source(source_name: str, source_file: str = "", num_workers: int = None,
         env["PYTHONPATH"] = f"{src_dir}{os.pathsep}{env['PYTHONPATH']}"
     else:
         env["PYTHONPATH"] = src_dir
+    # Set data directory
+    env["VIZ_DATA_DIR"] = str(SCRIPT_DIRECTORY / "data")
 
-    cmd = [PYTHON_INTERPRETER, str(script_path), "--source", source_name, "--output", str(output_directory)]
+    cmd = [
+        PYTHON_INTERPRETER,
+        str(script_path),
+        "--source",
+        source_name,
+        "--output",
+        str(output_directory),
+    ]
     if source_file:
         cmd.extend(["--file", source_file])
     if num_workers:
@@ -146,11 +158,7 @@ def run_source(source_name: str, source_file: str = "", num_workers: int = None,
     if renderers:
         cmd.extend(["--renderers", renderers])
 
-    result = subprocess.run(
-        cmd,
-        cwd=str(SCRIPT_DIRECTORY),
-        env=env
-    )
+    result = subprocess.run(cmd, cwd=str(SCRIPT_DIRECTORY), env=env)
 
     if result.returncode != 0:
         logger.error(f"  Error: {source_name} failed with return code {result.returncode}")
@@ -169,12 +177,8 @@ def main() -> None:
         default="all",
         help="Data source to process",
     )
-    parser.add_argument(
-        "--file", default="", help="Specific file to use (e.g., latin, cyrillic)"
-    )
-    parser.add_argument(
-        "--parallel", action="store_true", help="Run sources in parallel"
-    )
+    parser.add_argument("--file", default="", help="Specific file to use (e.g., latin, cyrillic)")
+    parser.add_argument("--parallel", action="store_true", help="Run sources in parallel")
     parser.add_argument(
         "--workers", type=int, default=None, help="Number of parallel workers for rendering"
     )
@@ -186,9 +190,7 @@ def main() -> None:
     arguments = parser.parse_args()
 
     # Determine which sources to process
-    sources_to_process = (
-        AVAILABLE_SOURCES if arguments.source == "all" else [arguments.source]
-    )
+    sources_to_process = AVAILABLE_SOURCES if arguments.source == "all" else [arguments.source]
 
     # Clean only the specific source directories
     for source in sources_to_process:
@@ -203,17 +205,34 @@ def main() -> None:
     if arguments.parallel and len(sources_to_process) > 1:
         logger.info(f"Running {len(sources_to_process)} sources in parallel...")
         with ProcessPoolExecutor(max_workers=len(sources_to_process)) as executor:
-            futures = [executor.submit(run_source, source, arguments.file, arguments.workers,
-                                       arguments.sweep_min, arguments.sweep_max, arguments.sweep_step,
-                                       arguments.jump_threshold, arguments.renderers)
-                       for source in sources_to_process]
+            futures = [
+                executor.submit(
+                    run_source,
+                    source,
+                    arguments.file,
+                    arguments.workers,
+                    arguments.sweep_min,
+                    arguments.sweep_max,
+                    arguments.sweep_step,
+                    arguments.jump_threshold,
+                    arguments.renderers,
+                )
+                for source in sources_to_process
+            ]
             for future in futures:
                 future.result()
     else:
         for source in sources_to_process:
-            run_source(source, arguments.file, arguments.workers,
-                       arguments.sweep_min, arguments.sweep_max, arguments.sweep_step,
-                       arguments.jump_threshold, arguments.renderers)
+            run_source(
+                source,
+                arguments.file,
+                arguments.workers,
+                arguments.sweep_min,
+                arguments.sweep_max,
+                arguments.sweep_step,
+                arguments.jump_threshold,
+                arguments.renderers,
+            )
 
     # Print summary
     logger.info(f"{'=' * 60}")

@@ -33,14 +33,14 @@ def _find_source_file(filename: str) -> str:
     script_dir = get_script_directory()
     parent_dir = get_parent_directory()
 
-    # Поиск файла в текущей директории скрипта и родительской директории.
+    # Поиск файла в родительской директории (корень) и текущей директории скрипта.
     # Это обеспечивает гибкость при запуске скрипта из разных мест и при
     # разной структуре папок с данными.
-    for search_dir in [script_dir, parent_dir]:
+    for search_dir in [parent_dir, script_dir]:
         path = search_dir / filename
         if path.exists():
             return str(path)
-    return str(script_dir / filename)
+    return str(parent_dir / filename)
 
 
 def load_mnist_data() -> Tuple[torch.Tensor, torch.Tensor, int, int, int]:
@@ -63,7 +63,7 @@ def _load_npz_dataset(filename: str) -> Tuple[torch.Tensor, torch.Tensor, int, i
     # Поддержка переменной окружения VIZ_DATA_DIR для гибкой настройки пути к данным.
     # Если переменная не задана, используется путь по умолчанию (в соседней директории).
     # Это позволяет пользователям IDE легко менять директорию данных без изменения кода.
-    default_data_dir = get_script_directory().parent.parent / "eugenia_data"
+    default_data_dir = get_parent_directory() / "eugenia_data"
     data_dir_env = os.environ.get("VIZ_DATA_DIR")
 
     if data_dir_env:
@@ -80,14 +80,14 @@ def _load_npz_dataset(filename: str) -> Tuple[torch.Tensor, torch.Tensor, int, i
     all_labels = data_file["y_train"]
 
     # Select one sample per class
-    class_indices = []
+    class_indices_list: list[int] = []
     for class_id in range(CONFIG.number_of_classes):
         indices = np.where(all_labels == class_id)[0]
         if len(indices) == 0:
             raise ValueError(f"No samples found for class {class_id}")
-        class_indices.append(indices[0])
+        class_indices_list.append(indices[0])
 
-    class_indices = np.array(class_indices)
+    class_indices = np.array(class_indices_list)
     images = torch.from_numpy(data_file["x_train"][class_indices].astype(np.float32))
     labels = torch.arange(CONFIG.number_of_classes, dtype=torch.int32)
 
@@ -148,15 +148,35 @@ def load_png_image(source_file: str = "") -> Tuple[torch.Tensor, torch.Tensor, i
     Returns:
         Tuple of (images, labels, height, width, channels)
     """
-    filename = source_file if source_file else "cyrillic.png"
+    filename = source_file if source_file else "Eugene"
+    print(f"Loading {filename}")
+    # Try the filename as is first
     path = _find_source_file(filename)
-
-    # Попытка найти JPEG, если PNG отсутствует. Это позволяет работать с разными
-    # форматами изображений без изменения кода загрузчика.
-    if not os.path.exists(path):
-        path = path.replace(".png", ".jpeg")
+    print(f"Initial path: {path}, exists: {os.path.exists(path)}")
+    if os.path.exists(path):
+        print(f"Using {filename} -> {path}")
+    else:
+        # Try different extensions
+        for ext in [".png", ".jpeg", ".jpg"]:
+            path = _find_source_file(filename + ext)
+            try:
+                os.stat(path)
+                exists = True
+                print(f"Trying {filename + ext} -> {path}, exists: True")
+            except OSError:
+                exists = False
+                print(f"Trying {filename + ext} -> {path}, exists: False")
+            if exists:
+                break
+            if os.path.exists(path):
+                break
+        else:
+            # If none found, default to jpeg
+            path = _find_source_file(filename + ".jpeg")
+    print(f"Final path: {path}")
 
     # Перевод изображения в градации серого для унификации обработки всех типов данных.
+    print(f"About to open: {path}, type: {type(path)}")
     image = Image.open(path).convert("L")  # Convert to grayscale
     image_array = np.array(image).astype(np.float32)
     height, width = image_array.shape

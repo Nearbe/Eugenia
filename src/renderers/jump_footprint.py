@@ -7,6 +7,7 @@ significant jumps in the occupancy rate during the threshold sweep.
 """
 
 import logging
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -27,29 +28,23 @@ def render(data, sweep, out_dir):
     num_classes = data["number_of_classes"]
 
     # Find the largest jump for each class
-    major_jumps = {}
+    major_jumps: dict[int, tuple[float, int, float]] = {}
     for t, class_idx, mag, prev_occ, curr_occ in jump_events:
         if class_idx not in major_jumps or mag > major_jumps[class_idx][2]:
             major_jumps[class_idx] = (t, class_idx, mag)
 
-    if not major_jumps:
-        logger.info("  No major jumps found for footprint analysis")
-        return
-
-    num_to_show = min(num_classes, 5)
-    fig, axes = plt.subplots(1, num_to_show, figsize=(4 * num_to_show, 5))
-    if num_to_show == 1:
-        axes = [axes]
+    # Create folder for individual footprint images
+    footprint_dir = os.path.join(out_dir, "19_jump_footprints")
+    os.makedirs(footprint_dir, exist_ok=True)
 
     # Step size
     t_step = thresholds[1] - thresholds[0]
 
-    for i in range(num_to_show):
-        class_idx = i
+    for class_idx in range(num_classes):
         label = get_symbol_label(class_idx, data)
-        ax = axes[i]
-
         delta_field = symbols[class_idx].cpu().numpy()
+
+        plt.figure(figsize=(5, 5))
 
         if class_idx in major_jumps:
             t_jump, _, mag = major_jumps[class_idx]
@@ -60,26 +55,39 @@ def render(data, sweep, out_dir):
             footprint = (delta_field > (t_jump - t_step)) & (delta_field <= t_jump)
 
             # Show original delta field dimmed, and footprint highlighted
-            ax.imshow(delta_field, cmap='gray', alpha=0.3)
+            plt.imshow(delta_field, cmap="gray", alpha=0.3)
             # Overlay footprint
             if np.any(footprint):
                 masked_footprint = np.ma.masked_where(~footprint, footprint)
-                ax.imshow(masked_footprint, cmap='Reds', alpha=1.0)
+                plt.imshow(masked_footprint, cmap="Reds", alpha=1.0)
 
-            ax.set_title(f"{label}\nJump at T={t_jump:.2f}\n(mag={mag:.1f}%)", fontsize=12)
+            plt.title(f"{label}\nJump at T={t_jump:.2f}\n(mag={mag:.1f}%)", fontsize=12)
+            description = (
+                f"Jump Footprint for class {label}: Visualizes the pixels responsible for the topology jump. "
+                f"Red pixels indicate areas where the occupancy rate changed sharply at threshold {t_jump:.2f}."
+            )
         else:
-            ax.imshow(delta_field, cmap='gray')
-            ax.set_title(f"{label}\nNo Jumps Detected")
+            plt.imshow(delta_field, cmap="gray")
+            plt.title(f"{label}\nNo Jumps Detected")
+            description = f"Delta field for class {label}: No significant jumps detected."
 
-        ax.axis('off')
+        plt.axis("off")
 
-    plt.tight_layout()
-    description = (
-        "Jump Footprints: Visualizes the pixels responsible for the most significant "
-        "topology jump in each class. Red pixels indicate areas where the occupancy "
-        "rate changed sharply at a specific threshold."
-    )
-    save_visualization("19_jump_footprints.png", out_dir, configuration, "dpi_default", description=description)
+        save_visualization(
+            f"{class_idx}_{label}.png",
+            footprint_dir,
+            configuration,
+            "dpi_default",
+            description=description,
+        )
+        plt.close()
+
+    if not major_jumps:
+        logger.info("  No major jumps found for footprint analysis")
+    else:
+        logger.info(
+            f"  Created jump footprint visualizations for {len(major_jumps)} classes with jumps"
+        )
     logger.info("  Created jump footprint visualization")
 
 

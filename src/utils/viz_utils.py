@@ -4,6 +4,7 @@ Utilities for matplotlib visualizations and plotting.
 """
 
 import os
+import warnings
 from typing import Dict, List, Tuple, Optional
 
 import matplotlib.pyplot as plt
@@ -73,8 +74,11 @@ def add_reference_line(ax: plt.Axes, configuration: Dict) -> None:
 
 
 def save_visualization(
-    filename: str, out_dir: str, configuration: Dict, dpi: str = "dpi_high",
-    description: Optional[str] = None
+    filename: str,
+    out_dir: str,
+    configuration: Dict,
+    dpi: str = "dpi_high",
+    description: Optional[str] = None,
 ) -> None:
     """
     Save the current matplotlib figure.
@@ -89,14 +93,23 @@ def save_visualization(
     if description:
         # Add description at the bottom
         plt.figtext(
-            0.5, 0.01, description,
-            ha="center", fontsize=7,
-            bbox={"boxstyle": "round", "facecolor": "whitesmoke", "alpha": 0.8,
-                  "edgecolor": "silver"},
-            wrap=True
+            0.5,
+            0.01,
+            description,
+            ha="center",
+            fontsize=7,
+            bbox={
+                "boxstyle": "round",
+                "facecolor": "whitesmoke",
+                "alpha": 0.8,
+                "edgecolor": "silver",
+            },
+            wrap=True,
         )
 
-    plt.tight_layout(rect=[0, 0.03, 1, 0.97] if description else None)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        plt.tight_layout(rect=(0.02, 0.05, 0.98, 0.95) if description else None)
     path = os.path.join(out_dir, filename)
     plt.savefig(path, dpi=configuration.get(dpi, 150))
     plt.close()

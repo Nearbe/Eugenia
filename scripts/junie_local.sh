@@ -16,9 +16,9 @@ if [ -f "$PROJECT_ROOT/.env" ]; then
     done < "$PROJECT_ROOT/.env"
 fi
 
-# Модель по умолчанию (из .env или qwen-local)
+# Модель по умолчанию (из .env или custom:gemma-local)
 # Мы используем имя файла конфигурации без .json как идентификатор в Junie CLI
-MODEL_ID="qwen-local"
+MODEL_ID="custom:gemma-local"
 
 # Обработка аргументов
 while [[ "$#" -gt 0 ]]; do

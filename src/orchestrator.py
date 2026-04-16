@@ -31,11 +31,7 @@ def get_source_name() -> str:
 
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='[%(asctime)s] %(message)s',
-    datefmt='%H:%M:%S'
-)
+logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger(__name__)
 
 # Глобальный кэш для предотвращения повторной загрузки данных и вычисления развертки в рамках одного сеанса
@@ -43,7 +39,9 @@ _cached_data: Optional[VisualizationData] = None
 _cached_sweep: Optional[SweepResults] = None
 
 
-def load_data(source_name: Optional[str] = None, source_file: Optional[str] = None) -> VisualizationData:
+def load_data(
+    source_name: Optional[str] = None, source_file: Optional[str] = None
+) -> VisualizationData:
     """
     Load data from the configured source and compute delta field.
 
@@ -99,13 +97,9 @@ def load_data(source_name: Optional[str] = None, source_file: Optional[str] = No
     # Разделение общего дельта-поля на индивидуальные поля для каждого символа или канала.
     # Это позволяет параллельно обрабатывать каждый класс в скриптах визуализации.
     if source_name == "cmyk":
-        symbol_delta_fields = [
-            delta_field[:, :, channel] for channel in range(channels)
-        ]
+        symbol_delta_fields = [delta_field[:, :, channel] for channel in range(channels)]
     else:
-        symbol_delta_fields = [
-            delta_field[index] for index in range(delta_field.shape[0])
-        ]
+        symbol_delta_fields = [delta_field[index] for index in range(delta_field.shape[0])]
 
     number_of_classes = len(symbol_delta_fields)
 
@@ -136,7 +130,7 @@ def load_data(source_name: Optional[str] = None, source_file: Optional[str] = No
         symbol_names=symbol_names,
         delta_min=delta_field.min().item(),
         delta_max=delta_field.max().item(),
-        config=asdict(CONFIG)
+        config=asdict(CONFIG),
     )
 
     return _cached_data
@@ -162,8 +156,13 @@ def compute_sweep(data: Optional[VisualizationData] = None) -> SweepResults:
     return _cached_sweep
 
 
-def _render_single_visualization(module_name: str, viz_directory: str, data: VisualizationData,
-                                 sweep: SweepResults, output_directory: str):
+def _render_single_visualization(
+    module_name: str,
+    viz_directory: str,
+    data: VisualizationData,
+    sweep: SweepResults,
+    output_directory: str,
+):
     """
     Helper function to render a single visualization module in a separate process.
     """
@@ -186,6 +185,8 @@ def _render_single_visualization(module_name: str, viz_directory: str, data: Vis
 
     try:
         spec = importlib.util.spec_from_file_location(module_name, str(module_path))
+        if spec is None or spec.loader is None:
+            return module_name, False, f"Could not load module {module_name}"
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
 
@@ -199,11 +200,13 @@ def _render_single_visualization(module_name: str, viz_directory: str, data: Vis
         return module_name, False, str(error) + "\n" + traceback.format_exc()
 
 
-def run_all_visualizations(source_name: Optional[str] = None,
-                           output_directory: Optional[str] = None,
-                           source_file: Optional[str] = None,
-                           num_workers: Optional[int] = None,
-                           renderers: Optional[str] = None) -> None:
+def run_all_visualizations(
+    source_name: Optional[str] = None,
+    output_directory: Optional[str] = None,
+    source_file: Optional[str] = None,
+    num_workers: Optional[int] = None,
+    renderers: Optional[str] = None,
+) -> None:
     """
     Execute all visualization scripts in sequence or parallel.
 
@@ -231,6 +234,7 @@ def run_all_visualizations(source_name: Optional[str] = None,
             return [to_cpu(v) for v in obj]
         if hasattr(obj, "__dataclass_fields__"):
             from dataclasses import fields
+
             new_values = {f.name: to_cpu(getattr(obj, f.name)) for f in fields(obj)}
             return obj.__class__(**new_values)
         return obj
@@ -246,10 +250,9 @@ def run_all_visualizations(source_name: Optional[str] = None,
 
     # Автоматическое обнаружение всех модулей визуализации в директории script/visualizations.
     # Это позволяет отделить логику визуализации от ядра алгоритма и загрузчиков данных.
-    visualization_modules = sorted([
-        f.stem for f in viz_directory.glob("*.py")
-        if not f.name.startswith("__")
-    ])
+    visualization_modules = sorted(
+        [f.stem for f in viz_directory.glob("*.py") if not f.name.startswith("__")]
+    )
 
     # Фильтрация модулей, если указан список конкретных рендереров.
     if renderers:
@@ -280,7 +283,7 @@ def run_all_visualizations(source_name: Optional[str] = None,
                 viz_directory,
                 data_cpu,
                 sweep_cpu,
-                output_directory
+                output_directory,
             )
             for module_name in visualization_modules
         ]
@@ -297,6 +300,13 @@ def run_all_visualizations(source_name: Optional[str] = None,
 
 
 if __name__ == "__main__":
+    import os
+
+    print(f"CWD: {os.getcwd()}")
+    # Test
+    from PIL import Image
+
+    print(f"PIL test: {Image.open('Eugene.jpeg')}")
     parser = argparse.ArgumentParser(description="Run visualizations for a specific source")
     parser.add_argument("--source", type=str, help="Source name (mnist, png, cmyk)")
     parser.add_argument("--output", type=str, help="Output directory")
@@ -325,5 +335,5 @@ if __name__ == "__main__":
         output_directory=args.output,
         source_file=args.file,
         num_workers=args.workers,
-        renderers=args.renderers
+        renderers=args.renderers,
     )

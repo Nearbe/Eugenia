@@ -86,9 +86,7 @@ class UnifiedSystem:
         self.state = DualState(omega=1.0 - balance, pi=balance)
         self.transition_history = []
 
-    def transition(
-        self, input_data: str, exploration_factor: float = 0.1
-    ) -> Tuple[str, DualState]:
+    def transition(self, input_data: str, exploration_factor: float = 0.1) -> Tuple[str, DualState]:
         """
         Переход — вычисляет результат с учётом текущего состояния
 
@@ -108,17 +106,13 @@ class UnifiedSystem:
 
         elif self.state.is_exploratory:
             # Режим Ω — добавляем "вибрацию" (случайность = движение по струне!)
-            variation = self._compute_variation(
-                input_data, self.state.omega, exploration_factor
-            )
+            variation = self._compute_variation(input_data, self.state.omega, exploration_factor)
             final_result = base_result + variation
             new_balance = max(0.0, self.state.pi * 0.98)  # Ослабляем
 
         else:  # Баланс — HYBRID
             # Комбинация: стабильность + исследование
-            variation = self._compute_variation(
-                input_data, 0.5, exploration_factor * 0.3
-            )
+            variation = self._compute_variation(input_data, 0.5, exploration_factor * 0.3)
             final_result = base_result + variation
             # Состояние остаётся примерно тем же
             new_balance = self.state.pi

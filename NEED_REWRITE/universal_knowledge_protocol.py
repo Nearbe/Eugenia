@@ -19,12 +19,12 @@ UNIVERSAL KNOWLEDGE PROTOCOL
 - Это NOT веса, это УНИВЕРСАЛЬНОЕ ПРЕДСТАВЛЕНИЕ знаний
 """
 
-import numpy as np
+import hashlib
 import struct
 from dataclasses import dataclass
-from typing import Dict, List, Tuple, Optional
-import hashlib
+from typing import Dict, List
 
+import numpy as np
 from core.division import safe_divide, resolve_potential, has_potential
 
 
@@ -153,9 +153,7 @@ class UniversalKnowledgeProtocol:
 
         return resolve_potential(cos_sim, 0.0)
 
-    def cluster(
-        self, layer: str, items: List[np.ndarray], n_clusters: int = 5
-    ) -> List[List[int]]:
+    def cluster(self, layer: str, items: List[np.ndarray], n_clusters: int = 5) -> List[List[int]]:
         """
         Cluster items by pattern similarity
 
@@ -164,7 +162,7 @@ class UniversalKnowledgeProtocol:
         projections = [self.encode(layer, x) for x in items]
 
         # Simple k-means in pattern space
-        clusters = [[] for _ in range(n_clusters)]
+        clusters: list[list] = [[] for _ in range(n_clusters)]
 
         for i, p in enumerate(projections):
             # Assign to nearest cluster center (simplified)
@@ -222,9 +220,9 @@ class UniversalKnowledgeProtocol:
             d = struct.unpack("<I", data[offset : offset + 4])[0]
             offset += 4
 
-            P = np.frombuffer(
-                data[offset : offset + d * proto.k * 2], dtype=np.float16
-            ).reshape(d, proto.k)
+            P = np.frombuffer(data[offset : offset + d * proto.k * 2], dtype=np.float16).reshape(
+                d, proto.k
+            )
             offset += d * proto.k * 2
 
             S = np.frombuffer(data[offset : offset + proto.k * 2], dtype=np.float16)
@@ -252,8 +250,7 @@ def demo():
 
     # Simulate model layers
     weights = {
-        f"layer_{i}": np.random.randn(4096, 4096).astype(np.float32) * 0.1
-        for i in range(32)
+        f"layer_{i}": np.random.randn(4096, 4096).astype(np.float32) * 0.1 for i in range(32)
     }
 
     # Learn maps
@@ -304,7 +301,7 @@ def demo():
     3. ONE map works for ALL inputs
     4. Compression: 111GB → ~50MB
     5. Fast semantic search
-    
+
     THE MAP IS THE SAME FOR EVERYTHING!
     This is effectively a UNIVERSAL KNOWLEDGE BASE!
     """)

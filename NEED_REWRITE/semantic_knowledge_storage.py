@@ -20,10 +20,11 @@ Semantic Knowledge Storage System
 - Runtime inference через pattern reconstruction
 """
 
-import numpy as np
 import struct
 from dataclasses import dataclass
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple
+
+import numpy as np
 
 
 # ============================================================
@@ -51,9 +52,7 @@ class SemanticOperators:
             return pattern
         # Усреднение блоков
         blocks = len(pattern) // target_len
-        return np.array(
-            [pattern[i * blocks : (i + 1) * blocks].mean() for i in range(target_len)]
-        )
+        return np.array([pattern[i * blocks : (i + 1) * blocks].mean() for i in range(target_len)])
 
     @staticmethod
     def L_pattern(pattern: np.ndarray) -> float:
@@ -140,9 +139,7 @@ class SemanticPatternExtractor:
                 vec_j = self.patterns[j].vector.astype(np.float32)
 
                 # Косинусное сходство
-                sim = np.dot(vec_i, vec_j) / (
-                    np.linalg.norm(vec_i) * np.linalg.norm(vec_j) + 1e-10
-                )
+                sim = np.dot(vec_i, vec_j) / (np.linalg.norm(vec_i) * np.linalg.norm(vec_j) + 1e-10)
                 relationships[i, j] = sim
 
         self.relationships = relationships
@@ -219,13 +216,9 @@ class KnowledgeGraph:
         vec_a = self.nodes[pattern_a].vector.astype(np.float32)
         vec_b = self.nodes[pattern_b].vector.astype(np.float32)
 
-        return np.dot(vec_a, vec_b) / (
-            np.linalg.norm(vec_a) * np.linalg.norm(vec_b) + 1e-10
-        )
+        return np.dot(vec_a, vec_b) / (np.linalg.norm(vec_a) * np.linalg.norm(vec_b) + 1e-10)
 
-    def find_related_patterns(
-        self, pattern_idx: int, top_k: int = 5
-    ) -> List[Tuple[int, float]]:
+    def find_related_patterns(self, pattern_idx: int, top_k: int = 5) -> List[Tuple[int, float]]:
         """Находит семантически связанные паттерны"""
         if self.edges is None or pattern_idx >= len(self.edges):
             return []
@@ -260,9 +253,7 @@ class SemanticRetrieval:
     def __init__(self, knowledge_graph: KnowledgeGraph):
         self.graph = knowledge_graph
 
-    def search_by_vector(
-        self, query: np.ndarray, top_k: int = 5
-    ) -> List[Tuple[int, float, float]]:
+    def search_by_vector(self, query: np.ndarray, top_k: int = 5) -> List[Tuple[int, float, float]]:
         """
         Поиск по вектору запроса
 
@@ -272,9 +263,7 @@ class SemanticRetrieval:
 
         for i, pattern in enumerate(self.graph.nodes):
             vec = pattern.vector.astype(np.float32)
-            score = np.dot(query, vec) / (
-                np.linalg.norm(query) * np.linalg.norm(vec) + 1e-10
-            )
+            score = np.dot(query, vec) / (np.linalg.norm(query) * np.linalg.norm(vec) + 1e-10)
             importance = pattern.singular_value
 
             # Комбинируем relevance и importance
@@ -314,9 +303,7 @@ class RuntimeReconstructor:
     def __init__(self, knowledge_graph: KnowledgeGraph):
         self.graph = knowledge_graph
 
-    def reconstruct_layer(
-        self, layer_name: str, d_model: int, d_out: int
-    ) -> np.ndarray:
+    def reconstruct_layer(self, layer_name: str, d_model: int, d_out: int) -> np.ndarray:
         """
         Восстанавливает слой из паттернов
 
@@ -361,9 +348,7 @@ class RuntimeReconstructor:
         patterns = []
         for i in range(k):
             if start_idx + i < len(self.graph.nodes):
-                patterns.append(
-                    self.graph.nodes[start_idx + i].vector.astype(np.float32)
-                )
+                patterns.append(self.graph.nodes[start_idx + i].vector.astype(np.float32))
 
         # Project: x -> pattern space
         pattern_matrix = np.column_stack(patterns)  # (d, k)
@@ -449,9 +434,7 @@ class SemanticStorageFormat:
             offset += 4
 
             vec_len = 32  # Assuming k=32
-            vector = np.frombuffer(
-                data[offset : offset + vec_len * 2], dtype=np.float16
-            )
+            vector = np.frombuffer(data[offset : offset + vec_len * 2], dtype=np.float16)
             offset += vec_len * 2
 
             graph.nodes.append(
@@ -547,8 +530,8 @@ def test_semantic_system():
     query = np.random.randn(4096).astype(np.float32)
     results = retrieval.search_by_vector(query, top_k=3)
 
-    print(f"Query: случайный вектор")
-    print(f"Top 3 семантически связанных паттерна:")
+    print("Query: случайный вектор")
+    print("Top 3 семантически связанных паттерна:")
     for idx, score, entropy in results:
         p = kg.nodes[idx]
         print(

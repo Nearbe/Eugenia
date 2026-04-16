@@ -28,7 +28,7 @@ def compute_gradient_magnitude(image: np.ndarray) -> np.ndarray:
     # Вычисление величины градиента как корня из суммы квадратов производных по осям.
     # Это позволяет оценить скорость изменения дельта-поля в каждой точке.
     vertical_gradient, horizontal_gradient = np.gradient(image)
-    return np.sqrt(horizontal_gradient ** 2 + vertical_gradient ** 2)
+    return np.sqrt(horizontal_gradient**2 + vertical_gradient**2)  # type: ignore[no-any-return]
 
 
 def normalize_image(image: np.ndarray, epsilon: float = 1e-10) -> np.ndarray:
@@ -50,7 +50,7 @@ def normalize_image(image: np.ndarray, epsilon: float = 1e-10) -> np.ndarray:
     if maximum_value - minimum_value < epsilon:
         return np.zeros_like(image)
 
-    return (image - minimum_value) / (maximum_value - minimum_value)
+    return (image - minimum_value) / (maximum_value - minimum_value)  # type: ignore[no-any-return]
 
 
 def hex_to_rgb(hex_color: str) -> Tuple[float, float, float]:
@@ -70,9 +70,7 @@ def hex_to_rgb(hex_color: str) -> Tuple[float, float, float]:
     return (red, green, blue)
 
 
-def create_colored_mask(
-        binary_mask: np.ndarray, color: Tuple[float, float, float]
-) -> np.ndarray:
+def create_colored_mask(binary_mask: np.ndarray, color: Tuple[float, float, float]) -> np.ndarray:
     """
     Create RGB image from binary mask with specified color.
 

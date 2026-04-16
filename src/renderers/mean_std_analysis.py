@@ -114,12 +114,13 @@ def render(data, sweep, out_dir):
     # Use a colormap to distinguish classes
     colors = np.arange(number_of_classes)
     plt.scatter(
-        means, stds,
+        means,
+        stds,
         c=colors,
         s=100,
         cmap="tab10" if number_of_classes <= 10 else "tab20",
         edgecolors="black",
-        alpha=0.8
+        alpha=0.8,
     )
 
     # Add class labels near the points
@@ -131,7 +132,7 @@ def render(data, sweep, out_dir):
             xytext=(5, 5),
             textcoords="offset points",
             fontsize=9,
-            fontweight="bold"
+            fontweight="bold",
         )
 
     plt.xlabel("Mean Delta (\u03bc)")

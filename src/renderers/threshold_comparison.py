@@ -138,5 +138,6 @@ def render(data, sweep, out_dir):
         "Helps identify at which threshold topological features (like holes in '8' or '0') become stable. "
         "Negative thresholds capture highlights; positive thresholds capture dark regions."
     )
-    save_visualization("09_original_vs_binary.png", out_dir, configuration, "dpi_high",
-                       description=description)
+    save_visualization(
+        "09_original_vs_binary.png", out_dir, configuration, "dpi_high", description=description
+    )

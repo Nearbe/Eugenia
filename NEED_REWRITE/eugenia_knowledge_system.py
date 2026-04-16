@@ -237,9 +237,7 @@ class KnowledgeSystem:
         for related_id in node.correlations:
             if related_id in self.nodes:
                 # Корреляция немного усиливается
-                node.correlations[related_id] = min(
-                    1.0, node.correlations[related_id] * 1.05
-                )
+                node.correlations[related_id] = min(1.0, node.correlations[related_id] * 1.05)
 
     def generate(self, context_node_id: str, max_nodes: int = 5) -> List[str]:
         """
@@ -256,9 +254,7 @@ class KnowledgeSystem:
         context_node = self.nodes[context_node_id]
 
         # Сортируем по силе корреляции
-        related = sorted(
-            context_node.correlations.items(), key=lambda x: x[1], reverse=True
-        )
+        related = sorted(context_node.correlations.items(), key=lambda x: x[1], reverse=True)
 
         # Усиливаем найденные
         for node_id, _ in related[:max_nodes]:
@@ -326,9 +322,7 @@ class KnowledgeSystem:
         total_correlations = sum(len(n.correlations) for n in self.nodes.values())
 
         most_used = (
-            max(self.nodes.items(), key=lambda x: x[1].usage_count)[0]
-            if self.nodes
-            else None
+            max(self.nodes.items(), key=lambda x: x[1].usage_count)[0] if self.nodes else None
         )
 
         return {
@@ -399,7 +393,7 @@ def demo():
 
     # Новый запрос
     result = system.query("собака это домашнее животное")
-    print(f"  Запрос 'собака это домашнее животное':")
+    print("  Запрос 'собака это домашнее животное':")
     print(f"    status: {result['status']}")
     if result.get("best_match"):
         print(f"    best: {result['best_match']} ({result['similarity']:.3f})")
@@ -407,7 +401,7 @@ def demo():
 
     # Ещё один запрос
     result2 = system.query("кот мурлычет")
-    print(f"\n  Запрос 'кот мурлычет':")
+    print("\n  Запрос 'кот мурлычет':")
     print(f"    status: {result2['status']}")
     if result2.get("best_match"):
         print(f"    best: {result2['best_match']} ({result2['similarity']:.3f})")

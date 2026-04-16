@@ -98,8 +98,8 @@ def render(data, sweep, out_dir):
             n_components=2,
             perplexity=max(1, perplexity),
             random_state=42,
-            init='pca',
-            learning_rate='auto'
+            init="pca",
+            learning_rate="auto",
         )
         coords = tsne.fit_transform(profiles)
 
@@ -111,7 +111,7 @@ def render(data, sweep, out_dir):
             s=100,
             cmap="tab10" if number_of_classes <= 10 else "tab20",
             edgecolors="black",
-            alpha=0.7
+            alpha=0.7,
         )
 
         # Annotate points with labels
@@ -123,7 +123,7 @@ def render(data, sweep, out_dir):
                 xytext=(5, 5),
                 textcoords="offset points",
                 fontsize=10,
-                fontweight="bold"
+                fontweight="bold",
             )
 
     plt.title(f"t-SNE Projection of Binary Profiles ({number_of_classes} symbols)")
@@ -136,4 +136,10 @@ def render(data, sweep, out_dir):
         "Classes that are topologically similar (e.g., similar stroke thickness, number of holes) appear closer together. "
         "This reveals the structural relationships between symbols in a reduced 2D space."
     )
-    save_visualization("05_tsne_binary_profiles.png", out_dir, configuration, "dpi_default", description=description)
+    save_visualization(
+        "05_tsne_binary_profiles.png",
+        out_dir,
+        configuration,
+        "dpi_default",
+        description=description,
+    )

@@ -120,9 +120,7 @@ def render(data, sweep, out_dir):
             binary_mask = (symbol > threshold_value).astype(np.uint8)
 
             # Pad to detect holes (regions not connected to boundary)
-            padded_mask = np.pad(
-                binary_mask, configuration["topology_padding"], mode="constant"
-            )
+            padded_mask = np.pad(binary_mask, configuration["topology_padding"], mode="constant")
 
             # Invert and label connected components
             # Padded background is 0, becomes 1 in inverted_mask
@@ -131,18 +129,19 @@ def render(data, sweep, out_dir):
             labeled_background, num_regions = ndimage.label(inverted_mask)
 
             # Find regions that touch the boundary (these are not holes)
-            boundary_labels = set(labeled_background[0, :]) | \
-                              set(labeled_background[-1, :]) | \
-                              set(labeled_background[:, 0]) | \
-                              set(labeled_background[:, -1])
+            boundary_labels = (
+                set(labeled_background[0, :])
+                | set(labeled_background[-1, :])
+                | set(labeled_background[:, 0])
+                | set(labeled_background[:, -1])
+            )
 
             # 0 is the foreground label, discard it
             boundary_labels.discard(0)
 
             # Total background regions - boundary regions = internal holes
             actual_holes = max(
-                configuration["topology_holes_min"],
-                num_regions - len(boundary_labels)
+                configuration["topology_holes_min"], num_regions - len(boundary_labels)
             )
             holes_counts.append(actual_holes)
 

@@ -154,4 +154,6 @@ def render(data, sweep, out_dir):
         "Peaks indicate major topological transitions (features appearing or merging). "
         "Threshold 0 (red line) marks the balance between dark and bright regions."
     )
-    save_visualization("04_jumps_analysis.png", out_dir, configuration, "dpi_default", description=description)
+    save_visualization(
+        "04_jumps_analysis.png", out_dir, configuration, "dpi_default", description=description
+    )

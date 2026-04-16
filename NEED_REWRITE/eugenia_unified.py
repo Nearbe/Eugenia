@@ -11,16 +11,16 @@ EUGENIA Unified System
 111GB весов → ~1GB паттернов → генерация в рантайме
 """
 
-import numpy as np
-from pathlib import Path
 from dataclasses import dataclass
-from typing import Optional, Dict, List, Tuple
 from enum import Enum
+from pathlib import Path
+from typing import Optional, Dict
 
-from core.division import div_safe, safe_divide
+import numpy as np
+
+from eugenia_duality import UnifiedSystem, DualState
 from eugenia_graphics import GeometricEngine, GeometricProfile, RenderParams
 from eugenia_model_patterns import ModelLoader, PatternExtractor, ModelProfile
-from eugenia_duality import UnifiedSystem, DualState
 
 
 class TaskMode(Enum):
@@ -102,7 +102,6 @@ class EugeniaUnified:
 
         # Регистрируем в graphics engine
         for name, profile in profiles.items():
-            geo = self.extractor.get_pattern_geometry(profile)
             self.graphics.register_profile(name, self._profile_to_geo(profile))
 
         self.active_model = model_path
@@ -313,7 +312,7 @@ def demo_unified():
     │  │  111GB → ~1GB паттернов         │      │
     │  └─────────────────────────────────┘      │
     └─────────────────────────────────────────────┘
-    
+
     Результат:
     - Веса моделей сжимаются в паттерны
     - Паттерны генерируют графику в рантайме

@@ -63,7 +63,6 @@ def render(data, sweep, out_dir):
         plt.tight_layout()
         filename = f"class_{class_id}_individual.png"
         plt.savefig(
-            os.path.join(output_subdirectory, filename),
-            dpi=configuration["dpi_individual"]
+            os.path.join(output_subdirectory, filename), dpi=configuration["dpi_individual"]
         )
         plt.close()

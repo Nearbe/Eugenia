@@ -33,22 +33,27 @@ def render(data, sweep, out_dir):
     corr_matrix = np.corrcoef(occupancy_rates.T)
 
     fig, ax = plt.subplots(figsize=(12, 10))
-    im = ax.imshow(corr_matrix, cmap='RdBu_r', vmin=-1, vmax=1)
+    im = ax.imshow(corr_matrix, cmap="RdBu_r", vmin=-1, vmax=1)
 
     # Add labels
     labels = [get_symbol_label(i, data) for i in range(num_classes)]
     ax.set_xticks(np.arange(num_classes))
     ax.set_yticks(np.arange(num_classes))
-    ax.set_xticklabels(labels, rotation=45, ha='right')
+    ax.set_xticklabels(labels, rotation=45, ha="right")
     ax.set_yticklabels(labels)
 
     # Add values in the cells
     for i in range(num_classes):
         for j in range(num_classes):
             val = corr_matrix[i, j]
-            ax.text(j, i, f"{val:.2f}",
-                    ha="center", va="center",
-                    color="white" if abs(val) > 0.5 else "black")
+            ax.text(
+                j,
+                i,
+                f"{val:.2f}",
+                ha="center",
+                va="center",
+                color="white" if abs(val) > 0.5 else "black",
+            )
 
     ax.set_title("Topological Class Similarity (Occupancy Correlation)", fontsize=16)
     plt.colorbar(im, ax=ax)
@@ -59,7 +64,9 @@ def render(data, sweep, out_dir):
         "occupancy profiles of different classes. High correlation indicates similar "
         "structural response to thresholding, suggesting topological similarity."
     )
-    save_visualization("18_class_correlation.png", out_dir, configuration, "dpi_default", description=description)
+    save_visualization(
+        "18_class_correlation.png", out_dir, configuration, "dpi_default", description=description
+    )
     logger.info("  Created class correlation heatmap")
 
 

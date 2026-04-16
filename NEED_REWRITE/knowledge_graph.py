@@ -121,7 +121,6 @@ def extract_knowledge_structure():
     # Q-K-V relationships
     emb_q = kg.build_from_weights(W_q, k=16)
     emb_k = kg.build_from_weights(W_k, k=16)
-    emb_v = kg.build_from_weights(W_v, k=16)
 
     # Similarity между проекциями
     # Это хранит "как Q связано с K" — ключевой паттерн внимания!

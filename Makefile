@@ -1,4 +1,4 @@
-.PHONY: setup test run-all clean lint typecheck local-env
+.PHONY: setup test run-all clean lint typecheck format local-env junie junie-gemma generate-module
 
 PYTHON = venv/bin/python3
 PIP = venv/bin/pip
@@ -22,6 +22,9 @@ clean:
 lint:
 	$(PYTHON) -m ruff check src tests
 
+format:
+	$(PYTHON) -m ruff format src tests
+
 typecheck:
 	$(PYTHON) -m mypy src tests
 
@@ -36,8 +39,8 @@ local-env:
 junie:
 	@./scripts/junie_local.sh $(task)
 
-junie-qwen:
-	@./scripts/junie_local.sh --model qwen-local $(task)
-
 junie-gemma:
 	@./scripts/junie_local.sh --model gemma-local $(task)
+
+generate-module:
+	@./scripts/generate_module.sh $(name) "$(desc)"

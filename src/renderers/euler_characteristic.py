@@ -90,8 +90,12 @@ def compute_topology(binary_mask: np.ndarray, padding: int = 1) -> tuple:
     labeled_bg, num_bg = ndimage.label(inverted)
 
     # Boundary labels are not holes
-    boundary_labels = set(labeled_bg[0, :]) | set(labeled_bg[-1, :]) | \
-                      set(labeled_bg[:, 0]) | set(labeled_bg[:, -1])
+    boundary_labels = (
+        set(labeled_bg[0, :])
+        | set(labeled_bg[-1, :])
+        | set(labeled_bg[:, 0])
+        | set(labeled_bg[:, -1])
+    )
     boundary_labels.discard(0)
 
     b1 = max(0, num_bg - len(boundary_labels))
@@ -136,7 +140,7 @@ def render(data, sweep, out_dir):
 
             avg_b0[t_idx] += b0
             avg_b1[t_idx] += b1
-            avg_euler[t_idx] += (b0 - b1)
+            avg_euler[t_idx] += b0 - b1
 
     # Average across all classes
     avg_euler /= number_of_classes
@@ -156,7 +160,9 @@ def render(data, sweep, out_dir):
 
     # Panel 2: Betti Numbers (b0 and b1)
     plt.subplot(1, 3, 2)
-    plt.plot(analysis_thresholds, avg_b0, color="steelblue", lw=2, label="\u03b2\u2080 (Components)")
+    plt.plot(
+        analysis_thresholds, avg_b0, color="steelblue", lw=2, label="\u03b2\u2080 (Components)"
+    )
     plt.plot(analysis_thresholds, avg_b1, color="crimson", lw=2, label="\u03b2\u2081 (Holes)")
     plt.title("Avg Betti Numbers", fontsize=10)
     plt.xlabel("Threshold (Delta)")
@@ -178,5 +184,10 @@ def render(data, sweep, out_dir):
         "χ=0 for objects with one hole. Topological Flux highlights thresholds where major structural changes occur. "
         "Averaged across all classes to show the collective topological behavior."
     )
-    save_visualization("12_euler_persistence_complexity.png", out_dir, configuration, "dpi_default",
-                       description=description)
+    save_visualization(
+        "12_euler_persistence_complexity.png",
+        out_dir,
+        configuration,
+        "dpi_default",
+        description=description,
+    )

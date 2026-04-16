@@ -77,10 +77,7 @@ def compute_sweep(data: VisualizationData) -> SweepResults:
         # Использование обратной кумулятивной суммы позволяет за O(N) получить количество
         # пикселей выше каждого порога. Это ключевая оптимизация алгоритма развертки.
         histogram = torch.histc(
-            symbol_cpu,
-            bins=num_thresholds,
-            min=CONFIG.sweep_min,
-            max=CONFIG.sweep_max
+            symbol_cpu, bins=num_thresholds, min=CONFIG.sweep_min, max=CONFIG.sweep_max
         )
         # Преобразование гистограммы в долю пикселей (в процентах), превышающих порог.
         cumulative = torch.cumsum(histogram.flip(0), dim=0).flip(0)
@@ -91,11 +88,20 @@ def compute_sweep(data: VisualizationData) -> SweepResults:
     # Однако для MPS (Apple Silicon) последовательная обработка часто оказывается быстрее
     # из-за исключения накладных расходов на переключение контекста GPU-ядер.
     if device.type == "mps":
-        results = [process_class(i) for i in tqdm(range(number_of_classes), desc="Sweep (MPS)", leave=False)]
+        results = [
+            process_class(i)
+            for i in tqdm(range(number_of_classes), desc="Sweep (MPS)", leave=False)
+        ]
     else:
         with ThreadPoolExecutor(max_workers=min(number_of_classes, 8)) as executor:
-            results = list(tqdm(executor.map(process_class, range(number_of_classes)),
-                                total=number_of_classes, desc="Sweep (CPU/CUDA)", leave=False))
+            results = list(
+                tqdm(
+                    executor.map(process_class, range(number_of_classes)),
+                    total=number_of_classes,
+                    desc="Sweep (CPU/CUDA)",
+                    leave=False,
+                )
+            )
 
     for class_id, rates in results:
         occupancy_rates[:, class_id] = rates.to(device)
@@ -123,8 +129,7 @@ def compute_sweep(data: VisualizationData) -> SweepResults:
     )
 
     logger.info(
-        f"  {num_thresholds} thresholds, {len(jump_events)} jumps "
-        f"({time.time() - start_time:.1f}s)"
+        f"  {num_thresholds} thresholds, {len(jump_events)} jumps ({time.time() - start_time:.1f}s)"
     )
 
     return sweep_results

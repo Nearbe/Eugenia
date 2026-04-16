@@ -280,8 +280,8 @@ def test_mnist_classification():
 
     # Load MNIST
     try:
-        data = np.load("/Users/nearbe/EvgeniaML/eugenia_data/mnist.npz")
-    except:
+        np.load("/Users/nearbe/EvgeniaML/eugenia_data/mnist.npz")
+    except Exception:
         print("MNIST not found, using synthetic data")
         # Create synthetic digit-like data
         np.random.seed(42)

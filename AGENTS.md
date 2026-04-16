@@ -1,266 +1,270 @@
-# AGENTS.md
-
-## Quick start
-
-```bash
-cd /Users/nearbe/EvgeniaML/visualizations
-python3 generate.py              # ALL sources → output/{source}/
-python3 generate.py --source mnist # single source
-python3 generate.py --source png
-python3 generate.py --source cmyk
-```
-
-## Output
-
-```
-output/
-├── mnist/   # 15 PNG, 1 GIF
-├── png/     # 15 PNG, 1 GIF
-└── cmyk/    # 15 PNG, 1 GIF
-```
-
-## Data
-
-- Data lives in sibling directory `eugenia_data/` (not in this repo)
-- Required file: `eugenia_data/mnist.npz` with `x_train`, `y_train` keys
-- If missing, visualizations will fail
-
-## Architecture
-
-Single entry point `generate.py` with `--source` flag:
-
-| --source          | Loader       | Data source | Classes                            |
-|-------------------|--------------|-------------|------------------------------------|
-| `mnist` (default) | `loaders.py` | MNIST npz   | 10 digits                          |
-| `fashion`         | `loaders.py` | Fashion-MN  | 10 clothing types                  |
-| `png`             | `loaders.py` | PNG sprites | extracted via connected components |
-| `cmyk`            | `loaders.py` | CMYK images | 4 channels (C,M,Y,K)               |
-
-### generate.py
-
-1. Parses CLI arguments (`--source`, `--file`, `--parallel`, `--workers`, `--sweep-min`, `--sweep-max`, `--sweep-step`,
-   `--jump-threshold`, `--renderers`).
-2. Orchestrates source processing by calling `src/common.py` as a subprocess.
-3. Passes parameters via command-line arguments to ensure clean isolation between sources.
-
-### src/common.py
-
-1. Provides a parameterized API for loading data, computing sweeps, and rendering.
-2. Supports CLI arguments for standalone execution.
-3. Uses `logging` for unified output.
-4. Uses `pathlib` for robust path management.
-
-### src/loaders.py
-
-1. Contains source-specific data loading logic (MNIST, PNG, CMYK).
-2. Supports `VIZ_DATA_DIR` environment variable for the `eugenia_data` path.
-3. Implements connected components algorithm for sprite extraction.
-
-### src/sweep.py
-
-- Uses `torch.histc` for high-performance histogram computation.
-- Works on both CPU and Apple MPS (GPU).
-- Detects **jump events**: where occupancy changes >1% between adjacent thresholds.
-
-## Core Math
-
-### Delta field (line 97 in src/common.py)
-
-```python
-delta_field = log(images + 1) - log(256 - images)
-```
-
-Interpretation: logarithmic contrast transformation mapping [0,255] → ℝ.
-
-### Sweep algorithm
-
-```
-for threshold in sweep_range:
-    binary = (delta_field > threshold)
-    occupancy[c] = % of pixels in class c where binary == True
-```
-
-- Output: `occupancy_rates` shape `(num_thresholds, number_of_classes)`
-- Jump detection: `abs(occupancy[t+1] - occupancy[t]) > jump_threshold`
-
-### Topological features
-
-Uses `scipy.ndimage`:
-
-- `ndimage.label()`: connected components (Betti-0)
-- Hole detection via morphological operations (Betti-1)
-
-## Device
-
-- Uses Apple MPS (Metal Performance Shaders) via PyTorch (line 87 in src/common.py)
-- Falls back to CPU if MPS unavailable
-- All heavy computation on GPU
-
-## Output structure
-
-```
-root/
-├── 00a_delta_histograms_by_class.png
-├── 01_horizon_heatmap.png        # occupancy_rates as heatmap
-├── 02_horizon_animation.gif     # 60-frame sweep
-├── 03_scatter_mean_std.png
-├── 04_jumps_analysis.png
-├── 05_tsne_binary_profiles.png
-├── 06_3d_surface.png
-├── 07_cdf_by_class.png
-├── 08_entropy_analysis.png
-├── 09_original_vs_binary.png
-├── 10_betti0_components.png
-├── 11_betti1_holes.png
-├── 12_euler_persistence_complexity.png
-├── 13_persistence_landscape.png
-├── 14_stress_map.png
-├── 15_phase_volume.png
-├── 16_beauty_vision.png
-├── 17_noise_robustness.png
-├── 18_class_correlation.png
-├── 19_jump_footprints.png
-├── anim_frames/                # 60 PNG frames for animation
-├── Eugene_cmyk.tiff            # CMYK source image
-└── src/                       # core logic
-    ├── utils/                 # shared utilities
-    └── renderers/             # visualization modules
-```
-
-## Render function signature
-
-Each visualization script exports:
-
-```python
-def render(data, sweep, out_dir):
-    ...
-```
-
-Where:
-
-- `data`: `VisualizationData` object with `symbol_delta_fields`, `number_of_classes`, `height`, `width`, `config`
-- `sweep`: `SweepResults` object with `thresholds`, `occupancy_rates`, `jump_events`
-- `out_dir`: output directory (root, NOT script/)
-
-## Key configuration (params.py)
-
-- `VisualizationConfig` dataclass at `src/params.py` (Mutable)
-- Sweep range: `sweep_min=-5.546`, `sweep_max=5.546`, `sweep_step=0.0001` (Adjustable via CLI)
-- Jump threshold: `1.0` (percent)
-- Fig sizes defined per visualization type
-
-## Adding a new visualization
-
-1. Create `src/renderers/name.py`
-2. Export `render(data, sweep, out_dir)` function
-3. Run: `python3 generate.py`
-
-## Debugging
-
-- Uses `logging` module for all messages.
-- Configure logging level and format in `generate.py` or `common.py`.
-- Check `src/__pycache__/` for cached modules if imports fail.
-
-## Testing
-
-The project uses `pytest` for unit and integration testing.
-
-### Running Tests
-
-```bash
-pytest tests/
-```
-
-- `tests/test_math.py`: Verifies the Delta Field transformation and Sweep algorithm structure.
-- `tests/test_integration.py`: Verifies data loading and end-to-end pipeline components for MNIST and PNG sources.
-
-## Local LLM Integration (Junie CLI)
-
-To save tokens and use Junie with a local model (e.g., Ollama, LM Studio) via terminal:
-
-1. **Setup Environment**:
-   ```bash
-   make local-env
-   ```
-   This creates a `.env` file from `.env.example`. Edit it to point to your local API.
-
-2. **Configure Local API**:
-    - For **Ollama**: Use `http://localhost:11434/v1` as `JUNIE_API_BASE`.
-    - For **LM Studio**: Use `http://192.168.1.91:1234/v1` as `JUNIE_API_BASE`.
-    - **API Key**: `sk-lm-fp4sIXzQ:Ero2vvZ3skty30Ul8rnT`
-
-3. **Available Models (LM Studio)**:
-    - `qwen3-32b-merge-math4-science4-submath05-med05-other1-mlx` (Recommended)
-    - `gemma-4-e4b-it-mlx`
-    - `gemma-4-26b-a4b-it-mlx`
-    - `google/gemma-4-26b-a4b`
-    - `google/gemma-4-e2b`
-    - `gpt-oss-120b-mlx-crack`
-    - `harmonic-hermes-9b-mlx`
-    - `zai-org/glm-4.7-flash`
-    - `liquid/lfm2-1.2b`
-    - `crow-9b-heretic-4.6`
-    - `liquid/lfm2-24b-a2b`
-    - `text-embedding-nomic-embed-text-v1.5`
-
-4. **Running**:
-   Ensure your local LLM server is running and the model is loaded.
-
-   The project includes a pre-configured model definition for Junie CLI in `.junie/models/qwen-local.json`.
-
-   There are several ways to run it:
-
-    - **Recommended (via script)**:
-      ```bash
-      ./scripts/junie_local.sh "Explain this code"
-      ```
-      This script automatically loads `.env` variables and uses the `qwen-local` model.
-
-    - **Via Makefile**:
-      ```bash
-      make junie task="Explain this code"
-      # Или для конкретных моделей:
-      make junie-qwen task="Summary of tests/"
-      make junie-gemma task="Improve src/common.py"
-      ```
-
-    - **Directly via CLI**:
-      ```bash
-      junie --model qwen-local "Ваша задача"
-      ```
-
-   If you want to use it as the default for all commands, you can set `JUNIE_MODEL` in your `.env`.
-
-## IDE Integration
-
-This project is optimized for JetBrains IDEs (PyCharm, IntelliJ IDEA with Python plugin).
-
-### Run Configurations
-
-Pre-defined Run Configurations are available in the `.idea/runConfigurations/` folder:
-
-- **Generate ALL**: Runs `generate.py` for all data sources.
-- **Generate MNIST**: Runs `generate.py --source mnist`.
-- **Generate PNG**: Runs `generate.py --source png`.
-- **Generate CMYK**: Runs `generate.py --source cmyk`.
-- **Pytest in tests**: Runs all tests in the `tests/` directory.
-
-### Project Structure
-
-- **Source Root**: The `src/` directory is marked as a source root for proper module resolution.
-- **Test Root**: The `tests/` directory is marked as a test source root.
-- **Excluded Folders**: `output/`, `venv/`, and `.idea/` are excluded from indexing to maintain performance.
-
-## Files
-
-- `generate.py`: Unified entry point (use `--source` flag)
-- `src/common.py`: MNIST data loader + sweep orchestration
-- `src/loaders.py`: Source-specific loaders (MNIST, PNG, CMYK)
-- `src/models.py`: Data models and types
-- `src/params.py`: Configuration dataclass
-- `src/sweep.py`: Optimized threshold sweep logic
-- `src/utils/image_utils.py`: Image processing and color conversions
-- `src/utils/viz_utils.py`: Plotting & visualization
-- `src/utils/path_utils.py`: Path management
-- `src/utils/tensor_utils.py`: Tensor manipulations
-- `src/renderers/*.py`: 21 visualization modules
+# Repository Guidelines
+
+This repository contains a high-performance visualization pipeline for analyzing the topological features of images
+using a **Delta Field** transformation and threshold sweep algorithm.
+
+## Project Structure & Module Organization
+
+The project is organized into the following structure:
+
+- : The main entry point for running the visualization pipeline.
+- : Contains all core logic and visualization modules.
+    - : Pipeline orchestration.
+    - : Data ingestion modules (e.g., MNIST, PNG, CMYK).
+    - : Individual visualization modules.
+    - : Shared utility functions (image processing, plotting, etc.).
+- : Unit and integration tests.
+- : Local datasets used for testing and generation.
+- : Directory where generated visualizations are stored.
+- : Automation and helper scripts.
+
+## Build, Test, and Development Commands
+
+The project uses a to manage common tasks. All commands should be run within a virtual environment ().
+
+- python3 -m venv venv
+  venv/bin/pip install --upgrade pip
+  Requirement already satisfied: pip in ./venv/lib/python3.14/site-packages (26.0.1)
+  venv/bin/pip install -e ".[dev]"
+  Obtaining file:///Users/nearbe/Eugenia
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+  Requirement already satisfied: numpy in ./venv/lib/python3.14/site-packages (from Eugenia==0.1.0) (2.4.4)
+  Requirement already satisfied: scipy in ./venv/lib/python3.14/site-packages (from Eugenia==0.1.0) (1.17.1)
+  Requirement already satisfied: matplotlib in ./venv/lib/python3.14/site-packages (from Eugenia==0.1.0) (3.10.8)
+  Requirement already satisfied: Pillow in ./venv/lib/python3.14/site-packages (from Eugenia==0.1.0) (12.2.0)
+  Requirement already satisfied: torch in ./venv/lib/python3.14/site-packages (from Eugenia==0.1.0) (2.11.0)
+  Requirement already satisfied: tqdm in ./venv/lib/python3.14/site-packages (from Eugenia==0.1.0) (4.67.3)
+  Requirement already satisfied: scikit-learn in ./venv/lib/python3.14/site-packages (from Eugenia==0.1.0) (1.8.0)
+  Requirement already satisfied: pytest in ./venv/lib/python3.14/site-packages (from Eugenia==0.1.0) (9.0.3)
+  Requirement already satisfied: pytest-mpl in ./venv/lib/python3.14/site-packages (from Eugenia==0.1.0) (0.19.0)
+  Requirement already satisfied: ruff in ./venv/lib/python3.14/site-packages (from Eugenia==0.1.0) (0.15.10)
+  Requirement already satisfied: mypy in ./venv/lib/python3.14/site-packages (from Eugenia==0.1.0) (1.20.1)
+  Requirement already satisfied: contourpy>=1.0.1 in ./venv/lib/python3.14/site-packages (from matplotlib->
+  Eugenia==0.1.0) (1.3.3)
+  Requirement already satisfied: cycler>=0.10 in ./venv/lib/python3.14/site-packages (from matplotlib->Eugenia==0.1.0) (
+  0.12.1)
+  Requirement already satisfied: fonttools>=4.22.0 in ./venv/lib/python3.14/site-packages (from matplotlib->
+  Eugenia==0.1.0) (4.62.1)
+  Requirement already satisfied: kiwisolver>=1.3.1 in ./venv/lib/python3.14/site-packages (from matplotlib->
+  Eugenia==0.1.0) (1.5.0)
+  Requirement already satisfied: packaging>=20.0 in ./venv/lib/python3.14/site-packages (from matplotlib->
+  Eugenia==0.1.0) (26.1)
+  Requirement already satisfied: pyparsing>=3 in ./venv/lib/python3.14/site-packages (from matplotlib->Eugenia==0.1.0) (
+  3.3.2)
+  Requirement already satisfied: python-dateutil>=2.7 in ./venv/lib/python3.14/site-packages (from matplotlib->
+  Eugenia==0.1.0) (2.9.0.post0)
+  Requirement already satisfied: six>=1.5 in ./venv/lib/python3.14/site-packages (from python-dateutil>=2.7->
+  matplotlib->Eugenia==0.1.0) (1.17.0)
+  Requirement already satisfied: typing_extensions>=4.6.0 in ./venv/lib/python3.14/site-packages (from mypy->
+  Eugenia==0.1.0) (4.15.0)
+  Requirement already satisfied: mypy_extensions>=1.0.0 in ./venv/lib/python3.14/site-packages (from mypy->
+  Eugenia==0.1.0) (1.1.0)
+  Requirement already satisfied: pathspec>=1.0.0 in ./venv/lib/python3.14/site-packages (from mypy->Eugenia==0.1.0) (
+  1.0.4)
+  Requirement already satisfied: librt>=0.8.0 in ./venv/lib/python3.14/site-packages (from mypy->Eugenia==0.1.0) (0.9.0)
+  Requirement already satisfied: iniconfig>=1.0.1 in ./venv/lib/python3.14/site-packages (from pytest->Eugenia==0.1.0) (
+  2.3.0)
+  Requirement already satisfied: pluggy<2,>=1.5 in ./venv/lib/python3.14/site-packages (from pytest->Eugenia==0.1.0) (
+  1.6.0)
+  Requirement already satisfied: pygments>=2.7.2 in ./venv/lib/python3.14/site-packages (from pytest->Eugenia==0.1.0) (
+  2.20.0)
+  Requirement already satisfied: Jinja2>=2.10.2 in ./venv/lib/python3.14/site-packages (from pytest-mpl->
+  Eugenia==0.1.0) (3.1.6)
+  Requirement already satisfied: MarkupSafe>=2.0 in ./venv/lib/python3.14/site-packages (from Jinja2>=2.10.2->
+  pytest-mpl->Eugenia==0.1.0) (3.0.3)
+  Requirement already satisfied: joblib>=1.3.0 in ./venv/lib/python3.14/site-packages (from scikit-learn->
+  Eugenia==0.1.0) (1.5.3)
+  Requirement already satisfied: threadpoolctl>=3.2.0 in ./venv/lib/python3.14/site-packages (from scikit-learn->
+  Eugenia==0.1.0) (3.6.0)
+  Requirement already satisfied: filelock in ./venv/lib/python3.14/site-packages (from torch->Eugenia==0.1.0) (3.28.0)
+  Requirement already satisfied: setuptools<82 in ./venv/lib/python3.14/site-packages (from torch->Eugenia==0.1.0) (
+  81.0.0)
+  Requirement already satisfied: sympy>=1.13.3 in ./venv/lib/python3.14/site-packages (from torch->Eugenia==0.1.0) (
+  1.14.0)
+  Requirement already satisfied: networkx>=2.5.1 in ./venv/lib/python3.14/site-packages (from torch->Eugenia==0.1.0) (
+  3.6.1)
+  Requirement already satisfied: fsspec>=0.8.5 in ./venv/lib/python3.14/site-packages (from torch->Eugenia==0.1.0) (
+  2026.3.0)
+  Requirement already satisfied: mpmath<1.4,>=1.1.0 in ./venv/lib/python3.14/site-packages (from sympy>=1.13.3->torch->
+  Eugenia==0.1.0) (1.3.0)
+  Building wheels for collected packages: Eugenia
+  Building editable for Eugenia (pyproject.toml): started
+  Building editable for Eugenia (pyproject.toml): finished with status 'done'
+  Created wheel for Eugenia: filename=eugenia-0.1.0-0.editable-py3-none-any.whl size=4491
+  sha256=9c7fcccaea7162fbe85751d75daf61bc4a807288bdad7bb7bff5f515b8a310f4
+  Stored in directory:
+  /private/var/folders/34/5600hh790m527lzqmt3j8zwm0000gn/T/pip-ephem-wheel-cache-g1vltlgr/wheels/82/ed/68/e0427ab01dce76f9033e50ff042f0a074564b57aa52fae7cc9
+  Successfully built Eugenia
+  Installing collected packages: Eugenia
+  Attempting uninstall: Eugenia
+  Found existing installation: Eugenia 0.1.0
+  Uninstalling Eugenia-0.1.0:
+  Successfully uninstalled Eugenia-0.1.0
+  Successfully installed Eugenia-0.1.0: Create a virtual environment and install all dependencies.
+- venv/bin/python3 -m pytest tests/
+  [1m============================= test session starts ==============================[0m
+  platform darwin -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0
+  Matplotlib: 3.10.8
+  Freetype: 2.6.1
+  rootdir: /Users/nearbe/Eugenia
+  configfile: pyproject.toml
+  plugins: mpl-0.19.0
+  collected 7 items
+
+tests/test_integration.py [33ms[0m[32m.[0m[32m                                             [ 28%][0m
+tests/test_math.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[
+32m                                                 [100%][0m
+
+[32m========================= [32m[1m6 passed[0m, [33m1 skipped[0m[32m in 0.60s[0m[32m
+=========================[0m: Run the test suite using [1m============================= test session starts
+==============================[0m
+platform darwin -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0
+Matplotlib: 3.10.8
+Freetype: 2.6.1
+rootdir: /Users/nearbe/Eugenia
+configfile: pyproject.toml
+testpaths: tests
+plugins: mpl-0.19.0
+collected 7 items
+
+tests/test_integration.py [33ms[0m[32m.[0m[32m                                             [ 28%][0m
+tests/test_math.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[
+32m                                                 [100%][0m
+
+[32m========================= [32m[1m6 passed[0m, [33m1 skipped[0m[32m in 0.61s[0m[32m
+=========================[0m.
+
+- venv/bin/python3 generate.py --source all
+  CWD: /Users/nearbe/Eugenia
+  PIL test: <PIL.JpegImagePlugin.JpegImageFile image mode=RGB size=640x640 at 0x10D3F4AD0>
+  Generating 60 animation frames...
+  Assembling GIF...
+  CWD: /Users/nearbe/Eugenia
+  PIL test: <PIL.JpegImagePlugin.JpegImageFile image mode=RGB size=640x640 at 0x111240AD0>
+  Loading Eugene
+  Initial path: /Users/nearbe/Eugenia/Eugene, exists: False
+  Trying Eugene.png -> /Users/nearbe/Eugenia/Eugene.png, exists: False
+  Trying Eugene.jpeg -> /Users/nearbe/Eugenia/Eugene.jpeg, exists: True
+  Final path: /Users/nearbe/Eugenia/Eugene.jpeg
+  About to open: /Users/nearbe/Eugenia/Eugene.jpeg, type: <class 'str'>
+  Generating 60 animation frames...
+  Assembling GIF...
+  CWD: /Users/nearbe/Eugenia
+  PIL test: <PIL.JpegImagePlugin.JpegImageFile image mode=RGB size=640x640 at 0x10E6ECAD0>
+  Generating 60 animation frames...
+  Assembling GIF...
+  CWD: /Users/nearbe/Eugenia
+  PIL test: <PIL.JpegImagePlugin.JpegImageFile image mode=RGB size=640x640 at 0x10CB58AD0>: Execute the full
+  visualization pipeline for all data sources.
+- venv/bin/python3 -m ruff check src tests
+  [1m[91mF811 [0m[[1m[96m*[0m] [1mRedefinition of unused `compute_gradient_magnitude` from line 74[0m
+  [1m[94m-->[0m src/renderers/gradient_stress.py:74:31
+  [1m[94m|[0m
+  [1m[94m72 |[0m import numpy as np
+  [1m[94m73 |[0m
+  [1m[94m74 |[0m from utils.image_utils import compute_gradient_magnitude
+  [1m[94m|[0m [1m[33m--------------------------[0m [1m[33mprevious definition of `compute_gradient_magnitude`
+  here[0m
+  [1m[94m75 |[0m from utils.viz_utils import save_visualization, get_symbol_label
+  [1m[94m76 |[0m from utils.image_utils import compute_gradient_magnitude
+  [1m[94m|[0m [1m[91m^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [1m[91m`compute_gradient_magnitude` redefined here[0m
+  [1m[94m|[0m
+  [1m[96mhelp[0m: [1mRemove definition: `compute_gradient_magnitude`[0m
+
+Found 1 error.
+[[36m*[0m] 1 fixable with the `--fix` option.: Run the Ruff linter to check code quality.
+
+- venv/bin/python3 -m ruff format src tests
+  40 files left unchanged: Format the codebase using Ruff.
+- venv/bin/python3 -m mypy src tests
+  src/renderers/topological_entropy.py:111: error: No overload variant of "int" matches argument type "
+  object"  [call-overload]
+  src/renderers/topological_entropy.py:111: note: Possible overload variants:
+  src/renderers/topological_entropy.py:111: note:     def int(str | Buffer | SupportsInt | SupportsIndex = ..., /) ->
+  int
+  src/renderers/topological_entropy.py:111: note:     def int(str | bytes | bytearray, /, base: SupportsIndex) -> int
+  src/renderers/threshold_comparison.py:108: error: Argument 2 to "from_list" of "LinearSegmentedColormap" has
+  incompatible type "list[Sequence[object]]"; expected "Buffer | _SupportsArray[dtype[Any]] | _NestedSequence[_
+  SupportsArray[dtype[Any]]] | complex | bytes | str | _NestedSequence[complex | bytes | str] | Sequence[tuple[float,
+  tuple[float, float, float] | str | str | tuple[float, float, float, float] | tuple[tuple[float, float, float] | str,
+  float] | tuple[tuple[float, float, float, float], float]]]"  [arg-type]
+  src/renderers/surface_3d_projection.py:173: error: "Axes" has no attribute "set_zlabel"  [attr-defined]
+  src/renderers/summary_dashboard.py:72: error: Argument 2 to "from_list" of "LinearSegmentedColormap" has incompatible
+  type "list[Sequence[object]]"; expected "Buffer | _SupportsArray[dtype[Any]] | _NestedSequence[_SupportsArray[
+  dtype[Any]]] | complex | bytes | str | _NestedSequence[complex | bytes | str] | Sequence[tuple[float,
+  tuple[float, float, float] | str | str | tuple[float, float, float, float] | tuple[tuple[float, float, float] | str,
+  float] | tuple[tuple[float, float, float, float], float]]]"  [arg-type]
+  src/renderers/gradient_stress.py:128: error: "Axes" has no attribute "set_zlabel"  [attr-defined]
+  src/orchestrator.py:246: error: Argument 2 to "get" of "_Environ" has incompatible type "Path"; expected "str |
+  None"  [arg-type]
+  src/orchestrator.py:283: error: Argument 3 to "submit" of "Executor" has incompatible type "Path"; expected "
+  str"  [arg-type]
+  src/orchestrator.py:286: error: Argument 6 to "submit" of "Executor" has incompatible type "str | None"; expected "
+  str"  [arg-type]
+  Found 8 errors in 6 files (checked 40 source files): Run static type checking with Mypy.
+- rm -rf output/*
+  rm -rf src/**/__pycache__
+  rm -rf tests/__pycache__: Clear the directory and cache files.
+
+## Coding Style & Naming Conventions
+
+- **Language**: Python 3.14+
+- **Style**: The project follows standard PEP 8 guidelines, supplemented by for linting and formatting.
+- **Naming**:
+    - Use for functions, methods, and variables.
+    - Use for classes.
+    - Use for constants.
+- **Typing**: Explicit type hinting is required for all function signatures to ensure clarity and support static
+  analysis with Mypy.
+
+## Testing Guidelines
+
+- **Framework**: [1m============================= test session starts ==============================[0m
+  platform darwin -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0
+  Matplotlib: 3.10.8
+  Freetype: 2.6.1
+  rootdir: /Users/nearbe/Eugenia
+  configfile: pyproject.toml
+  testpaths: tests
+  plugins: mpl-0.19.0
+  collected 7 items
+
+tests/test_integration.py [33ms[0m[32m.[0m[32m                                             [ 28%][0m
+tests/test_math.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[
+32m                                                 [100%][0m
+
+[32m========================= [32m[1m6 passed[0m, [33m1 skipped[0m[32m in 0.64s[0m[32m
+=========================[0m is used for all testing.
+
+- **Coverage**: Tests should cover core mathematical logic, data loading, and individual renderer modules.
+- **Execution**: Run tests using venv/bin/python3 -m pytest tests/
+  [1m============================= test session starts ==============================[0m
+  platform darwin -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0
+  Matplotlib: 3.10.8
+  Freetype: 2.6.1
+  rootdir: /Users/nearbe/Eugenia
+  configfile: pyproject.toml
+  plugins: mpl-0.19.0
+  collected 7 items
+
+tests/test_integration.py [33ms[0m[32m.[0m[32m                                             [ 28%][0m
+tests/test_math.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[
+32m                                                 [100%][0m
+
+[32m========================= [32m[1m6 passed[0m, [33m1 skipped[0m[32m in 0.61s[0m[32m
+=========================[0m.
+
+## Commit & Pull Request Guidelines
+
+- **Commit Messages**: Follow the conventional commits format (e.g., , , ).
+- **Pull Requests**:
+    - Ensure all tests pass before submitting a PR.
+    - Include a brief description of the changes and any new visualizations generated.
+    - If applicable, provide screenshots or links to the directory for visual review.

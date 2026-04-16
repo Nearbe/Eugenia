@@ -13,4 +13,4 @@ def get_script_directory() -> Path:
 
 def get_parent_directory() -> Path:
     """Get the project root."""
-    return get_script_directory().parent.parent
+    return get_script_directory().parent

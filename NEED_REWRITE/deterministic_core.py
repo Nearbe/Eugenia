@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from typing import Dict
 
 import numpy as np
-from core.division import normalize_vector_safe, div_safe
+from core.division import normalize_vector_safe
 
 
 # ============================================================
