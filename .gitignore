@@ -30,12 +30,9 @@ venv/
 ENV/
 
 # IDE
-.idea/workspace.xml
-.idea/shelf/
-.idea/dictionaries/
-.idea/libraries/
-.idea/tasks.xml
-.idea/sonarlint/
+.idea/
+.ai/
+.junie/
 .vscode/
 .DS_Store
 
