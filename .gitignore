@@ -44,7 +44,7 @@ ENV/
 htmlcov/
 
 # Project specific
-output/
+!output/
 *.png
 *.gif
 *.jpeg

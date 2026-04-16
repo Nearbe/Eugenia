@@ -1,5 +1,7 @@
 # Visualizations: Topological Data Analysis Pipeline
 
+[![Easy](easy_mnist.png)](easy_mnist.png)
+
 This repository contains a high-performance visualization pipeline for analyzing the topological features of images
 using a **Delta Field** transformation and threshold sweep algorithm.
 
@@ -174,4 +176,4 @@ A `Makefile` is provided for common tasks:
 
 ## License
 
-[TODO: Add License Information - e.g., MIT, Proprietary, etc.]
+This project is licensed under the CC-BY-NC 4.0 International License - see the [LICENSE.md] file for details.
