@@ -1,9 +1,9 @@
 [project]
-name = "Eugenia"
+name = "Nucleus"
 version = "0.1.0"
 description = "Delta field visualizations for MNIST, PNG, and CMYK data"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.11"
 dependencies = [
   "numpy",
   "scipy",
@@ -24,10 +24,10 @@ dev = [
 
 [tool.ruff]
 line-length = 100
-target-version = "py314"
+target-version = "py311"
 
 [tool.mypy]
-python_version = "3.14"
+python_version = "3.11"
 mypy_path = "src"
 explicit_package_bases = true
 warn_return_any = true

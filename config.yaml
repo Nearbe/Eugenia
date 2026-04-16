@@ -1,0 +1,45 @@
+# Nucleus Configuration File
+# Move settings from hardcode to this YAML file
+
+# Data sources
+data:
+  mnist_path: "./data/mnist.npz"
+  default_source: "mnist"
+  sources:
+    - mnist
+    - fashion
+    - png
+    - cmyk
+
+# Sweep parameters
+sweep:
+  min: -10.0
+  max: 10.0
+  step: 0.1
+  jump_threshold: 5.0  # percentage
+
+# Performance settings
+performance:
+  num_workers: 8  # max parallel workers
+  use_gpu: true
+  cache_enabled: true
+  cache_dir: "./cache"
+
+# Output settings
+output:
+  directory: "./output"
+  format: "png"
+  dpi: 300
+  animation_fps: 24
+
+# Logging
+logging:
+  level: "INFO"
+  format: "[%(asctime)s] %(message)s"
+  datefmt: "%H:%M:%S"
+
+# Nucleus Core settings
+nucleus:
+  d_model: 4096
+  k: 32  # number of patterns per layer
+  compression_ratio: 0.01  # target compression (111GB -> ~1GB)

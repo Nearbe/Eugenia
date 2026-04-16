@@ -1,0 +1,62 @@
+# Multi-stage Dockerfile for Nucleus
+# Optimized for size and security
+
+# Stage 1: Build dependencies
+FROM python:3.11-slim as builder
+
+WORKDIR /build
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip and install build tools
+RUN pip install --upgrade pip setuptools wheel
+
+# Copy only dependency files first (better caching)
+COPY pyproject.toml .
+COPY README.md .
+
+# Install dependencies to virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --no-cache-dir -e .
+
+# Stage 2: Runtime image
+FROM python:3.11-slim as runtime
+
+# Create non-root user for security
+RUN groupadd -r eugenia && useradd -r -g eugenia eugenia
+
+WORKDIR /app
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy application code
+COPY src/ ./src/
+COPY data/ ./data/
+COPY config.yaml .
+COPY generate.py .
+
+# Create necessary directories
+RUN mkdir -p output cache && chown -R eugenia:eugenia /app
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV VIZ_OUTPUT_DIR=/app/output
+ENV CACHE_DIR=/app/cache
+
+# Switch to non-root user
+USER eugenia
+
+# Default command
+CMD ["python", "generate.py", "--source", "mnist"]
+
+# Health check (optional, requires curl or similar)
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+#     CMD python -c "import torch; print('OK')" || exit 1

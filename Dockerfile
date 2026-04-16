@@ -21,7 +21,7 @@ RUN pip install --no-cache-dir .
 COPY . .
 
 # Создаем директории для данных и вывода
-RUN mkdir -p output eugenia_data
+RUN mkdir -p output nucleus_data
 
 # Переменная окружения для корректной работы matplotlib в headless режиме
 ENV QT_QPA_PLATFORM=offscreen

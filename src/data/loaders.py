@@ -63,7 +63,7 @@ def _load_npz_dataset(filename: str) -> Tuple[torch.Tensor, torch.Tensor, int, i
     # Поддержка переменной окружения VIZ_DATA_DIR для гибкой настройки пути к данным.
     # Если переменная не задана, используется путь по умолчанию (в соседней директории).
     # Это позволяет пользователям IDE легко менять директорию данных без изменения кода.
-    default_data_dir = get_parent_directory() / "eugenia_data"
+    default_data_dir = get_parent_directory() / "nucleus_data"
     data_dir_env = os.environ.get("VIZ_DATA_DIR")
 
     if data_dir_env:
