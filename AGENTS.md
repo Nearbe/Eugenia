@@ -112,6 +112,8 @@ root/
 ├── 15_phase_volume.png
 ├── 16_beauty_vision.png
 ├── 17_noise_robustness.png
+├── 18_class_correlation.png
+├── 19_jump_footprints.png
 ├── anim_frames/                # 60 PNG frames for animation
 ├── Eugene_cmyk.tiff            # CMYK source image
 └── src/                       # core logic
@@ -165,4 +167,4 @@ Where:
 - `src/utils/viz_utils.py`: Plotting & visualization
 - `src/utils/path_utils.py`: Path management
 - `src/utils/tensor_utils.py`: Tensor manipulations
-- `src/renderers/*.py`: 19 visualization modules
+- `src/renderers/*.py`: 21 visualization modules

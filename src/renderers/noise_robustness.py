@@ -49,10 +49,10 @@ def render(data, sweep, out_dir):
             occ = (noisy_delta > t).mean() * 100.0
             occupancy.append(occ)
 
-        ax1.plot(sample_thresholds, occupancy, label=rf"$\sigma={sigma}$", alpha=0.8)
+        ax1.plot(sample_thresholds, occupancy, label=f"$\\sigma={sigma}$", alpha=0.8)
 
     ax1.set_title(f"Occupancy Robustness: {label}", fontsize=14)
-    ax1.set_xlabel(r"Threshold ($\Delta$)")
+    ax1.set_xlabel("Threshold ($\\Delta$)")
     ax1.set_ylabel("Occupancy Rate (%)")
     ax1.legend()
     ax1.grid(alpha=0.3)
@@ -67,7 +67,7 @@ def render(data, sweep, out_dir):
     diff = np.abs(noisy_vis - original_symbol)
     im = ax2.imshow(diff, cmap='hot')
     plt.colorbar(im, ax=ax2)
-    ax2.set_title(rf"Noise Impact ($\sigma={sigma_vis}$)", fontsize=14)
+    ax2.set_title(f"Noise Impact ($\\sigma={sigma_vis}$)", fontsize=14)
     ax2.axis('off')
 
     plt.tight_layout()

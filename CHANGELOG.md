@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2026-04-16
+
+### Added
+
+- Added `class_correlation.py` renderer for topological similarity analysis between classes.
+- Added `jump_footprint.py` renderer for spatial localization of significant topology changes.
+- Added `scikit-learn` to project dependencies.
+
+### Fixed
+
+- Fixed invalid escape sequence warnings in `noise_robustness.py`.
+
 ## [0.1.3] - 2026-04-16
 
 ### Added
