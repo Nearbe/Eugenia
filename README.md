@@ -5,6 +5,8 @@
 This repository contains a high-performance visualization pipeline for analyzing the topological features of images
 using a **Delta Field** transformation and threshold sweep algorithm.
 
+[![Easy](easy_mnist_animation.gif)](easy_mnist_animation.gif)
+
 ## Overview
 
 The core objective is to map image pixel values $X \in [0, 255]$ into a continuous real-valued "delta
