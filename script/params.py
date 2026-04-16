@@ -4,6 +4,41 @@ Configuration parameters for all visualizations.
 
 This module centralizes all numeric constants used across the visualization pipeline.
 Each parameter includes a docstring explaining its purpose and effect.
+
+========================================
+KEY MATHEMATICAL CONSTANTS
+========================================
+
+DELTA FIELD TRANSFORMATION:
+    D = log(X + 1) - log(256 - X)
+
+This maps pixel values X ∈ [0, 255] to real numbers D ∈ [-5.546, 5.546].
+
+Key properties:
+- log(X + 1) is approximately log(X) for X >> 1
+- log(256 - X) is approximately -log(0) when X ≈ 255
+- The constants ±5.546 come from log(256)
+
+    log(256) = 5.545 (natural log)
+    log(1) = 0
+
+========================================
+THRESHOLD SWEEP RANGE
+========================================
+
+sweep_min = -5.546
+sweep_max = 5.546
+sweep_step = 0.0001
+
+These are chosen to exactly cover the delta field range.
+With step = 0.0001, we get ~111,000 threshold levels.
+
+Resolution trade-off:
+- More thresholds → smoother curves, more jump detection
+- Fewer thresholds → faster computation
+
+The 1% jump threshold means we detect changes that affect
+at least 1% of pixels between adjacent thresholds.
 """
 
 from dataclasses import dataclass, field

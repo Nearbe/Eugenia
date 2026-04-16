@@ -90,11 +90,35 @@ The CDF provides a complete description of the
 distribution in a single smooth curve.
 """
 
-import numpy as np
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from utils import save_visualization, get_symbol_label
+
+
+def _plot_cdf_curves(ax, data, threshold_values, occupancy_rates, number_of_classes):
+    """Plot the CDF curves for each class."""
+    for class_id in range(number_of_classes):
+        # Compute CDF: % of pixels <= threshold
+        # Using pre-computed occupancy rates (% of pixels > threshold)
+        cumulative_distribution = 1.0 - (occupancy_rates[:, class_id].cpu().numpy() / 100.0)
+
+        ax.plot(
+            threshold_values,
+            cumulative_distribution,
+            label=get_symbol_label(class_id, data),
+            linewidth=1.5,
+        )
+
+
+def _setup_cdf_plot(ax, configuration, number_of_classes):
+    """Configure the axes for CDF plot."""
+    ax.set_xlabel("Threshold Value (Delta)")
+    ax.set_ylabel("Cumulative Probability (CDF)")
+    ax.set_title("Cumulative Distribution Function (CDF) by Class")
+    ax.legend(fontsize=8, loc="lower right", ncol=2 if number_of_classes > 5 else 1)
+    ax.grid(alpha=configuration["alpha_grid"])
 
 
 def render(data, sweep, out_dir):
@@ -102,37 +126,23 @@ def render(data, sweep, out_dir):
     Render CDF visualization for each class.
 
     Args:
-        data: Dictionary containing loaded data and configuration
-        sweep: Dictionary containing threshold sweep results
+        data: VisualizationData containing loaded data and configuration
+        sweep: SweepResults containing threshold sweep results
         out_dir: Output directory for saving the figure
     """
-    configuration = data["viz"]
-    symbols = data["symbol_delta_fields"]
-    number_of_classes = data["number_of_classes"]
-    threshold_values = sweep["thresholds"]
+    configuration = data.config
+    number_of_classes = data.number_of_classes
+    threshold_values = sweep.thresholds
+    occupancy_rates = sweep.occupancy_rates
 
-    figure, axis = plt.subplots(figsize=configuration["figure_cdf"])
+    fig, ax = plt.subplots(figsize=configuration["figure_cdf"])
 
-    for class_id in range(number_of_classes):
-        values = symbols[class_id].cpu().numpy().flatten()
+    _plot_cdf_curves(ax, data, threshold_values, occupancy_rates, number_of_classes)
+    _setup_cdf_plot(ax, configuration, number_of_classes)
 
-        # Compute CDF: percentage of values <= threshold
-        cumulative_distribution = np.array(
-            [np.mean(values <= threshold) for threshold in threshold_values]
-        )
-
-        axis.plot(
-            threshold_values,
-            cumulative_distribution,
-            label=str(class_id),
-            linewidth=1.5,
-        )
-
-    axis.set_xlabel("Delta Value")
-    axis.set_ylabel("Cumulative Probability")
-    axis.legend(fontsize=8, ncol=(number_of_classes + 4) // 5)
-    axis.grid(alpha=configuration["alpha_grid"])
-
-    plt.tight_layout()
-    plt.savefig(f"{out_dir}/cdf_by_class.png", dpi=configuration["dpi_default"])
-    plt.close()
+    description = (
+        "Cumulative Distribution Function (CDF) showing the percentage of pixels below each Delta threshold. "
+        "Steep sections indicate high pixel density at those values. "
+        "Crossing the 0.5 probability level (median) reveals the overall brightness balance of each symbol."
+    )
+    save_visualization("07_cdf_by_class.png", out_dir, configuration, "dpi_default", description=description)

@@ -29,39 +29,38 @@ output/
 
 Single entry point `generate.py` with `--source` flag:
 
-| --source | Module | Data source | Classes |
-|---------|--------|-----------|---------|
-| `mnist` (default) | `common.py` | MNIST npz | 10 digits |
-| `png` | `common_png.py` | PNG sprites | extracted via connected components |
-| `cmyk` | `common_cmyk.py` | CMYK images | 4 channels (C,M,Y,K) |
+| --source          | Loader       | Data source | Classes                            |
+|-------------------|--------------|-------------|------------------------------------|
+| `mnist` (default) | `loaders.py` | MNIST npz   | 10 digits                          |
+| `png`             | `loaders.py` | PNG sprites | extracted via connected components |
+| `cmyk`            | `loaders.py` | CMYK images | 4 channels (C,M,Y,K)               |
 
-### common.py (MNIST)
+### generate.py
 
-1. Loads `mnist.npz` → one sample per digit (10 total)
-2. Computes **Δ-field**: `D = log(X+1) - log(256-X)` (line 48)
-3. Runs **sweep**: thresholds -5.546 to 5.546, step 0.0001 (111K thresholds)
-4. For each threshold: computes `% of pixels where D > threshold` per class
-5. Detects **jump events**: where occupancy changes >1% between adjacent thresholds
+1. Parses CLI arguments.
+2. Sets environment variables (`VIZ_SOURCE`, `VIZ_OUTPUT_DIR`).
+3. Runs subprocess for each source to ensure isolation and clean resource handling.
 
-### common_png.py (PNG sprites)
+### script/common.py
 
-1. Loads PNG sprite sheet (e.g., `cyrillic.png`, `latin.png`, `Eugene.jpeg`)
-2. Extracts **symbols** by connected components in Δ-field (Δ > -4.0 threshold)
-3. Each symbol becomes a "class"
-4. Runs same sweep algorithm
+1. Calls `loaders.py` functions to load data.
+2. Computes **delta field**: `delta_field = log(X+1) - log(256-X)`.
+3. Runs **sweep**: thresholds -5.546 to 5.546, step 0.0001 (~111K thresholds).
+4. Dynamically discovers visualization modules in `script/visualizations/*.py`.
+5. Uses `ProcessPoolExecutor` for parallel rendering of modules.
 
-### common_cmyk.py (CMYK images)
+### script/sweep.py
 
-- Loads 4-channel CMYK image (Cyan, Magenta, Yellow, Key)
-- Each channel treated as a separate "symbol"
-- No symbol extraction (whole image)
+- Uses `torch.histc` for high-performance histogram computation.
+- Works on both CPU and Apple MPS (GPU).
+- Detects **jump events**: where occupancy changes >1% between adjacent thresholds.
 
 ## Core Math
 
-### Delta field (line 48 in common.py)
+### Delta field (line 89 in common.py)
 
 ```python
-D = log(X + 1) - log(256 - X)
+delta_field = log(images + 1) - log(256 - images)
 ```
 
 Interpretation: logarithmic contrast transformation mapping [0,255] → ℝ.
@@ -70,16 +69,17 @@ Interpretation: logarithmic contrast transformation mapping [0,255] → ℝ.
 
 ```
 for threshold in sweep_range:
-    binary = (D > threshold)
-    bits[c] = % of pixels in class c where binary == True
+    binary = (delta_field > threshold)
+    occupancy[c] = % of pixels in class c where binary == True
 ```
 
-- Output: `bits_tr_all` shape `(n_thresholds, n_classes)`
-- Jump detection: `abs(bits[t+1] - bits[t]) > jump_threshold`
+- Output: `occupancy_rates` shape `(num_thresholds, number_of_classes)`
+- Jump detection: `abs(occupancy[t+1] - occupancy[t]) > jump_threshold`
 
 ### Topological features
 
 Uses `scipy.ndimage`:
+
 - `ndimage.label()`: connected components (Betti-0)
 - Hole detection via morphological operations (Betti-1)
 
@@ -94,7 +94,7 @@ Uses `scipy.ndimage`:
 ```
 root/
 ├── 00a_delta_histograms_by_class.png
-├── 01_horizon_heatmap.png        # bits_tr_all as heatmap
+├── 01_horizon_heatmap.png        # occupancy_rates as heatmap
 ├── 02_horizon_animation.gif     # 60-frame sweep
 ├── 03_scatter_mean_std.png
 ├── 04_jumps_analysis.png
@@ -109,8 +109,11 @@ root/
 ├── 13_persistence_landscape.png
 ├── 14_stress_map.png
 ├── 15_phase_volume.png
+├── 16_beauty_vision.png
 ├── anim_frames/                # 60 PNG frames for animation
-└── script/                    # source files
+├── Eugene_cmyk.tiff            # CMYK source image
+└── script/                    # core logic
+    └── visualizations/        # visualization modules
 ```
 
 ## Render function signature
@@ -123,23 +126,23 @@ def render(data, sweep, out_dir):
 ```
 
 Where:
-- `data`: dict with keys `symbols_delta`, `n_classes`, `H`, `W`, `viz`
-- `sweep`: dict with keys `thresholds`, `bits_tr_all`, `jump_events`
+
+- `data`: `VisualizationData` object with `symbol_delta_fields`, `number_of_classes`, `height`, `width`, `config`
+- `sweep`: `SweepResults` object with `thresholds`, `occupancy_rates`, `jump_events`
 - `out_dir`: output directory (root, NOT script/)
 
 ## Key configuration (params.py)
 
-- `SolenoidVizParams` dataclass at `script/params.py:12`
+- `VisualizationConfig` dataclass at `script/params.py:49`
 - Sweep range: `sweep_min=-5.546`, `sweep_max=5.546`, `sweep_step=0.0001`
 - Jump threshold: `1.0` (percent)
 - Fig sizes defined per visualization type
 
 ## Adding a new visualization
 
-1. Create `script/XX_name.py`
+1. Create `script/visualizations/name.py`
 2. Export `render(data, sweep, out_dir)` function
-3. Add to `scripts` list in `common.py` or corresponding common module
-4. Run: `python generate_all.py`
+3. Run: `python3 generate.py`
 
 ## Debugging
 
@@ -150,8 +153,10 @@ Where:
 ## Files
 
 - `generate.py`: Unified entry point (use `--source` flag)
-- `script/common.py`: MNIST data loader + sweep
-- `script/common_png.py`: PNG sprite loader
-- `script/common_cmyk.py`: CMYK image loader
+- `script/common.py`: MNIST data loader + sweep orchestration
+- `script/loaders.py`: Source-specific loaders (MNIST, PNG, CMYK)
+- `script/models.py`: Data models and types
 - `script/params.py`: Configuration dataclass
-- `script/*.py`: 16 visualization modules
+- `script/sweep.py`: Optimized threshold sweep logic
+- `script/utils.py`: Shared utilities
+- `script/visualizations/*.py`: 18 visualization modules

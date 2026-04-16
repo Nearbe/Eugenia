@@ -79,11 +79,12 @@ Example for MNIST:
     "8": Low μ, High σ (two circles with holes)
 """
 
-import numpy as np
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import numpy as np
+from utils import save_visualization, get_symbol_label
 
 
 def render(data, sweep, out_dir):
@@ -95,41 +96,51 @@ def render(data, sweep, out_dir):
         sweep: Dictionary containing threshold sweep results
         out_dir: Output directory for saving the figure
     """
-    configuration = data["viz"]
-    symbols = data["symbol_delta_fields"]
-    number_of_classes = data["number_of_classes"]
+    configuration = data.config
+    symbols = data.symbol_delta_fields
+    number_of_classes = data.number_of_classes
 
     # Calculate mean and standard deviation for each class
-    mean_values = []
-    std_values = []
+    means = []
+    stds = []
 
     for class_id in range(number_of_classes):
         values = symbols[class_id].cpu().numpy().flatten()
-        mean_values.append(values.mean())
-        std_values.append(values.std())
+        means.append(values.mean())
+        stds.append(values.std())
 
-    # Create scatter plot
-    figure, axis = plt.subplots(figsize=configuration["figure_scatter"])
+    plt.figure(figsize=configuration["figure_scatter"])
 
-    scatter = axis.scatter(
-        mean_values, std_values, c=range(number_of_classes), s=80, cmap="tab20"
+    # Use a colormap to distinguish classes
+    colors = np.arange(number_of_classes)
+    scatter = plt.scatter(
+        means, stds,
+        c=colors,
+        s=100,
+        cmap="tab10" if number_of_classes <= 10 else "tab20",
+        edgecolors="black",
+        alpha=0.8
     )
 
-    # Add class labels
+    # Add class labels near the points
     for class_id in range(number_of_classes):
-        label = str(class_id) if number_of_classes <= 20 else f"#{class_id}"
-        axis.annotate(
+        label = get_symbol_label(class_id, data)
+        plt.annotate(
             label,
-            (mean_values[class_id], std_values[class_id]),
-            fontsize=10,
-            fontweight="bold",
+            (means[class_id], stds[class_id]),
+            xytext=(5, 5),
+            textcoords="offset points",
+            fontsize=9,
+            fontweight="bold"
         )
 
-    axis.set_xlabel("Mean Delta")
-    axis.set_ylabel("Standard Deviation")
-    axis.grid(alpha=configuration["alpha_grid"])
-    axis.set_title(f"{number_of_classes} Classes")
+    plt.xlabel("Mean Delta (\u03bc)")
+    plt.ylabel("Standard Deviation (\u03c3)")
+    plt.title(f"Contrast Profile Scatter: Mean vs. Std Dev ({number_of_classes} symbols)")
+    plt.grid(alpha=configuration["alpha_grid"])
 
-    plt.tight_layout()
-    plt.savefig(f"{out_dir}/scatter_mean_std.png", dpi=configuration["dpi_default"])
-    plt.close()
+    # Add quadrant lines at mean of all classes
+    plt.axvline(np.mean(means), color="gray", ls="--", alpha=0.3)
+    plt.axhline(np.mean(stds), color="gray", ls="--", alpha=0.3)
+
+    save_visualization("03_scatter_mean_std.png", out_dir, configuration, "dpi_default")

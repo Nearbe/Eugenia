@@ -77,17 +77,12 @@ The surface shows WHAT exists, topology shows
 HOW IT'S CONNECTED.
 """
 
-import numpy as np
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-
-
-# Colormaps for different color spaces
-CMYK_COLORMAPS = ["Blues", "Purples", "YlOrBr", "Greys"]
-RGB_COLORMAPS = ["Reds", "Greens", "Blues"]
+import numpy as np
+from utils import save_visualization, get_symbol_label, get_channel_config
 
 
 def render(data, sweep, out_dir):
@@ -99,51 +94,52 @@ def render(data, sweep, out_dir):
         sweep: Dictionary containing threshold sweep results
         out_dir: Output directory for saving the figure
     """
-    configuration = data["viz"]
-    symbols = data["symbol_delta_fields"]
-    number_of_classes = data["number_of_classes"]
-    is_color = data.get("is_color", False)
-    color_space = data.get("color_space", "Grayscale")
-    symbol_names = data.get("symbol_names", None)
+    configuration = data.config
+    symbols = data.symbol_delta_fields
+    number_of_classes = data.number_of_classes
 
-    # Select colormaps based on data type
-    if is_color:
-        if color_space == "CMYK":
-            channel_colormaps = CMYK_COLORMAPS
-        else:
-            channel_colormaps = RGB_COLORMAPS
-    else:
-        channel_colormaps = [configuration["colormap_3d"]] * number_of_classes
+    # Select colormaps based on data type from utils
+    _, channel_colormaps = get_channel_config(data, configuration)
 
     # Limit number of displayed classes
     display_count = min(configuration["surface_samples"], number_of_classes)
 
-    figure = plt.figure(figsize=configuration["figure_3d_multi"])
+    plt.figure(figsize=configuration["figure_3d_multi"])
 
-    for index in range(display_count):
-        delta_image = symbols[index].cpu().numpy()
-        height, width = delta_image.shape
+    # Pre-convert symbols to numpy to avoid redundant .cpu().numpy() calls
+    symbol_numpy = [s.cpu().numpy() for s in symbols[:display_count]]
 
-        axis = figure.add_subplot(1, display_count, index + 1, projection="3d")
+    for idx in range(display_count):
+        delta_image = symbol_numpy[idx]
+        h, w = delta_image.shape
 
-        horizontal_axis, vertical_axis = np.meshgrid(range(width), range(height))
-        axis.plot_surface(
-            horizontal_axis,
-            vertical_axis,
-            delta_image,
-            cmap=channel_colormaps[index],
-            alpha=configuration["colormap_3d_alpha"],
+        ax = plt.subplot(1, display_count, idx + 1, projection="3d")
+        x, y = np.meshgrid(np.arange(w), np.arange(h))
+
+        ax.plot_surface(
+            x, y, delta_image,
+            cmap=channel_colormaps[idx % len(channel_colormaps)],
+            alpha=configuration.get("colormap_3d_alpha", 0.8),
+            edgecolor="none"
         )
 
-        label = symbol_names[index] if symbol_names else f"#{index}"
-        axis.set_title(label)
+        label = get_symbol_label(idx, data)
+        ax.set_title(label)
 
         # Set consistent z-axis range
-        if delta_image.min() == delta_image.max():
-            axis.set_zlim(delta_image.min() - 1, delta_image.max() + 1)
+        z_min, z_max = delta_image.min(), delta_image.max()
+        if z_min == z_max:
+            ax.set_zlim(z_min - 1, z_max + 1)
         else:
-            axis.set_zlim(delta_image.min(), delta_image.max())
+            ax.set_zlim(z_min, z_max)
 
-    plt.tight_layout()
-    plt.savefig(f"{out_dir}/surface_3d.png", dpi=configuration["dpi_default"])
-    plt.close()
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_zlabel("\u0394")
+
+    description = (
+        "3D Surface plots of the Delta field for each class. "
+        "Height and color represent the Delta value (log-contrast). "
+        "This reveals the 'topography' of the symbols, where peaks are bright and valleys are dark."
+    )
+    save_visualization("06_3d_surface.png", out_dir, configuration, "dpi_default", description=description)

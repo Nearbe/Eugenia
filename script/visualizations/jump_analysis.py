@@ -81,43 +81,38 @@ The vertical RED LINE at threshold = 0 divides:
     - Right side: Bright-dominant pixels
 """
 
-import numpy as np
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import numpy as np
+from utils import save_visualization, add_reference_line
 
 
-def render(data, sweep, out_dir):
-    """
-    Render jump analysis visualization.
-
-    Args:
-        data: Dictionary containing loaded data and configuration
-        sweep: Dictionary containing threshold sweep results
-        out_dir: Output directory for saving the figure
-    """
-    configuration = data["viz"]
-    threshold_values = sweep["thresholds"]
-    jump_events = sweep["jump_events"]
-    jump_count = sweep["jump_count"]
-
-    # Count jumps at each threshold
+def _compute_jump_histogram(threshold_values, jump_events):
+    """Count jumps at each threshold."""
     jump_histogram = np.zeros(len(threshold_values))
-    for threshold, _, _, _, _ in jump_events:
-        index = np.argmin(np.abs(threshold_values - threshold))
-        jump_histogram[index] += 1
 
-    # Create figure
-    figure, axis = plt.subplots(figsize=configuration["figure_jumps"])
+    # Thresholds are evenly spaced, so we can calculate indices
+    t_min = threshold_values[0]
+    t_step = threshold_values[1] - threshold_values[0]
 
-    axis.plot(
+    for t_val, _, _, _, _ in jump_events:
+        idx = int((t_val - t_min) / t_step + 0.5)
+        if 0 <= idx < len(jump_histogram):
+            jump_histogram[idx] += 1
+    return jump_histogram
+
+
+def _plot_jump_distribution(ax, threshold_values, jump_histogram, configuration, jump_count):
+    """Plot the jump distribution on the given axes."""
+    ax.plot(
         threshold_values,
         jump_histogram,
         color="crimson",
-        linewidth=configuration["marker_size"],
+        linewidth=configuration.get("marker_size", 2),
     )
-    axis.fill_between(
+    ax.fill_between(
         threshold_values,
         0,
         jump_histogram,
@@ -125,20 +120,38 @@ def render(data, sweep, out_dir):
         color="crimson",
     )
 
-    axis.set_xlabel("Threshold Value")
-    axis.set_ylabel("Number of Jumps (>1%)")
-    axis.set_title(
-        f"Total Jumps: {jump_count}",
-        fontsize=configuration["figure_title_fontsize"] + 2,
-    )
+    ax.set_xlabel("Threshold Value (Delta)")
+    ax.set_ylabel("Jump Density (Count)")
+    ax.set_title(f"Jump Analysis (Total Jumps: {jump_count})")
 
-    axis.axvline(
-        x=0,
-        color=configuration["color_reference_line"],
-        ls=configuration["reference_line_style"],
-    )
-    axis.grid(alpha=configuration["alpha_grid"])
+    # Add reference line at delta = 0
+    add_reference_line(ax, configuration)
+    ax.grid(alpha=configuration["alpha_grid"])
 
-    plt.tight_layout()
-    plt.savefig(f"{out_dir}/jumps_analysis.png", dpi=configuration["dpi_default"])
-    plt.close()
+
+def render(data, sweep, out_dir):
+    """
+    Render jump analysis visualization.
+
+    Args:
+        data: VisualizationData containing loaded data and configuration
+        sweep: SweepResults containing threshold sweep results
+        out_dir: Output directory for saving the figure
+    """
+    configuration = data.config
+    threshold_values = sweep.thresholds
+    jump_events = sweep.jump_events
+    jump_count = sweep.jump_count
+
+    # Count jumps at each threshold
+    jump_histogram = _compute_jump_histogram(threshold_values, jump_events)
+
+    fig, ax = plt.subplots(figsize=configuration["figure_jumps"])
+    _plot_jump_distribution(ax, threshold_values, jump_histogram, configuration, jump_count)
+
+    description = (
+        "A 'jump' occurs when the occupancy rate changes by > 1% between adjacent thresholds. "
+        "Peaks indicate major topological transitions (features appearing or merging). "
+        "Threshold 0 (red line) marks the balance between dark and bright regions."
+    )
+    save_visualization("04_jumps_analysis.png", out_dir, configuration, "dpi_default", description=description)
