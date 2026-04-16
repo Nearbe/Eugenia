@@ -46,7 +46,7 @@ The pipeline supports three primary data sources, each requiring specific files:
 
 1. **MNIST**: Requires `../eugenia_data/mnist.npz` (with `x_train` and `y_train`).
 2. **PNG**: Expects image files (e.g., `cyrillic.png`, `latin.png`) in the project root.
-3. **CMYK**: Reads `Eugene.jpeg` from the project root and converts it to a CMYK TIFF (`script/Eugene_cmyk.tiff`).
+3. **CMYK**: Reads `Eugene.jpeg` from the project root and converts it to a CMYK TIFF (`src/Eugene_cmyk.tiff`).
 
 ## Usage
 
@@ -100,26 +100,33 @@ Results are saved to `output/{source}/`. Each run generates 17 different visuali
 ├── AGENTS.md           # Advanced developer guide
 ├── generate.py         # Main entry point
 ├── output/             # Generated visualizations
-├── script/             # Core logic and visualization modules
+├── src/                # Core logic and visualization modules
 │   ├── common.py       # Pipeline orchestration
 │   ├── loaders.py      # Data ingestion
 │   ├── params.py       # Configuration constants
 │   ├── sweep.py        # Threshold sweep algorithm
-│   ├── utils.py        # Shared utilities
-│   └── *.py            # Visualization modules
+│   ├── utils/          # Shared utilities
+│   │   ├── image_utils.py  # Image processing
+│   │   ├── viz_utils.py    # Plotting & visualization
+│   │   ├── path_utils.py   # Path management
+│   │   └── tensor_utils.py # Tensor manipulations
+│   └── renderers/      # Visualization modules
 └── venv/               # Python virtual environment
 ```
 
 ## Project Architecture
 
 - `generate.py`: Unified entry point. Parses arguments and spawns subprocesses.
-- `script/common.py`: Orchestrates loading, sweeping, and rendering.
-- `script/loaders.py`: Source-specific data loading (MNIST, PNG extraction via connected components, CMYK channel
+- `src/common.py`: Orchestrates loading, sweeping, and rendering.
+- `src/loaders.py`: Source-specific data loading (MNIST, PNG extraction via connected components, CMYK channel
   separation).
-- `script/params.py`: Central `CONFIG` dataclass containing all numeric constants and visualization parameters.
-- `script/sweep.py`: Core algorithm for thresholding the delta field at high resolution (~111k steps).
-- `script/utils.py`: Shared visualization and math utilities.
-- `script/*.py`: Individual visualization modules, each exporting a `render()` function.
+- `src/params.py`: Central `CONFIG` dataclass containing all numeric constants and visualization parameters.
+- `src/sweep.py`: Core algorithm for thresholding the delta field at high resolution (~111k steps).
+- `src/utils/image_utils.py`: Image processing and color conversions.
+- `src/utils/viz_utils.py`: Matplotlib plotting and visualization helpers.
+- `src/utils/path_utils.py`: Path and directory management.
+- `src/utils/tensor_utils.py`: PyTorch tensor padding and utilities.
+- `src/renderers/*.py`: Individual visualization modules, each exporting a `render()` function.
 
 ## Environment Variables
 

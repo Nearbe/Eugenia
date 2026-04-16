@@ -32,24 +32,25 @@ Single entry point `generate.py` with `--source` flag:
 | --source          | Loader       | Data source | Classes                            |
 |-------------------|--------------|-------------|------------------------------------|
 | `mnist` (default) | `loaders.py` | MNIST npz   | 10 digits                          |
+| `fashion`         | `loaders.py` | Fashion-MN  | 10 clothing types                  |
 | `png`             | `loaders.py` | PNG sprites | extracted via connected components |
 | `cmyk`            | `loaders.py` | CMYK images | 4 channels (C,M,Y,K)               |
 
 ### generate.py
 
-1. Parses CLI arguments.
-2. Sets environment variables (`VIZ_SOURCE`, `VIZ_OUTPUT_DIR`).
-3. Runs subprocess for each source to ensure isolation and clean resource handling.
+1. Parses CLI arguments (`--source`, `--file`, `--parallel`, `--workers`, `--sweep-min`, `--sweep-max`, `--sweep-step`,
+   `--jump-threshold`, `--renderers`).
+2. Orchestrates source processing by calling `src/common.py` as a subprocess.
+3. Passes parameters via command-line arguments to ensure clean isolation between sources.
 
-### script/common.py
+### src/common.py
 
-1. Calls `loaders.py` functions to load data.
-2. Computes **delta field**: `delta_field = log(X+1) - log(256-X)`.
-3. Runs **sweep**: thresholds -5.546 to 5.546, step 0.0001 (~111K thresholds).
-4. Dynamically discovers visualization modules in `script/visualizations/*.py`.
-5. Uses `ProcessPoolExecutor` for parallel rendering of modules.
+1. Provides a parameterized API for loading data, computing sweeps, and rendering.
+2. Supports CLI arguments for standalone execution.
+3. Uses `logging` for unified output.
+4. Uses `pathlib` for robust path management.
 
-### script/sweep.py
+### src/sweep.py
 
 - Uses `torch.histc` for high-performance histogram computation.
 - Works on both CPU and Apple MPS (GPU).
@@ -57,7 +58,7 @@ Single entry point `generate.py` with `--source` flag:
 
 ## Core Math
 
-### Delta field (line 89 in common.py)
+### Delta field (line 95 in common.py)
 
 ```python
 delta_field = log(images + 1) - log(256 - images)
@@ -110,10 +111,12 @@ root/
 ├── 14_stress_map.png
 ├── 15_phase_volume.png
 ├── 16_beauty_vision.png
+├── 17_noise_robustness.png
 ├── anim_frames/                # 60 PNG frames for animation
 ├── Eugene_cmyk.tiff            # CMYK source image
-└── script/                    # core logic
-    └── visualizations/        # visualization modules
+└── src/                       # core logic
+    ├── utils/                 # shared utilities
+    └── renderers/             # visualization modules
 ```
 
 ## Render function signature
@@ -133,30 +136,33 @@ Where:
 
 ## Key configuration (params.py)
 
-- `VisualizationConfig` dataclass at `script/params.py:49`
-- Sweep range: `sweep_min=-5.546`, `sweep_max=5.546`, `sweep_step=0.0001`
+- `VisualizationConfig` dataclass at `src/params.py` (Mutable)
+- Sweep range: `sweep_min=-5.546`, `sweep_max=5.546`, `sweep_step=0.0001` (Adjustable via CLI)
 - Jump threshold: `1.0` (percent)
 - Fig sizes defined per visualization type
 
 ## Adding a new visualization
 
-1. Create `script/visualizations/name.py`
+1. Create `src/renderers/name.py`
 2. Export `render(data, sweep, out_dir)` function
 3. Run: `python3 generate.py`
 
 ## Debugging
 
-- Add `print()` statements ( flushed, timestamps via `time.strftime('%H:%M:%S')`)
-- Check `script/__pycache__/` for cached modules
-- Re-run with: `python generate_all.py`
+- Uses `logging` module for all messages.
+- Configure logging level and format in `generate.py` or `common.py`.
+- Check `src/__pycache__/` for cached modules if imports fail.
 
 ## Files
 
 - `generate.py`: Unified entry point (use `--source` flag)
-- `script/common.py`: MNIST data loader + sweep orchestration
-- `script/loaders.py`: Source-specific loaders (MNIST, PNG, CMYK)
-- `script/models.py`: Data models and types
-- `script/params.py`: Configuration dataclass
-- `script/sweep.py`: Optimized threshold sweep logic
-- `script/utils.py`: Shared utilities
-- `script/visualizations/*.py`: 18 visualization modules
+- `src/common.py`: MNIST data loader + sweep orchestration
+- `src/loaders.py`: Source-specific loaders (MNIST, PNG, CMYK)
+- `src/models.py`: Data models and types
+- `src/params.py`: Configuration dataclass
+- `src/sweep.py`: Optimized threshold sweep logic
+- `src/utils/image_utils.py`: Image processing and color conversions
+- `src/utils/viz_utils.py`: Plotting & visualization
+- `src/utils/path_utils.py`: Path management
+- `src/utils/tensor_utils.py`: Tensor manipulations
+- `src/renderers/*.py`: 19 visualization modules

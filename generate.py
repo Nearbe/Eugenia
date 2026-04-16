@@ -70,59 +70,85 @@ Each source gets 15 PNG files plus 1 GIF animation.
 """
 
 import argparse
+import logging
 import os
 import shutil
 import subprocess
 import sys
 import time
 from concurrent.futures import ProcessPoolExecutor
+from pathlib import Path
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] %(message)s',
+    datefmt='%H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 # Determine script directory and Python interpreter
-SCRIPT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
-
-VENV_PYTHON = os.path.join(SCRIPT_DIRECTORY, "venv", "bin", "python3")
-PYTHON_INTERPRETER = VENV_PYTHON if os.path.exists(VENV_PYTHON) else sys.executable
+SCRIPT_DIRECTORY = Path(__file__).resolve().parent
+VENV_PYTHON = SCRIPT_DIRECTORY / "venv" / "bin" / "python3"
+PYTHON_INTERPRETER = str(VENV_PYTHON) if VENV_PYTHON.exists() else sys.executable
 
 # Available data sources
-AVAILABLE_SOURCES = ["mnist", "png", "cmyk"]
+AVAILABLE_SOURCES = ["mnist", "png", "cmyk", "fashion"]
 
 
-def run_source(source_name: str, source_file: str = "") -> bool:
+def run_source(source_name: str, source_file: str = "", num_workers: int = None,
+               sweep_min: float = None, sweep_max: float = None, sweep_step: float = None,
+               jump_threshold: float = None, renderers: str = None) -> bool:
     """
     Run visualization generation for a specific source.
 
     Args:
         source_name: Name of the data source (mnist, png, cmyk)
         source_file: Optional specific file to use (e.g., latin, cyrillic)
+        num_workers: Number of parallel workers for rendering.
+        sweep_min, sweep_max, sweep_step: Custom sweep parameters.
+        jump_threshold: Custom jump detection threshold.
+        renderers: Comma-separated list of renderers to run.
 
     Returns:
         True if successful, False otherwise
     """
     start_time = time.time()
-    print(f"\n[{time.strftime('%H:%M:%S')}] === {source_name.upper()} ===")
+    logger.info(f"{'=' * 10} {source_name.upper()} {'=' * 10}")
 
-    output_directory = os.path.join(SCRIPT_DIRECTORY, "output", source_name)
-    os.makedirs(output_directory, exist_ok=True)
-
-    # Set up environment for the subprocess
-    env = os.environ.copy()
-    env["VIZ_SOURCE"] = source_name
-    env["VIZ_OUTPUT_DIR"] = output_directory
-    env["VIZ_SOURCE_FILE"] = source_file
+    output_directory = SCRIPT_DIRECTORY / "output" / source_name
+    output_directory.mkdir(parents=True, exist_ok=True)
 
     # Run the common orchestration script
-    script_path = os.path.join(SCRIPT_DIRECTORY, "script", "common.py")
+    script_path = SCRIPT_DIRECTORY / "src" / "common.py"
+
+    cmd = [PYTHON_INTERPRETER, str(script_path), "--source", source_name, "--output", str(output_directory)]
+    if source_file:
+        cmd.extend(["--file", source_file])
+    if num_workers:
+        cmd.extend(["--workers", str(num_workers)])
+    if sweep_min is not None:
+        cmd.extend(["--sweep-min", str(sweep_min)])
+    if sweep_max is not None:
+        cmd.extend(["--sweep-max", str(sweep_max)])
+    if sweep_step is not None:
+        cmd.extend(["--sweep-step", str(sweep_step)])
+    if jump_threshold is not None:
+        cmd.extend(["--jump-threshold", str(jump_threshold)])
+    if renderers:
+        cmd.extend(["--renderers", renderers])
+
     result = subprocess.run(
-        [PYTHON_INTERPRETER, script_path],
-        cwd=SCRIPT_DIRECTORY,
-        env=env
+        cmd,
+        cwd=str(SCRIPT_DIRECTORY),
+        env=os.environ.copy()
     )
 
     if result.returncode != 0:
-        print(f"  Error: {source_name} failed with return code {result.returncode}")
+        logger.error(f"  Error: {source_name} failed with return code {result.returncode}")
         return False
 
-    print(f"  Completed in {time.time() - start_time:.0f}s")
+    logger.info(f"  Completed in {time.time() - start_time:.0f}s")
     return True
 
 
@@ -141,6 +167,14 @@ def main() -> None:
     parser.add_argument(
         "--parallel", action="store_true", help="Run sources in parallel"
     )
+    parser.add_argument(
+        "--workers", type=int, default=None, help="Number of parallel workers for rendering"
+    )
+    parser.add_argument("--sweep-min", type=float, help="Minimum threshold for sweep")
+    parser.add_argument("--sweep-max", type=float, help="Maximum threshold for sweep")
+    parser.add_argument("--sweep-step", type=float, help="Step size for sweep")
+    parser.add_argument("--jump-threshold", type=float, help="Jump detection threshold (%%)")
+    parser.add_argument("--renderers", type=str, help="Comma-separated list of renderers to run")
     arguments = parser.parse_args()
 
     # Determine which sources to process
@@ -150,33 +184,38 @@ def main() -> None:
 
     # Clean only the specific source directories
     for source in sources_to_process:
-        output_dir = os.path.join(SCRIPT_DIRECTORY, "output", source)
-        if os.path.exists(output_dir):
+        output_dir = SCRIPT_DIRECTORY / "output" / source
+        if output_dir.exists():
             shutil.rmtree(output_dir)
-        os.makedirs(output_dir, exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
     # Process each source
     start_time = time.time()
 
     if arguments.parallel and len(sources_to_process) > 1:
-        print(f"[{time.strftime('%H:%M:%S')}] Running {len(sources_to_process)} sources in parallel...")
+        logger.info(f"Running {len(sources_to_process)} sources in parallel...")
         with ProcessPoolExecutor(max_workers=len(sources_to_process)) as executor:
-            futures = [executor.submit(run_source, source, arguments.file) for source in sources_to_process]
+            futures = [executor.submit(run_source, source, arguments.file, arguments.workers,
+                                       arguments.sweep_min, arguments.sweep_max, arguments.sweep_step,
+                                       arguments.jump_threshold, arguments.renderers)
+                       for source in sources_to_process]
             for future in futures:
                 future.result()
     else:
         for source in sources_to_process:
-            run_source(source, arguments.file)
+            run_source(source, arguments.file, arguments.workers,
+                       arguments.sweep_min, arguments.sweep_max, arguments.sweep_step,
+                       arguments.jump_threshold, arguments.renderers)
 
     # Print summary
-    print(f"\n{'=' * 60}")
-    print(f"Total time: {time.time() - start_time:.0f}s")
-    print(f"Outputs:")
+    logger.info(f"{'=' * 60}")
+    logger.info(f"Total time: {time.time() - start_time:.0f}s")
+    logger.info("Outputs:")
     for source in sources_to_process:
-        output_dir = os.path.join("output", source)
-        png_count = len([f for f in os.listdir(output_dir) if f.endswith(".png")])
-        gif_count = len([f for f in os.listdir(output_dir) if f.endswith(".gif")])
-        print(f"  {source}: {png_count} PNG, {gif_count} GIF -> {output_dir}/")
+        output_dir = SCRIPT_DIRECTORY / "output" / source
+        png_count = len(list(output_dir.glob("*.png")))
+        gif_count = len(list(output_dir.glob("*.gif")))
+        logger.info(f"  {source}: {png_count} PNG, {gif_count} GIF -> {output_dir}/")
 
 
 if __name__ == "__main__":

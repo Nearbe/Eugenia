@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-04-16
+
+### Added
+
+- Added `noise_robustness.py` renderer for topological stability analysis under Gaussian noise.
+- Implemented `load_fashion_data` in `src/loaders.py` to support Fashion-MNIST.
+- Added new CLI arguments to `generate.py`: `--sweep-min`, `--sweep-max`, `--sweep-step`, `--jump-threshold`, and
+  `--renderers`.
+- Support for selecting specific renderers via comma-separated list.
+
+### Changed
+
+- Made `VisualizationConfig` in `src/params.py` mutable to allow dynamic updates from CLI.
+- Refactored `src/loaders.py` to use a generic `_load_npz_dataset` helper.
+
 ## [0.1.2] - 2026-04-16
 
 ### Added
