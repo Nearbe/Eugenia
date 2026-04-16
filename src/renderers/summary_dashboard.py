@@ -2,8 +2,8 @@
 """
 Beauty vision summary visualization.
 
-Compiles multiple key visualizations into a single high-quality 
-"beauty vision" summary, providing a comprehensive overview 
+Compiles multiple key visualizations into a single high-quality
+"beauty vision" summary, providing a comprehensive overview
 of the topological analysis.
 
 ========================================
@@ -57,7 +57,7 @@ from utils.viz_utils import (
     get_symbol_label,
     get_channel_config,
 )
-from image_utils import (
+from utils.image_utils import (
     hex_to_rgb,
     create_colored_mask,
     normalize_image,
@@ -193,7 +193,8 @@ def _plot_gradient_stress(ax, delta_image):
     ax.axis('off')
 
 
-def _plot_info_metadata(ax, data, configuration, label, thresholds, class_occupancy, jump_events, display_idx, entropy,
+def _plot_info_metadata(ax, data, configuration, label, thresholds, class_occupancy, jump_events,
+                        display_idx, entropy,
                         w, h):
     """PANEL 9: Info & Metadata (Bottom Right)"""
     ax.axis('off')
@@ -245,24 +246,30 @@ def render(data, sweep, out_dir):
 
     # Create a large figure with GridSpec
     fig = plt.figure(figsize=(24, 18))
-    fig.suptitle(f"Topological Analysis Summary: {label.upper()}", fontsize=32, fontweight='bold', y=0.98)
+    fig.suptitle(f"Topological Analysis Summary: {label.upper()}", fontsize=32, fontweight='bold',
+                 y=0.98)
 
     gs = gridspec.GridSpec(3, 3, figure=fig)
 
     # --- PANEL 1: Original Delta Field (Top Left) ---
-    _plot_delta_field(fig.add_subplot(gs[0, 0]), delta_image, is_color, channel_colors, display_idx, configuration)
+    _plot_delta_field(fig.add_subplot(gs[0, 0]), delta_image, is_color, channel_colors, display_idx,
+                      configuration)
 
     # --- PANEL 2: Binary Mask (Top Middle) ---
-    _plot_binary_mask(fig.add_subplot(gs[0, 1]), delta_image, is_color, channel_colors, display_idx, configuration)
+    _plot_binary_mask(fig.add_subplot(gs[0, 1]), delta_image, is_color, channel_colors, display_idx,
+                      configuration)
 
     # --- PANEL 3: 3D Surface (Top Right) ---
-    _plot_3d_landscape(fig.add_subplot(gs[0, 2], projection='3d'), delta_image, channel_colormaps, display_idx)
+    _plot_3d_landscape(fig.add_subplot(gs[0, 2], projection='3d'), delta_image, channel_colormaps,
+                       display_idx)
 
     # --- PANEL 4: Persistence Skeleton (Middle Left) ---
-    _plot_persistence_skeleton(fig.add_subplot(gs[1, 0], projection='3d'), delta_image, configuration)
+    _plot_persistence_skeleton(fig.add_subplot(gs[1, 0], projection='3d'), delta_image,
+                               configuration)
 
     # --- PANEL 5: Jumps & Occupancy (Middle Middle) ---
-    _plot_occupancy_jumps(fig.add_subplot(gs[1, 1]), thresholds, class_occupancy, jump_events, display_idx)
+    _plot_occupancy_jumps(fig.add_subplot(gs[1, 1]), thresholds, class_occupancy, jump_events,
+                          display_idx)
 
     # --- PANEL 6: Horizon Heatmap (Middle Right) ---
     _plot_horizon_heatmap(fig.add_subplot(gs[1, 2]), thresholds, occupancy_rates, num_classes)
@@ -275,7 +282,8 @@ def render(data, sweep, out_dir):
 
     # --- PANEL 9: Info & Metadata (Bottom Right) ---
     h, w = delta_image.shape
-    _plot_info_metadata(fig.add_subplot(gs[2, 2]), data, configuration, label, thresholds, class_occupancy, jump_events,
+    _plot_info_metadata(fig.add_subplot(gs[2, 2]), data, configuration, label, thresholds,
+                        class_occupancy, jump_events,
                         display_idx, entropy, w, h)
 
     description = (
@@ -283,7 +291,8 @@ def render(data, sweep, out_dir):
         "Uses colored masks to highlight regions above significant thresholds. "
         "Demonstrates the complexity and structural richness of the symbols' Delta fields."
     )
-    save_visualization("16_beauty_vision.png", out_dir, configuration, "dpi_high", description=description)
+    save_visualization("16_beauty_vision.png", out_dir, configuration, "dpi_high",
+                       description=description)
 
 
 if __name__ == "__main__":

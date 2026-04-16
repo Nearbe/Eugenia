@@ -7,6 +7,7 @@ PNG sprite sheets, and CMYK images.
 """
 
 import os
+from pathlib import Path
 from typing import Tuple
 
 import numpy as np
@@ -59,8 +60,17 @@ def _load_npz_dataset(filename: str) -> Tuple[torch.Tensor, torch.Tensor, int, i
     Args:
         filename: Name of the .npz file (e.g., "mnist.npz", "fashion_mnist.npz").
     """
-    script_dir = get_script_directory()
-    data_dir = script_dir.parent.parent / "eugenia_data"
+    # Поддержка переменной окружения VIZ_DATA_DIR для гибкой настройки пути к данным.
+    # Если переменная не задана, используется путь по умолчанию (в соседней директории).
+    # Это позволяет пользователям IDE легко менять директорию данных без изменения кода.
+    default_data_dir = get_script_directory().parent.parent / "eugenia_data"
+    data_dir_env = os.environ.get("VIZ_DATA_DIR")
+
+    if data_dir_env:
+        data_dir = Path(data_dir_env)
+    else:
+        data_dir = default_data_dir
+
     dataset_path = data_dir / filename
 
     if not dataset_path.exists():
@@ -152,7 +162,7 @@ def load_png_image(source_file: str = "") -> Tuple[torch.Tensor, torch.Tensor, i
     height, width = image_array.shape
 
     # Инверсия: белый фон (255) становится черным (0), а символы — белыми (255).
-    # Это необходимо для того, чтобы символы считались "объектами" (foreground), 
+    # Это необходимо для того, чтобы символы считались "объектами" (foreground),
     # а фон — пустотой (background) при анализе связности.
     images = torch.from_numpy(255.0 - image_array)
 

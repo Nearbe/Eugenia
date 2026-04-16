@@ -3,8 +3,8 @@ import sys
 
 import pytest
 
-# Добавляем директорию script в путь поиска модулей
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'script'))
+# Добавляем директорию src в путь поиска модулей
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from common import load_data, compute_sweep
 from models import VisualizationData, SweepResults

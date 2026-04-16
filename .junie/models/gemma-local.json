@@ -1,0 +1,11 @@
+{
+    "baseUrl": "http://192.168.1.91:1234/v1/responses",
+    "id": "gemma-4-26b-a4b-it-mlx",
+    "apiType": "OpenAIResponses",
+    "extraHeaders": {
+        "X-Custom-Source": "Junie"
+    },
+    "fasterModel": {
+        "id": "gemma-4-e4b-it-mlx"
+    }
+}

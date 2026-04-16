@@ -68,7 +68,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from utils.viz_utils import save_visualization, get_symbol_label
-from image_utils import normalize_image
+from utils.image_utils import normalize_image
 
 
 def _plot_skeleton(ax, delta_image, data, idx, configuration):
@@ -130,4 +130,5 @@ def render(data, sweep, out_dir):
         "Features with persistence below threshold (noise) are filtered out. "
         "Highlights the core structural components of each class in 3D."
     )
-    save_visualization("13_persistence_landscape.png", out_dir, configuration, "dpi_default", description=description)
+    save_visualization("13_persistence_landscape.png", out_dir, configuration, "dpi_default",
+                       description=description)

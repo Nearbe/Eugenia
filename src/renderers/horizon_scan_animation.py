@@ -53,7 +53,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 from utils.viz_utils import get_channel_config, get_symbol_label
-from image_utils import hex_to_rgb, create_colored_mask
+from utils.image_utils import hex_to_rgb, create_colored_mask
 
 
 def render(data, sweep, out_dir):
@@ -120,7 +120,7 @@ def render(data, sweep, out_dir):
         plt.close()
 
     # Create animated GIF from frames
-    print(f"  Assembling GIF...", flush=True)
+    print("  Assembling GIF...", flush=True)
     try:
         frames = [
             Image.open(f"{frames_directory}/frame_{i:04d}.png")

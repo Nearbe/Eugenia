@@ -69,7 +69,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from utils.viz_utils import save_visualization, get_symbol_label
-from image_utils import compute_gradient_magnitude
+from utils.image_utils import compute_gradient_magnitude
 
 
 def render(data, sweep, out_dir):

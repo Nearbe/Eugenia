@@ -1,0 +1,56 @@
+# Environments
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+
+# IDE
+.idea/workspace.xml
+.idea/shelf/
+.idea/dictionaries/
+.idea/libraries/
+.idea/tasks.xml
+.idea/sonarlint/
+.vscode/
+.DS_Store
+
+# Testing
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Project specific
+output/
+*.png
+*.gif
+*.jpeg
+*.tiff
+!Eugene.jpeg
+!Eugene_cmyk.tiff

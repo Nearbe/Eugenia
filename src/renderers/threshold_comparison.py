@@ -66,7 +66,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from utils.viz_utils import save_visualization, get_symbol_label, get_channel_config
-from image_utils import hex_to_rgb, create_colored_mask
+from utils.image_utils import hex_to_rgb, create_colored_mask
 
 
 def render(data, sweep, out_dir):
@@ -138,4 +138,5 @@ def render(data, sweep, out_dir):
         "Helps identify at which threshold topological features (like holes in '8' or '0') become stable. "
         "Negative thresholds capture highlights; positive thresholds capture dark regions."
     )
-    save_visualization("09_original_vs_binary.png", out_dir, configuration, "dpi_high", description=description)
+    save_visualization("09_original_vs_binary.png", out_dir, configuration, "dpi_high",
+                       description=description)

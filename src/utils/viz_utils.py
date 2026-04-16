@@ -4,17 +4,17 @@ Utilities for matplotlib visualizations and plotting.
 """
 
 import os
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 import matplotlib.pyplot as plt
 
 # Импорт констант из image_utils для использования в get_channel_config
-from image_utils import CMYK_COLORS, CMYK_COLORMAPS, RGB_COLORS, RGB_COLORMAPS
+from utils.image_utils import CMYK_COLORS, CMYK_COLORMAPS, RGB_COLORS, RGB_COLORMAPS
 
 
 def get_channel_config(
-        data: Dict,
-        configuration: Dict,
+    data: Dict,
+    configuration: Dict,
 ) -> Tuple[List[str], List[str]]:
     """
     Get colors and colormaps based on data type (CMYK, RGB, or grayscale).
@@ -73,7 +73,8 @@ def add_reference_line(ax: plt.Axes, configuration: Dict) -> None:
 
 
 def save_visualization(
-        filename: str, out_dir: str, configuration: Dict, dpi: str = "dpi_high", description: str = None
+    filename: str, out_dir: str, configuration: Dict, dpi: str = "dpi_high",
+    description: Optional[str] = None
 ) -> None:
     """
     Save the current matplotlib figure.
@@ -90,7 +91,8 @@ def save_visualization(
         plt.figtext(
             0.5, 0.01, description,
             ha="center", fontsize=7,
-            bbox={"boxstyle": "round", "facecolor": "whitesmoke", "alpha": 0.8, "edgecolor": "silver"},
+            bbox={"boxstyle": "round", "facecolor": "whitesmoke", "alpha": 0.8,
+                  "edgecolor": "silver"},
             wrap=True
         )
 

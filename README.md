@@ -138,11 +138,39 @@ The pipeline uses the following internal environment variables (set automaticall
 
 ## Testing
 
-Verify the core math engine and sweep logic:
+Verify the core math engine and sweep logic using pytest:
 
 ```bash
-python3 test_core.py
+pytest tests/
 ```
+
+## IDE Integration
+
+This project includes JetBrains IDE configuration:
+
+- **Run Configurations**: Pre-defined configurations for all data sources and tests (found in
+  `.idea/runConfigurations`).
+    - `Generate ALL`: Runs the full pipeline.
+    - `Generate MNIST/PNG/CMYK`: Source-specific runs.
+    - `Lint Code (Ruff)`: Fast linting.
+    - `Type Check (Mypy)`: Static analysis.
+    - `Clean Output`: Deletes all generated files.
+    - `Pytest in tests`: Runs all tests.
+- **Project Structure**: `src` and `tests` directories are properly marked for optimal indexing and testing.
+- **Excluded Folders**: `output`, `venv`, and `.idea` folders are excluded from indexing to improve performance.
+- **Environment Variables**: Use `VIZ_DATA_DIR` to specify a custom location for the `eugenia_data` folder.
+
+## Automation with Makefile
+
+A `Makefile` is provided for common tasks:
+
+- `make setup`: Set up virtual environment and install dependencies.
+- `make test`: Run all tests.
+- `make run-all`: Run the full visualization pipeline.
+- `make lint`: Run Ruff linter.
+- `make typecheck`: Run Mypy type checker.
+- `make local-env`: Create `.env` from template for local LLM integration.
+- `make clean`: Clear the `output/` directory.
 
 ## License
 

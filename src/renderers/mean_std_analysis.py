@@ -113,7 +113,7 @@ def render(data, sweep, out_dir):
 
     # Use a colormap to distinguish classes
     colors = np.arange(number_of_classes)
-    scatter = plt.scatter(
+    plt.scatter(
         means, stds,
         c=colors,
         s=100,
