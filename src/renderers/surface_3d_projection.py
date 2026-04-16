@@ -98,7 +98,7 @@ def render(data, sweep, out_dir):
     symbols = data.symbol_delta_fields
     number_of_classes = data.number_of_classes
 
-    # Select colormaps based on data type from utils.viz_utils
+    # Select colormaps based on data type from eugenia.utils.viz_utils
     _, channel_colormaps = get_channel_config(data, configuration)
 
     # Limit number of displayed classes

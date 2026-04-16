@@ -2,7 +2,7 @@
 """
 Topological Class Correlation Analysis.
 
-Calculates and visualizes the Pearson correlation between the 
+Calculates and visualizes the Pearson correlation between the
 occupancy profiles of different classes across the entire threshold sweep.
 """
 

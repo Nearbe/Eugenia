@@ -207,13 +207,29 @@ To save tokens and use Junie with a local model (e.g., Ollama, LM Studio) via te
    Ensure your local LLM server is running and the model is loaded.
 
    The project includes a pre-configured model definition for Junie CLI in `.junie/models/qwen-local.json`.
-   To use it, you can run:
-   ```bash
-   junie --model qwen-local "Ваша задача"
-   ```
 
-   If you want to use it as the default, you can set `JUNIE_MODEL` in your `.env` and the CLI will pick it up (if
-   supported by your version) or use the `--model` flag.
+   There are several ways to run it:
+
+    - **Recommended (via script)**:
+      ```bash
+      ./scripts/junie_local.sh "Explain this code"
+      ```
+      This script automatically loads `.env` variables and uses the `qwen-local` model.
+
+    - **Via Makefile**:
+      ```bash
+      make junie task="Explain this code"
+      # Или для конкретных моделей:
+      make junie-qwen task="Summary of tests/"
+      make junie-gemma task="Improve src/common.py"
+      ```
+
+    - **Directly via CLI**:
+      ```bash
+      junie --model qwen-local "Ваша задача"
+      ```
+
+   If you want to use it as the default for all commands, you can set `JUNIE_MODEL` in your `.env`.
 
 ## IDE Integration
 

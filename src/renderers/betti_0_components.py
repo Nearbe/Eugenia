@@ -88,7 +88,7 @@ def render(data, sweep, out_dir):
     number_of_classes = data.number_of_classes
 
     # Генерация набора пороговых значений для топологического анализа.
-    # Мы используем разреженную сетку (меньше точек, чем в основной развертке), 
+    # Мы используем разреженную сетку (меньше точек, чем в основной развертке),
     # так как алгоритм поиска связных компонент (ndimage.label) вычислительно сложен.
     topology_thresholds = np.linspace(
         configuration["topology_threshold_min"],

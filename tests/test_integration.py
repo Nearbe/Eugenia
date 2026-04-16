@@ -6,8 +6,8 @@ import pytest
 # Добавляем директорию src в путь поиска модулей
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from common import load_data, compute_sweep
-from models import VisualizationData, SweepResults
+from orchestrator import load_data, compute_sweep
+from models.types import VisualizationData, SweepResults
 
 
 def test_mnist_pipeline_components():
@@ -43,9 +43,9 @@ def test_png_pipeline_components():
         pytest.skip("Eugene.jpeg не найден в корне проекта")
 
     # Сбрасываем кэш для корректной загрузки новых данных в рамках одного процесса
-    import common
-    common._cached_data = None
-    common._cached_sweep = None
+    import orchestrator
+    orchestrator._cached_data = None
+    orchestrator._cached_sweep = None
 
     os.environ['VIZ_SOURCE'] = 'png'
     os.environ['VIZ_SOURCE_FILE'] = 'Eugene.jpeg'

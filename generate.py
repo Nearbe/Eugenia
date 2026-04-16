@@ -119,8 +119,16 @@ def run_source(source_name: str, source_file: str = "", num_workers: int = None,
     output_directory = SCRIPT_DIRECTORY / "output" / source_name
     output_directory.mkdir(parents=True, exist_ok=True)
 
-    # Run the common orchestration script
-    script_path = SCRIPT_DIRECTORY / "src" / "common.py"
+    # Run the eugenia orchestrator script
+    script_path = SCRIPT_DIRECTORY / "src" / "eugenia" / "orchestrator.py"
+
+    env = os.environ.copy()
+    # Add src to PYTHONPATH so that 'from eugenia...' imports work
+    src_dir = str(SCRIPT_DIRECTORY / "src")
+    if "PYTHONPATH" in env:
+        env["PYTHONPATH"] = f"{src_dir}{os.pathsep}{env['PYTHONPATH']}"
+    else:
+        env["PYTHONPATH"] = src_dir
 
     cmd = [PYTHON_INTERPRETER, str(script_path), "--source", source_name, "--output", str(output_directory)]
     if source_file:
@@ -141,7 +149,7 @@ def run_source(source_name: str, source_file: str = "", num_workers: int = None,
     result = subprocess.run(
         cmd,
         cwd=str(SCRIPT_DIRECTORY),
-        env=os.environ.copy()
+        env=env
     )
 
     if result.returncode != 0:

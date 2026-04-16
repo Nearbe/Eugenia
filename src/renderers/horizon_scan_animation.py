@@ -70,7 +70,7 @@ def render(data, sweep, out_dir):
     number_of_classes = data.number_of_classes
     is_color = data.is_color
 
-    # Get color configuration from utils.viz_utils
+    # Get color configuration from eugenia.utils.viz_utils
     channel_colors, _ = get_channel_config(data, configuration)
 
     threshold_values = sweep.thresholds

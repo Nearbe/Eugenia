@@ -7,8 +7,8 @@ import torch
 # Добавляем директорию src в путь поиска модулей
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from sweep import compute_sweep
-from models import VisualizationData
+from core.sweep import compute_sweep
+from models.types import VisualizationData
 
 
 def test_delta_field_math():

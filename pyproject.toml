@@ -1,5 +1,5 @@
 [project]
-name = "visualizations"
+name = "Eugenia"
 version = "0.1.0"
 description = "Delta field visualizations for MNIST, PNG, and CMYK data"
 readme = "README.md"
@@ -24,10 +24,10 @@ dev = [
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py314"
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.14"
 mypy_path = "src"
 explicit_package_bases = true
 warn_return_any = true

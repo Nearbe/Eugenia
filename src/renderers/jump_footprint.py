@@ -2,7 +2,7 @@
 """
 Jump Footprint Analysis.
 
-Visualizes the specific pixels in the Delta field that trigger 
+Visualizes the specific pixels in the Delta field that trigger
 significant jumps in the occupancy rate during the threshold sweep.
 """
 

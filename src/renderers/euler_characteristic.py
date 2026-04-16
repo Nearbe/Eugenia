@@ -77,7 +77,7 @@ from utils.viz_utils import save_visualization
 def compute_topology(binary_mask: np.ndarray, padding: int = 1) -> tuple:
     """
     Compute Betti-0 and Betti-1 for a binary mask.
-    
+
     Returns:
         (betti_0, betti_1)
     """

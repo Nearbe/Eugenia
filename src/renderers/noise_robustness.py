@@ -2,7 +2,7 @@
 """
 Noise robustness analysis for topological features.
 
-This module analyzes how the occupancy rates and jump events 
+This module analyzes how the occupancy rates and jump events
 change when noise is added to the input images.
 """
 
@@ -26,7 +26,7 @@ def render(data, sweep, out_dir):
     label = get_symbol_label(display_idx, data)
     original_symbol = data["symbol_delta_fields"][display_idx].cpu().numpy()
 
-    # We need the original image before delta transform to add noise properly, 
+    # We need the original image before delta transform to add noise properly,
     # but we can also add noise directly to delta field for simplicity in this visualization.
     # Let's add noise to the delta field.
 

@@ -32,3 +32,12 @@ local-env:
 	else \
 		echo ".env file already exists."; \
 	fi
+
+junie:
+	@./scripts/junie_local.sh $(task)
+
+junie-qwen:
+	@./scripts/junie_local.sh --model qwen-local $(task)
+
+junie-gemma:
+	@./scripts/junie_local.sh --model gemma-local $(task)
