@@ -9,6 +9,7 @@ using specialized loaders and running the core threshold sweep algorithm.
 import argparse
 import logging
 import os
+import sys
 import time
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import asdict
@@ -89,10 +90,17 @@ def load_data(
         device = torch.device("cpu")
 
     images = images.to(device)
-    # Вычисление дельта-поля: D = log(X + 1) - log(256 - X)
-    # Это преобразование симметризует диапазон интенсивностей [0, 255] в логарифмическую шкалу,
-    # центрированную вокруг 0. Это необходимо для корректного анализа пороговых переходов.
-    delta_field = torch.log(images + 1.0) - torch.log(256.0 - images)
+
+    # Precompute delta if requested (CLI mode only)
+    precompute_flag = os.environ.get("EUGENIA_PRECOMPUTE_DELTA", "false") == "true"
+    if precompute_flag and Path("delta.npy").exists():
+        delta_field = torch.load("delta.npy")
+        logger.info("Using precomputed delta from file")
+    else:
+        # Вычисление дельта-поля: D = log(X + 1) - log(256 - X)
+        # Это преобразование симметризует диапазон интенсивностей [0, 255] в логарифмическую шкалу,
+        # центрированную вокруг 0. Это необходимо для корректного анализа пороговых переходов.
+        delta_field = torch.log(images + 1.0) - torch.log(256.0 - images)
 
     # Разделение общего дельта-поля на индивидуальные поля для каждого символа или канала.
     # Это позволяет параллельно обрабатывать каждый класс в скриптах визуализации.
@@ -325,6 +333,13 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    # Precompute delta if requested
+    if args.precompute_delta:
+        from utils.delta_precompute import compute_and_save_delta
+
+        compute_and_save_delta(args.file or "Eugene.jpeg", "delta.npy")
+        sys.exit(0)
+
     # Update global config with command line arguments
     if args.sweep_min is not None:
         CONFIG.sweep_min = args.sweep_min
@@ -335,11 +350,10 @@ if __name__ == "__main__":
     if args.jump_threshold is not None:
         CONFIG.jump_threshold = args.jump_threshold
 
-    # Precompute delta if requested
+    # Pass precompute flag to load_data via environment variable
     if args.precompute_delta:
-        from utils.delta_precompute import compute_and_save_delta
+        os.environ["EUGENIA_PRECOMPUTE_DELTA"] = "true"
 
-        compute_and_save_delta(args.file or "Eugene.jpeg", "delta.npy")
     run_all_visualizations(
         source_name=args.source,
         output_directory=args.output,
