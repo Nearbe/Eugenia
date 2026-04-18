@@ -1,0 +1,130 @@
+"""
+Fractal Pyramid — Фрактальная пирамида.
+
+Пирамида с Ω (0) в центре каждого уровня:
+  - 0 в центре = Ω (Потенциал), точка ветвления
+  - Каждое число → новый ряд вверх (фрактальная рекурсия)
+  - Слева — обратный счёт, справа — прямой
+  - Мост через 0 = a:0:b = ветвление, не деление
+
+Функции:
+- fractal_pyramid_level: один уровень (left, center, right)
+- fractal_pyramid: полная пирамида
+- fractal_pyramid_to_string: текстовая визуализация
+- fractal_bridge_analysis: анализ моста через Ω
+"""
+
+from typing import Optional
+
+from numpy import array
+
+from core.constants import D_ID
+from core.spine import ridge_level
+
+
+def fractal_pyramid_level(n: int) -> tuple[str, str, str]:
+    """
+    Генерация уровня фрактальной пирамиды.
+
+    Args:
+        n: Уровень пирамиды (1-based).
+
+    Returns:
+        Кортеж (left, center, right):
+        - left: обратная последовательность как строка
+        - center: "0" (Ω — Потенциал)
+        - right: прямая последовательность как строка
+
+    Пример:
+        fractal_pyramid_level(5) → ("4321", "0", "1234")
+    """
+    if n < 1:
+        raise ValueError(f"Pyramid level must be >= 1, got {n}")
+
+    left_digits = range(n - 1, 0, -1)
+    right_digits = range(1, n)
+
+    left = "".join(str(d) for d in left_digits)
+    right = "".join(str(d) for d in right_digits)
+
+    return left, "0", right
+
+
+def fractal_pyramid(max_level: int = 10) -> list:
+    """
+    Генерация всей фрактальной пирамиды.
+
+    Args:
+        max_level: Максимальный уровень пирамиды.
+
+    Returns:
+        Список кортежей (level, left, center, right).
+    """
+    pyramid = []
+    for level in range(1, max_level + 1):
+        left, center, right = fractal_pyramid_level(level)
+        pyramid.append((level, left, center, right))
+    return pyramid
+
+
+def fractal_pyramid_to_string(max_level: int = 10, width: Optional[int] = None) -> str:
+    """
+    Визуализация фрактальной пирамиды в виде строки.
+
+    Args:
+        max_level: Максимальный уровень пирамиды.
+        width: Ширина выравнивания (по умолчанию = ширина самого широкого уровня).
+
+    Returns:
+        Отформатированная строка пирамиды.
+    """
+    pyramid = fractal_pyramid(max_level)
+
+    if width is None:
+        width = max(
+            len(left) + 1 + len(center) + 1 + len(right) for _, left, center, right in pyramid
+        )
+
+    lines = []
+    for level, left, center, right in pyramid:
+        content = f"{left}:{center}:{right}"
+        lines.append(f"{level:>4} | {content:^{width}} |")
+
+    separator = " " * (6 + width + 4)
+    result = "Фрактальная пирамида (Ω в центре)\n"
+    result += separator + "\n"
+    result += "\n".join(lines)
+    result += "\n" + separator
+
+    return result
+
+
+def fractal_bridge_analysis(pyr_level: int) -> dict:
+    """
+    Анализ моста через Ω (0) на уровне пирамиды.
+
+    Для уровня n:
+    - Левая сторона: обратная последовательность → сжатие H(a)
+    - Правая сторона: прямая последовательность → ветвление D(a)
+    - 0 в центре: мост a:0:b = ветвление, не деление
+
+    Идентичность: left:0:right = 1 (тождество через Ω)
+    """
+    left, center, right = fractal_pyramid_level(pyr_level)
+
+    left_digits = list(range(pyr_level - 1, 0, -1))
+    right_digits = list(range(1, pyr_level))
+
+    return {
+        "level": pyr_level,
+        "left_sequence": left_digits,
+        "right_sequence": right_digits,
+        "left_str": left,
+        "right_str": right,
+        "center": int(center),
+        "left_spine_level": ridge_level(array(left_digits[-1] if left_digits else 0)),
+        "right_spine_level": ridge_level(array(right_digits[0] if right_digits else 0)),
+        "bridge_identity": True,
+        "left_compression": f"H({left_digits[-1] if left_digits else '∅'}) = {left_digits[-1] / D_ID if left_digits else '∅'}",
+        "right_branching": f"D({right_digits[0] if right_digits else '∅'}) = {right_digits[0] * D_ID if right_digits else '∅'}",
+    }

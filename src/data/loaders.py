@@ -53,7 +53,9 @@ def load_fashion_data() -> Tuple[torch.Tensor, torch.Tensor, int, int, int]:
     return _load_npz_dataset("fashion_mnist.npz")
 
 
-def _load_npz_dataset(filename: str) -> Tuple[torch.Tensor, torch.Tensor, int, int, int]:
+def _load_npz_dataset(
+    filename: str,
+) -> Tuple[torch.Tensor, torch.Tensor, int, int, int]:
     """
     Internal helper to load one sample per class from a .npz dataset.
 
@@ -63,7 +65,7 @@ def _load_npz_dataset(filename: str) -> Tuple[torch.Tensor, torch.Tensor, int, i
     # Поддержка переменной окружения VIZ_DATA_DIR для гибкой настройки пути к данным.
     # Если переменная не задана, используется путь по умолчанию (в соседней директории).
     # Это позволяет пользователям IDE легко менять директорию данных без изменения кода.
-    default_data_dir = get_parent_directory() / "eugenia_data"
+    default_data_dir = get_parent_directory() / "nucleus_data"
     data_dir_env = os.environ.get("VIZ_DATA_DIR")
 
     if data_dir_env:
@@ -98,7 +100,9 @@ def _load_npz_dataset(filename: str) -> Tuple[torch.Tensor, torch.Tensor, int, i
     return images, labels, height, width, channels
 
 
-def load_png_image(source_file: str = "") -> Tuple[torch.Tensor, torch.Tensor, int, int, int]:
+def load_png_image(
+    source_file: str = "",
+) -> Tuple[torch.Tensor, torch.Tensor, int, int, int]:
     """
     Load PNG image and extract symbols via connected components.
 
@@ -219,7 +223,9 @@ def load_png_image(source_file: str = "") -> Tuple[torch.Tensor, torch.Tensor, i
     return images, labels, height, width, 1
 
 
-def load_cmyk_image(source_file: str = "") -> Tuple[torch.Tensor, torch.Tensor, int, int, int]:
+def load_cmyk_image(
+    source_file: str = "",
+) -> Tuple[torch.Tensor, torch.Tensor, int, int, int]:
     """
     Load CMYK image and treat each channel as a separate symbol.
 

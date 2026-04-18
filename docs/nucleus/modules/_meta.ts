@@ -1,0 +1,23 @@
+export default [
+    {
+        text: "Overview",
+        link: "/",
+    },
+    "deterministic-core",
+    "deterministic-knowledge",
+    "universal-knowledge-map",
+    "universal-knowledge-protocol",
+    "knowledge-system",
+    "unified-system",
+    "hybrid-system",
+    "duality-system",
+    "correlation-compressor",
+    "cross-layer-compressor",
+    "fractal-compressor",
+    "geometric-classifier",
+    "seed-system",
+    "graphics-engine",
+    "model-patterns",
+    "semantic-storage",
+    "llm-crisis",
+]

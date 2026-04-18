@@ -361,8 +361,3 @@ if __name__ == "__main__":
         num_workers=args.workers,
         renderers=args.renderers,
     )
-    parser.add_argument(
-        "--precompute-delta",
-        action="store_true",
-        help="Generate and save delta.npy from current image",
-    )

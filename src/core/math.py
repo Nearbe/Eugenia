@@ -1,29 +1,40 @@
-import numpy as np
+"""
+Core mathematical operators — compatibility shim.
 
+Все функции перемещены в специализированные модули:
+- spine: ridge_level, ridge_to_percentage, percentage_to_ridge, spine_value, spine_value_array
+- pyramid: fractal_pyramid_level, fractal_pyramid, fractal_pyramid_to_string, fractal_bridge_analysis
+- chain: omega_to_pi_chain, chain_identity_check
+"""
 
-def safe_divide(a, b):
-    """Безопасное деление: a/b if b!=0 else 0"""
-    return np.divide(a, b, where=(b != 0), out=np.zeros_like(a))
+from .chain import (
+    chain_identity_check,
+    omega_to_pi_chain,
+)
+from .pyramid import (
+    fractal_bridge_analysis,
+    fractal_pyramid,
+    fractal_pyramid_level,
+    fractal_pyramid_to_string,
+)
+from .spine import (
+    percentage_to_ridge,
+    ridge_level,
+    ridge_to_percentage,
+    spine_value,
+    spine_value_array,
+)
 
-
-def div_safe(a, b):
-    return safe_divide(a, b)
-
-
-def resolve_potential(x):
-    """max(x, 0)"""
-    return np.maximum(x, 0.0)
-
-
-def is_potential(x):
-    return x != 0
-
-
-def normalize_vector_safe(v):
-    """v / ||v|| if ||v|| > 1e-8 else v"""
-    norm = np.linalg.norm(v)
-    return v / norm if norm > 1e-8 else v
-
-
-def has_potential(x):
-    return np.any(x != 0)
+__all__ = [
+    "ridge_level",
+    "ridge_to_percentage",
+    "percentage_to_ridge",
+    "spine_value",
+    "spine_value_array",
+    "fractal_pyramid_level",
+    "fractal_pyramid",
+    "fractal_pyramid_to_string",
+    "fractal_bridge_analysis",
+    "omega_to_pi_chain",
+    "chain_identity_check",
+]

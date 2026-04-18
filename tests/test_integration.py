@@ -13,7 +13,7 @@ from models.types import VisualizationData, SweepResults
 def test_mnist_pipeline_components():
     """Интеграционный тест компонентов загрузки и обработки для MNIST."""
     # Проверяем наличие данных
-    mnist_path = os.path.join(os.path.dirname(__file__), "..", "..", "eugenia_data", "mnist.npz")
+    mnist_path = os.path.join(os.path.dirname(__file__), "..", "..", "nucleus_data", "mnist.npz")
     if not os.path.exists(mnist_path):
         pytest.skip("Файл данных MNIST не найден")
 

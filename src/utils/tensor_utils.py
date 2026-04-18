@@ -34,7 +34,7 @@ def pad_tensors(tensors: List[torch.Tensor], padding_value: float = 0.0) -> torc
 
         # In torch.nn.functional.pad, padding is (padding_left, padding_right, padding_top, padding_bottom)
         padding = (0, pad_w, 0, pad_h)
-        padded = torch.nn.functional.pad(t, padding, value=padding_value)
+        padded = torch.nn.functional.pad(t, padding, mode="constant", value=padding_value)
         padded_tensors.append(padded)
 
     return torch.stack(padded_tensors)
