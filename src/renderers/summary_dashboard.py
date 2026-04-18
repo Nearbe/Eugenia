@@ -69,7 +69,9 @@ def _plot_delta_field(ax, delta_image, is_color, channel_colors, display_idx, co
     """PANEL 1: Original Delta Field (Top Left)"""
     if is_color:
         color_rgb = hex_to_rgb(channel_colors[display_idx])
-        cmap = matplotlib.colors.LinearSegmentedColormap.from_list("custom", ["black", color_rgb])
+        cmap = matplotlib.colors.LinearSegmentedColormap.from_list(  # type: ignore
+            "custom", ["black", color_rgb]
+        )
         im = ax.imshow(delta_image, cmap=cmap)
     else:
         im = ax.imshow(delta_image, cmap=configuration["colormap_grayscale"])

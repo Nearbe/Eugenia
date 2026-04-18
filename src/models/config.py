@@ -76,8 +76,9 @@ class VisualizationConfig:
     # DATA LOADING PARAMETERS
     # =========================================================================
 
+    # number_of_classes is determined dynamically from data (e.g., 10 for MNIST)
     number_of_classes: int = 10
-    """Number of distinct classes/symbols in the dataset (e.g., 10 for digits)."""
+    """Number of distinct classes/symbols in the dataset (e.g., 15 for digits)."""
 
     image_height: int = 28
     """Expected height of input images in pixels."""

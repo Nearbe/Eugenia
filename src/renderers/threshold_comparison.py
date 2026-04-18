@@ -104,7 +104,7 @@ def render(data, sweep, out_dir):
         if is_color:
             # Create a custom colormap from black to the channel's color
             color_rgb = hex_to_rgb(channel_colors[class_id])
-            cmap = matplotlib.colors.LinearSegmentedColormap.from_list(
+            cmap = matplotlib.colors.LinearSegmentedColormap.from_list(  # type: ignore
                 "custom", ["black", color_rgb]
             )
             plt.imshow(delta_image, cmap=cmap)

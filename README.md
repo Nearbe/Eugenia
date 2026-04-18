@@ -48,7 +48,7 @@ pip install torch numpy scipy matplotlib Pillow scikit-learn
 
 The pipeline supports three primary data sources, each requiring specific files:
 
-1. **MNIST**: Requires `../eugenia_data/mnist.npz` (with `x_train` and `y_train`).
+1. **MNIST**: Requires `/data/mnist.npz` (with `x_train` and `y_train`).
 2. **PNG**: Expects image files (e.g., `cyrillic.png`, `latin.png`) in the project root.
 3. **CMYK**: Reads `Eugene.jpeg` from the project root and converts it to a CMYK TIFF (`src/Eugene_cmyk.tiff`).
 
@@ -162,7 +162,7 @@ This project includes JetBrains IDE configuration:
     - `Pytest in tests`: Runs all tests.
 - **Project Structure**: `src` and `tests` directories are properly marked for optimal indexing and testing.
 - **Excluded Folders**: `output`, `venv`, and `.idea` folders are excluded from indexing to improve performance.
-- **Environment Variables**: Use `VIZ_DATA_DIR` to specify a custom location for the `eugenia_data` folder.
+- **Environment Variables**: Use `VIZ_DATA_DIR` to specify a custom location for the `data` folder.
 
 ## Automation with Makefile
 

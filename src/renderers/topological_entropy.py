@@ -108,7 +108,8 @@ def render(data, sweep, out_dir):
     axes_flat = axes.flatten()
 
     for i, params in enumerate(measures):
-        values = compute_moment(occupancy_rates, int(params["power"]))
+        power = int(params["power"])  # type: ignore[call-overload,arg-type]
+        values = compute_moment(occupancy_rates, power)
         _plot_moment(axes_flat[i], threshold_values, values, params, configuration)
 
     plt.tight_layout()

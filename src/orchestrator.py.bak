@@ -89,6 +89,7 @@ def load_data(
         device = torch.device("cpu")
 
     images = images.to(device)
+
     # Вычисление дельта-поля: D = log(X + 1) - log(256 - X)
     # Это преобразование симметризует диапазон интенсивностей [0, 255] в логарифмическую шкалу,
     # центрированную вокруг 0. Это необходимо для корректного анализа пороговых переходов.
@@ -236,7 +237,7 @@ def run_all_visualizations(
             from dataclasses import fields
 
             new_values = {f.name: to_cpu(getattr(obj, f.name)) for f in fields(obj)}
-            return obj.__class__(**{str(k): v for k, v in new_values.items()})  # type: ignore[arg-type]
+            return obj.__class__(**new_values)
         return obj
 
     data_cpu = to_cpu(data)  # type: ignore[arg-type]
@@ -317,11 +318,6 @@ if __name__ == "__main__":
     parser.add_argument("--sweep-step", type=float, help="Step size for sweep")
     parser.add_argument("--jump-threshold", type=float, help="Jump detection threshold (%%)")
     parser.add_argument("--renderers", type=str, help="Comma-separated list of renderers to run")
-    parser.add_argument(
-        "--precompute-delta",
-        action="store_true",
-        help="Generate and save delta.npy from current image",
-    )
 
     args = parser.parse_args()
 
@@ -335,20 +331,10 @@ if __name__ == "__main__":
     if args.jump_threshold is not None:
         CONFIG.jump_threshold = args.jump_threshold
 
-    # Precompute delta if requested
-    if args.precompute_delta:
-        from utils.delta_precompute import compute_and_save_delta
-
-        compute_and_save_delta(args.file or "Eugene.jpeg", "delta.npy")
     run_all_visualizations(
         source_name=args.source,
         output_directory=args.output,
         source_file=args.file,
         num_workers=args.workers,
         renderers=args.renderers,
-    )
-    parser.add_argument(
-        "--precompute-delta",
-        action="store_true",
-        help="Generate and save delta.npy from current image",
     )

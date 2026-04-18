@@ -61,7 +61,7 @@ output/
 ├── mnist/           # MNIST visualizations
 │   ├── 00_delta_histograms_by_class.png
 │   ├── 01_horizon_heatmap.png
-│   ├── ...
+│   ...
 │   └── 15_phase_volume.png
 ├── png/             # PNG sprite visualizations
 └── cmyk/           # CMYK channel visualizations
@@ -78,6 +78,7 @@ import sys
 import time
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
+from typing import Optional
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(message)s", datefmt="%H:%M:%S")
@@ -95,12 +96,12 @@ AVAILABLE_SOURCES = ["mnist", "png", "cmyk", "fashion"]
 def run_source(
     source_name: str,
     source_file: str = "",
-    num_workers: int = None,
-    sweep_min: float = None,
-    sweep_max: float = None,
-    sweep_step: float = None,
-    jump_threshold: float = None,
-    renderers: str = None,
+    num_workers: Optional[int] = None,
+    sweep_min: Optional[float] = None,
+    sweep_max: Optional[float] = None,
+    sweep_step: Optional[float] = None,
+    jump_threshold: Optional[float] = None,
+    renderers: Optional[str] = None,
 ) -> bool:
     """
     Run visualization generation for a specific source.
@@ -155,7 +156,7 @@ def run_source(
         cmd.extend(["--sweep-step", str(sweep_step)])
     if jump_threshold is not None:
         cmd.extend(["--jump-threshold", str(jump_threshold)])
-    if renderers:
+    if renderers is not None:
         cmd.extend(["--renderers", renderers])
 
     result = subprocess.run(cmd, cwd=str(SCRIPT_DIRECTORY), env=env)

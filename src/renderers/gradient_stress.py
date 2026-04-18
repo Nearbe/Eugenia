@@ -71,9 +71,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-# from utils.image_utils import compute_gradient_magnitude # Commented out to resolve Ruff F811 redefinition warning
-from utils.viz_utils import save_visualization, get_symbol_label
-# from utils.image_utils import compute_gradient_magnitude # Commented out to resolve Ruff F811 redefinition warning
+from eugenia.utils.image_utils import compute_gradient_magnitude
+from eugenia.utils.viz_utils import get_symbol_label, save_visualization
 
 
 def render(data, sweep, out_dir):
@@ -125,7 +124,7 @@ def render(data, sweep, out_dir):
             ax.set_zlim(0, max(0.1, stress_map.max()))  # type: ignore[attr-defined]
             ax.set_xlabel("X")
             ax.set_ylabel("Y")
-            ax.set_zlabel("||\u2207\u0394||")
+            ax.set_zlabel("||\u2207\u0394||")  # type: ignore[attr-defined]
 
         label = get_symbol_label(idx, data)
         description = (

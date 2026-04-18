@@ -137,7 +137,7 @@ def render(data, sweep, out_dir):
 
         plt.figure(figsize=(6, 6))
 
-        ax = plt.subplot(1, 1, 1, projection="3d")
+        ax = plt.subplot(1, 1, 1, projection="3d")  # type: ignore[assignment]
         x, y = np.meshgrid(np.arange(w), np.arange(h))
 
         # WHY plot_surface WITH SPECIFIC PARAMS?
@@ -170,7 +170,7 @@ def render(data, sweep, out_dir):
 
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
-        ax.set_zlabel("\u0394")
+        ax.set_zlabel("\u0394")  # type: ignore[attr-defined]
 
         # WHY DETAILED DESCRIPTION?
         # Причина: Пользователь должен понимать, что видит, без обращения к документации.

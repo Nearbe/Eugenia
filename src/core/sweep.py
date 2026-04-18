@@ -15,7 +15,7 @@ import torch
 from tqdm import tqdm
 
 from models.config import CONFIG
-from models.types import VisualizationData, SweepResults
+from models.types import SweepResults, VisualizationData
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +115,7 @@ def compute_sweep(data: VisualizationData) -> SweepResults:
     jump_indices = torch.where(jump_mask)
 
     for threshold_idx, class_id in zip(jump_indices[0].tolist(), jump_indices[1].tolist()):
-        threshold_value = round(thresholds[threshold_idx + 1], 4)
+        threshold_value = round(float(thresholds[threshold_idx + 1]), 4)
         before = occupancy_rates[threshold_idx, class_id].item()
         after = occupancy_rates[threshold_idx + 1, class_id].item()
         change = abs(after - before)
