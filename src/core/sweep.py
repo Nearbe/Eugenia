@@ -12,9 +12,6 @@ from logging import getLogger
 from time import time
 from typing import Union
 
-from models.config import CONFIG
-from models.types import SweepResults, VisualizationData
-
 logger = getLogger(__name__)
 
 Number = Union[int, float]
@@ -241,7 +238,7 @@ def theoretical_occupancy(n_pixels: int, threshold_fraction: float) -> float:
     return cumulative
 
 
-def compute_sweep(data: VisualizationData) -> SweepResults:
+def compute_sweep(data):  # type: ignore[no-redef]
     """
     Compute threshold sweep across the delta field.
 
