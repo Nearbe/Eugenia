@@ -12,7 +12,7 @@ Each histogram shows the DISTRIBUTION of delta values
 within a single symbol/class.
 
 For each class c:
-    - X-axis: Delta value (-5.546 to 5.546)
+    - X-axis: Delta value (-8 to 8)
     - Y-axis: Number of pixels with that delta value
 
 This is essentially the probability density function (PDF)

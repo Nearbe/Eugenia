@@ -13,9 +13,9 @@ This creates a "movie" showing how the binary masks
 change as we sweep through threshold values.
 
 We take 60 evenly-spaced frames (configurable):
-    - Frame 0: threshold = -5.546 (most restrictive)
+    - Frame 0: threshold = -8 (most restrictive)
     - Frame 30: threshold = 0 (midpoint)
-    - Frame 60: threshold = +5.546 (least restrictive)
+    - Frame 60: threshold = +8 (least restrictive)
 
 At each frame, we show ALL classes/symbols in a grid.
 

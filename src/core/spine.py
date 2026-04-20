@@ -33,7 +33,7 @@ from numpy import (
     ndarray,
 )
 
-from core.constants import D_ID, OMEGA, PI
+from .constants import D_ID, OMEGA, PI
 
 
 def ridge_level(x: ndarray) -> ndarray:

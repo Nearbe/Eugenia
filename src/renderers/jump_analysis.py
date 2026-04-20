@@ -62,7 +62,7 @@ Example for digit "1":
 WHAT DOES THE PLOT SHOW?
 ========================================
 
-X-axis: Threshold value (-5.546 to +5.546)
+X-axis: Threshold value (-8 to +8)
 Y-axis: Number of jumps at each threshold
 
 The histogram shows where in the threshold space

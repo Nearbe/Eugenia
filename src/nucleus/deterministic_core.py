@@ -63,7 +63,7 @@ from typing import Dict
 
 import numpy as np
 
-from src.core.math import normalize_vector_safe
+from nucleus import normalize_vector_safe
 
 
 # ============================================================

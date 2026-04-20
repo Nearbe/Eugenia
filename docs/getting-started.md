@@ -13,7 +13,9 @@ primary value is the **Nucleus** system.
 
 ```bash
 # Setup
-make setup
+python3 -m venv venv
+source venv/bin/activate
+pip install -e ".[dev]"
 
 # Run the nucleus knowledge pipeline (GGUF → SVD → patterns → graph)
 # (requires a GGUF model file)
@@ -31,8 +33,6 @@ python3 generate.py --source mnist
 ## Installation
 
 ```bash
-make setup
-# Equivalent to:
 python3 -m venv venv
 source venv/bin/activate
 pip install -e ".[dev]"
@@ -47,10 +47,9 @@ pip install -e ".[dev]"
 .
 ├── generate.py              # CLI entry (visualization pipeline, secondary)
 ├── pyproject.toml           # Project metadata, deps, tool config
-├── Makefile                 # Common tasks
 ├── src/
 │   ├── orchestrator.py      # Visualization pipeline orchestration
-│   ├── core/                # Sweep algorithms & math
+│   ├── core/                # Sweep algorithms, math utilities, delta operations (21 modules)
 │   ├── data/                # Data loaders (MNIST, Fashion, PNG, CMYK)
 │   ├── models/              # Config & typed dataclasses
 │   ├── nucleus/             # 🔥 Deterministic knowledge system (19 modules)

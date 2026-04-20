@@ -515,7 +515,7 @@ def demonstrate_geometry_vision():
        - How many holes?
        - These are GEOMETRIC properties!
 
-    4. ENTROPY → geometric complexity
+    4. CAPACITY → geometric complexity
        - Simple vs complex shapes
 
     Result:

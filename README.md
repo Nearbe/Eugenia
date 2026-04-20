@@ -97,7 +97,7 @@ python3 generate.py --source mnist --renderers betti_0_components,tsne_analysis
 
 ## Output Structure
 
-Results are saved to `output/{source}/`. Each run generates **23 visualization files** (PNG + GIF) per source:
+Results are saved to `output/{source}/`. Each run generates **23 visualization files** (22 PNG + 1 GIF) per source:
 
 - **delta_histograms_by_class.png**: Distribution of delta values per class.
 - **horizon_scan_heatmap.png**: 2D heatmaps of the delta field for all classes.
@@ -119,6 +119,7 @@ Results are saved to `output/{source}/`. Each run generates **23 visualization f
 - **individual_histograms/**: Directory with individual high-resolution histograms for each symbol.
 - **jump_footprint.png**: Jump event footprint analysis.
 - **noise_robustness.png**: Noise robustness testing results.
+- **topological_capacity.png**: Topological capacity analysis.
 - **threshold_comparison.png**: Threshold comparison visualization.
 - **summary_dashboard.png**: Summary dashboard of all metrics.
 
@@ -130,12 +131,16 @@ Results are saved to `output/{source}/`. Each run generates **23 visualization f
 .
 ├── AGENTS.md           # Advanced developer guide
 ├── generate.py         # Main entry point (CLI)
+├── pyproject.toml      # Project metadata, deps, tool config
 ├── output/             # Generated visualizations
 ├── src/                # Core logic and visualization modules
 │   ├── orchestrator.py     # Pipeline orchestration
-│   ├── core/               # Sweep algorithms & math
+│   ├── core/               # Sweep algorithms, math utilities, delta operations (21 modules)
 │   │   ├── sweep.py
-│   │   └── math.py
+│   │   ├── division.py (safe_divide)
+│   │   ├── potential.py (resolve_potential)
+│   │   ├── delta.py
+│   │   └── ... (17 more modules)
 │   ├── data/               # Data loaders (MNIST, PNG, CMYK)
 │   │   └── loaders.py
 │   ├── models/             # Configuration & types
@@ -149,8 +154,8 @@ Results are saved to `output/{source}/`. Each run generates **23 visualization f
 │   │   ├── tensor_utils.py # Tensor manipulations
 │   │   ├── delta_precompute.py
 │   │   ├── clean_output.py
-│   │   └── metrics.py
-│   └── renderers/          # Visualization modules (23 files)
+│   │   └── metrics.py          # Performance timing decorators
+│   └── renderers/          # Visualization modules (22 files)
 ├── tests/                # Unit & integration tests
 ├── data/                 # Dataset files (mnist.npz, etc.)
 └── venv/                 # Python virtual environment
@@ -162,7 +167,7 @@ Results are saved to `output/{source}/`. Each run generates **23 visualization f
 - `src/orchestrator.py`: Orchestrates loading, sweeping, and rendering. Uses global caching (`_cached_data`,
   `_cached_sweep`).
 - `src/core/sweep.py`: Core algorithm for thresholding the delta field at high resolution (~111k steps).
-- `src/core/math.py`: Low-level math utilities (safe division, normalization, potential resolution).
+- `src/core/division.py` (`safe_divide`), `src/core/potential.py` (`resolve_potential`): Low-level math utilities.
 - `src/data/loaders.py`: Source-specific data loading (MNIST, Fashion-MNIST, PNG extraction via connected components,
   CMYK channel separation).
 - `src/models/config.py`: Central `CONFIG` dataclass containing all numeric constants and visualization parameters.
@@ -185,14 +190,6 @@ The pipeline uses the following internal environment variables (set automaticall
 - `VIZ_DATA_DIR`: Custom path for the `data/` directory containing dataset files.
 - `PYTHONPATH`: Auto-set by `generate.py` to include `src/`.
 
-For local LLM integration, copy `.env.example` to `.env` and edit:
-
-- `LLM_API_URL`: Local LLM endpoint (default: `http://localhost:11434/api/generate`)
-- `LLM_MODEL`: Model name (default: `llama2`)
-- `LOG_LEVEL`: DEBUG/INFO/WARNING/ERROR
-- `CACHE_DIR`: Intermediate results cache directory
-- `OUTPUT_DIR`: Generated files output directory
-
 ## Testing
 
 Verify the core math engine and sweep logic using pytest:
@@ -201,20 +198,17 @@ Verify the core math engine and sweep logic using pytest:
 pytest tests/
 ```
 
-## Automation with Makefile
+## Automation
 
-A `Makefile` is provided for common tasks:
+Common commands (no Makefile present):
 
-- `make setup`: Set up virtual environment and install dependencies (including dev).
-- `make test`: Run all tests (`pytest`).
-- `make run-all`: Run the full visualization pipeline for all sources.
-- `make lint`: Run Ruff linter (`ruff check`).
-- `make format`: Format code with Ruff (`ruff format`).
-- `make typecheck`: Run Mypy type checker.
-- `make local-env`: Create `.env` from template for local LLM integration.
-- `make clean`: Clear the `output/` directory and `__pycache__`.
-- `make junie`: Run Junie local script (default task).
-- `make junie-gemma`: Run Junie with gemma-local model.
+- **Setup**: `python3 -m venv venv && source venv/bin/activate && pip install -e ".[dev]"`
+- **Test**: `pytest tests/`
+- **Run all**: `python3 generate.py`
+- **Lint**: `ruff check .`
+- **Format**: `ruff format .`
+- **Typecheck**: `mypy src/`
+- **Clean**: `rm -rf output/ __pycache__`
 
 ## IDE Integration
 

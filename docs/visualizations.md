@@ -50,7 +50,7 @@ python3 generate.py --source mnist --renderers betti_0_components,tsne_analysis
 
 ## Output
 
-22 PNG files + 1 GIF per source in `output/{source}/`:
+22 PNG files + 1 GIF per source in `output/{source}/` (23 files total):
 
 - `delta_histograms_by_class.png` — Delta value distribution per class
 - `horizon_scan_heatmap.png` — 2D delta field heatmaps
@@ -71,6 +71,7 @@ python3 generate.py --source mnist --renderers betti_0_components,tsne_analysis
 - `class_correlation.png` — Class-label correlation
 - `jump_footprint.png` — Jump event footprint
 - `noise_robustness.png` — Noise robustness testing
+- `topological_capacity.png` — Topological capacity analysis
 - `individual_histograms/` — Directory of per-symbol histograms
 - `threshold_comparison.png` — Threshold comparison
 - `summary_dashboard.png` — Summary dashboard
@@ -112,8 +113,8 @@ All numeric parameters are in `src/models/config.py` via the `CONFIG` dataclass.
 ## Testing
 
 ```bash
-make test        # pytest
-make lint        # ruff check
-make format      # ruff format
-make typecheck   # mypy
+pytest tests/
+ruff check .
+ruff format .
+mypy src/
 ```

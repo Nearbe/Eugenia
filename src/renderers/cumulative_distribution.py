@@ -27,10 +27,10 @@ INTERPRETATION
 
 CDF curve properties:
 
-START (at t = -5.546):
+START (at t = -8):
     CDF ≈ 0 (almost no pixels are this dark)
 
-END (at t = +5.546):
+END (at t = +8):
     CDF ≈ 1 (almost all pixels are this bright)
 
 MIDDLE (at t = 0):

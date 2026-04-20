@@ -272,7 +272,7 @@ def demo_unified():
     weights = np.random.randn(512, 2048)
     profile = nucleus.extractor.extract_from_weights(weights, "test_layer")
     geo = nucleus.extractor.get_pattern_geometry(profile)
-    print(f"   Энтропия: {geo['entropy']:.2f}")
+    print(f"   Ёмкость: {geo['capacity']:.2f}")
     print(f"   Сжатие: {geo['compression_ratio']:.4f}x")
 
     # Регистрируем

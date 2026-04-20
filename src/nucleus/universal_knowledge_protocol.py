@@ -26,7 +26,7 @@ from typing import Dict, List
 
 import numpy as np
 
-from src.core.math import has_potential, resolve_potential, safe_divide
+from nucleus import has_potential, resolve_potential, safe_divide
 
 
 # ============================================================

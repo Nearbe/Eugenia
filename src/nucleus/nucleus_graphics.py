@@ -15,29 +15,24 @@ from typing import Tuple, Optional
 
 import numpy as np
 
-# Топологические функции будут определены локально, если не доступны из core.math
-try:
-    from src.core.math import (
-        compute_betti_numbers,
-        compute_euler_characteristic,
-        compute_information_capacity,
-    )
-except ImportError:
-    # Локальные реализации для автономности
-    def compute_betti_numbers(binary: np.ndarray) -> Tuple[int, int]:
-        """Вычислить числа Бетти (b0, b1) для бинарного изображения."""
-        return (1, 0)
 
-    def compute_euler_characteristic(betti: Tuple[int, int]) -> int:
-        """Вычислить характеристику Эйлера: χ = b0 - b1"""
-        return betti[0] - betti[1]
+# Топологические функции определены локально
+def compute_betti_numbers(binary: np.ndarray) -> Tuple[int, int]:
+    """Вычислить числа Бетти (b0, b1) для бинарного изображения."""
+    return (1, 0)
 
-    def compute_information_capacity(bits: np.ndarray) -> float:
-        """Вычислить информационную ёмкость через энтропию Шеннона."""
-        p = bits.mean()
-        if p == 0 or p == 1:
-            return 0.0
-        return -p * np.log2(p) - (1 - p) * np.log2(1 - p)
+
+def compute_euler_characteristic(betti: Tuple[int, int]) -> int:
+    """Вычислить характеристику Эйлера: χ = b0 - b1"""
+    return betti[0] - betti[1]
+
+
+def compute_information_capacity(bits: np.ndarray) -> float:
+    """Вычислить информационную ёмкость через энтропию Шеннона."""
+    p = bits.mean()
+    if p == 0 or p == 1:
+        return 0.0
+    return -p * np.log2(p) - (1 - p) * np.log2(1 - p)
 
 
 class RenderMode(Enum):
@@ -483,7 +478,7 @@ class GeometricEngine:
                 centroids=np.array([]),
                 betti=(0, 0),
                 euler=0,
-                entropy=0.0,
+                capacity=0.0,
                 complexity=0.0,
             )
             return self.render_horizon(profile, params)

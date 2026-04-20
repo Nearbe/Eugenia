@@ -230,8 +230,8 @@ class PatternExtractor:
         # Нормализованные сингулярные значения
         S_norm = S / (total + 1e-10)
 
-        # Энтропия паттерна
-        entropy = -np.sum(S_norm * np.log2(S_norm + 1e-10))
+        # Ёмкость паттерна
+        capacity = -np.sum(S_norm * np.log2(S_norm + 1e-10))
 
         return {
             "name": profile.name,
@@ -240,7 +240,7 @@ class PatternExtractor:
             "n_params": profile.n_params,
             "singular_values": S.tolist(),
             "singular_norm": S_norm.tolist(),
-            "entropy": float(entropy),
+            "capacity": float(capacity),
             "energy_concentration": float((S_norm**2).sum()),
             "original_shape": profile.original_shape,
             "compression_ratio": profile.compression_ratio,
@@ -320,7 +320,7 @@ def demo_extraction():
 
     print(f"  Размер оригинальный: {profile.original_shape}")
     print(f"  k (компонент): {profile.k}")
-    print(f"  Энтропия паттерна: {geometry['entropy']:.2f}")
+    print(f"  Ёмкость паттерна: {geometry['capacity']:.2f}")
     print(f"  Концентрация энергии: {geometry['energy_concentration']:.4f}")
     print(f"  Compression ratio: {geometry['compression_ratio']:.6f}x")
 
@@ -357,7 +357,7 @@ def demo_extraction():
 
                 profile = extractor.extract_from_weights(weights, first_layer)
                 geometry = extractor.get_pattern_geometry(profile)
-                print(f"  Энтропия: {geometry['entropy']:.2f}")
+                print(f"  Ёмкость: {geometry['capacity']:.2f}")
 
     print("\n" + "=" * 60)
     print("Ключевой вывод:")

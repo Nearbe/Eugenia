@@ -9,29 +9,32 @@ Each parameter includes a docstring explaining its purpose and effect.
 KEY MATHEMATICAL CONSTANTS
 ========================================
 
-DELTA FIELD TRANSFORMATION:
-    D = log(X + 1) - log(256 - X)
+DELTA FIELD TRANSFORMATION (log2-based):
+    D = log2(X + 1) - log2(256 - X)
 
-This maps pixel values X ∈ [0, 255] to real numbers D ∈ [-5.546, 5.546].
+This maps pixel values X ∈ [0, 255] to real numbers D ∈ [-8, 8].
 
 Key properties:
-- log(X + 1) is approximately log(X) for X >> 1
-- log(256 - X) is approximately -log(0) when X ≈ 255
-- The constants ±5.546 come from log(256)
+- log2(X + 1) is the branching depth (Хребет) for value X+1
+- log2(256 - X) is the compression depth for remaining pixels
+- The constants ±8 come from log2(256) = 8
 
-    log(256) = 5.545 (natural log)
-    log(1) = 0
+    log2(256) = 8  (D⁸(Id) — 8 levels of branching)
+    log2(1) = 0
+
+256 = 2⁸ = D⁸(Id) — exactly 8 levels of the Spine (Хребет).
+L(256) = 8 — information capacity per pixel per Essentials [30_Информация.md].
 
 ========================================
 THRESHOLD SWEEP RANGE
 ========================================
 
-sweep_min = -5.546
-sweep_max = 5.546
+sweep_min = -8
+sweep_max = 8
 sweep_step = 0.0001
 
-These are chosen to exactly cover the delta field range.
-With step = 0.0001, we get ~111,000 threshold levels.
+These exactly cover the log2-based delta field range [-8, 8].
+With step = 0.0001, we get ~160,000 threshold levels.
 
 Resolution trade-off:
 - More thresholds → smoother curves, more jump detection
@@ -60,11 +63,11 @@ class VisualizationConfig:
     # The delta field is thresholded at many values to generate binary masks.
     # These control the range and resolution of the sweep.
 
-    sweep_min: float = -5.546
-    """Minimum threshold value for delta field sweep."""
+    sweep_min: float = -8.0
+    """Minimum threshold value for delta field sweep. Matches log2(1) - log2(256) = -8."""
 
-    sweep_max: float = 5.546
-    """Maximum threshold value for delta field sweep."""
+    sweep_max: float = 8.0
+    """Maximum threshold value for delta field sweep. Matches log2(256) - log2(1) = 8."""
 
     sweep_step: float = 0.0001
     """Step size between consecutive thresholds."""
@@ -255,8 +258,11 @@ class VisualizationConfig:
     figure_individual_histogram_factor: tuple = (2.5, 1.8)
     """Scaling factors for individual histograms."""
 
-    figure_entropy: tuple = (16, 10)
-    """Entropy analysis figure size."""
+    figure_capacity: tuple = (16, 10)
+    """Capacity analysis figure size."""
+
+    figure_fractal: tuple = (16, 8)
+    """Fractal dimension analysis figure size."""
 
     figure_phase: tuple = (16, 10)
     """Phase volume figure size."""

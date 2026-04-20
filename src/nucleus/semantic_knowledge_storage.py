@@ -73,7 +73,7 @@ class EigenPattern:
     vector: np.ndarray  # Паттерн (compressed)
     singular_value: float  # Важность (L — глубина)
     phase: float  # Фаза ( для кодирования)
-    entropy: float  # Сложность паттерна
+    capacity: float  # Сложность паттерна
 
 
 class SemanticPatternExtractor:
@@ -106,15 +106,15 @@ class SemanticPatternExtractor:
                 vector=U[:, i].astype(np.float16),
                 singular_value=S[i],
                 phase=np.angle(U[0, i] + 1j * U[1, i]),  # фаза в комплексной плоскости
-                entropy=self._compute_entropy(U[:, i]),
+                capacity=self._compute_capacity(U[:, i]),
             )
             patterns.append(pattern)
 
         self.patterns = patterns
         return patterns
 
-    def _compute_entropy(self, vector: np.ndarray) -> float:
-        """Вычисляет энтропию паттерна"""
+    def _compute_capacity(self, vector: np.ndarray) -> float:
+        """Вычисляет ёмкость паттерна (Information capacity per Essentials [30_Информация.md])"""
         # Нормализация
         p = np.abs(vector) ** 2
         p = p / p.sum() + 1e-10
@@ -153,7 +153,7 @@ class SemanticPatternExtractor:
         size = 0
         for p in self.patterns:
             size += p.vector.nbytes  # float16 vector
-            size += 4 + 4 + 4  # singular_value, phase, entropy (float32 each)
+            size += 4 + 4 + 4  # singular_value, phase, capacity (float32 each)
 
         if self.relationships is not None:
             size += self.relationships.nbytes
@@ -233,7 +233,7 @@ class KnowledgeGraph:
         return {
             "n_patterns": len(self.nodes),
             "n_relationships": len(self.edges) ** 2 if self.edges is not None else 0,
-            "total_entropy": sum(p.entropy for p in self.nodes),
+            "total_capacity": sum(p.capacity for p in self.nodes),
             "layers": list(self.layer_index.keys()),
         }
 
@@ -268,7 +268,7 @@ class SemanticRetrieval:
 
             # Комбинируем relevance и importance
             final_score = score * np.log(importance + 1)
-            scores.append((i, final_score, pattern.entropy))
+            scores.append((i, final_score, pattern.capacity))
 
         scores.sort(key=lambda x: x[1], reverse=True)
         return scores[:top_k]
@@ -394,7 +394,7 @@ class SemanticStorageFormat:
         for p in graph.nodes:
             data += struct.pack("<f", p.singular_value)
             data += struct.pack("<f", p.phase)
-            data += struct.pack("<f", p.entropy)
+            data += struct.pack("<f", p.capacity)
             data += p.vector.tobytes()
 
         # Relationships
@@ -430,7 +430,7 @@ class SemanticStorageFormat:
             offset += 4
             phase = struct.unpack("<f", data[offset : offset + 4])[0]
             offset += 4
-            entropy = struct.unpack("<f", data[offset : offset + 4])[0]
+            capacity = struct.unpack("<f", data[offset : offset + 4])[0]
             offset += 4
 
             vec_len = 32  # Assuming k=32
@@ -442,7 +442,7 @@ class SemanticStorageFormat:
                     vector=vector,
                     singular_value=singular,
                     phase=phase,
-                    entropy=entropy,
+                    capacity=capacity,
                 )
             )
 
@@ -532,10 +532,10 @@ def test_semantic_system():
 
     print("Query: случайный вектор")
     print("Top 3 семантически связанных паттерна:")
-    for idx, score, entropy in results:
+    for idx, score, capacity in results:
         p = kg.nodes[idx]
         print(
-            f"  Pattern {idx}: score={score:.3f}, entropy={entropy:.3f}, importance={p.singular_value:.2f}"
+            f"  Pattern {idx}: score={score:.3f}, capacity={capacity:.3f}, importance={p.singular_value:.2f}"
         )
 
     # Layer-specific search

@@ -24,7 +24,7 @@ The "Beauty Vision" is a multi-panel dashboard that combines:
 4. JUMP ANALYSIS:
    - Shows critical threshold levels where the topology changes.
 
-5. TOPOLOGICAL ENTROPY:
+5. TOPOLOGICAL CAPACITY:
    - Measures the complexity and information content of the sweep.
 
 6. EULER CHARACTERISTIC:
@@ -171,18 +171,19 @@ def _plot_horizon_heatmap(ax, thresholds, occupancy_rates, num_classes):
     plt.colorbar(im, ax=ax, shrink=0.8)
 
 
-def _plot_topological_entropy(ax, thresholds, class_occupancy):
-    """PANEL 7: Entropy Analysis (Bottom Left)"""
-    # Simplified Shannon Entropy: p*log(p) + (1-p)*log(1-p)
+def _plot_topological_capacity(ax, thresholds, class_occupancy):
+    """PANEL 7: Capacity Analysis (Bottom Left)"""
+    # Shannon capacity: p*log2(p) + (1-p)*log2(1-p)
+    # According to Essentials [30_Информация.md]: I = L(M) = branching depth
     p = np.clip(class_occupancy / 100.0, 1e-7, 1.0 - 1e-7)
-    entropy = -(p * np.log2(p) + (1.0 - p) * np.log2(1.0 - p))
-    ax.plot(thresholds, entropy, color="green", linewidth=2.5)
-    ax.fill_between(thresholds, 0, entropy, color="green", alpha=0.2)
-    ax.set_title("Topological Entropy", fontsize=20)
+    capacity = -(p * np.log2(p) + (1.0 - p) * np.log2(1.0 - p))
+    ax.plot(thresholds, capacity, color="green", linewidth=2.5)
+    ax.fill_between(thresholds, 0, capacity, color="green", alpha=0.2)
+    ax.set_title("Topological Capacity", fontsize=20)
     ax.set_xlabel("Threshold (\u0394)", fontsize=16)
     ax.set_ylabel("Bits", fontsize=16)
     ax.grid(alpha=0.3)
-    return entropy
+    return capacity
 
 
 def _plot_gradient_stress(ax, delta_image):
@@ -203,7 +204,7 @@ def _plot_info_metadata(
     class_occupancy,
     jump_events,
     display_idx,
-    entropy,
+    capacity,
     w,
     h,
 ):
@@ -220,7 +221,7 @@ def _plot_info_metadata(
         f"COLOR SPACE: {data.color_space}\n"
         f"DEVICE: {data.device}\n\n"
         f"--- TOPOLOGY OVERVIEW ---\n"
-        f"Maximum Entropy: {np.max(entropy):.4f} bits\n"
+        f"Maximum Capacity: {np.max(capacity):.4f} bits\n"
         f"Peak Occupancy: {np.max(class_occupancy):.1f}%\n"
         f"T-Zero Occupancy: {class_occupancy[np.argmin(np.abs(thresholds))]:.1f}%"
     )
@@ -298,8 +299,8 @@ def render(data, sweep, out_dir):
     # --- PANEL 6: Horizon Heatmap (Middle Right) ---
     _plot_horizon_heatmap(fig.add_subplot(gs[1, 2]), thresholds, occupancy_rates, num_classes)
 
-    # --- PANEL 7: Entropy Analysis (Bottom Left) ---
-    entropy = _plot_topological_entropy(fig.add_subplot(gs[2, 0]), thresholds, class_occupancy)
+    # --- PANEL 7: Capacity Analysis (Bottom Left) ---
+    capacity = _plot_topological_capacity(fig.add_subplot(gs[2, 0]), thresholds, class_occupancy)
 
     # --- PANEL 8: Gradient Stress Map (Bottom Middle) ---
     _plot_gradient_stress(fig.add_subplot(gs[2, 1]), delta_image)
@@ -315,7 +316,7 @@ def render(data, sweep, out_dir):
         class_occupancy,
         jump_events,
         display_idx,
-        entropy,
+        capacity,
         w,
         h,
     )

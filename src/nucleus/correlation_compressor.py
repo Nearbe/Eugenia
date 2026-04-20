@@ -83,9 +83,9 @@ Correlation-based Compression — сжатие через корреляцион
 - Детектирование избыточности в весах сети
 """
 
-import struct
+from struct import pack
 
-import numpy as np
+from numpy import abs, diag, float16, float32, int8, linalg, random, sqrt, where, zeros_like
 
 
 class CorrelationCompressor:
@@ -191,12 +191,12 @@ class CorrelationCompressor:
         >>> # Восстановление: W_reconstructed = W_init + delta
         """
         if init_type == "random":
-            W_init = np.random.randn(*W.shape).astype(np.float32) * 0.01
+            W_init = random.randn(*W.shape).astype(float32) * 0.01
         elif init_type == "zeros":
-            W_init = np.zeros_like(W)
+            W_init = zeros_like(W)
         elif init_type == "xavier":
-            scale = np.sqrt(2.0 / (W.shape[0] + W.shape[1]))
-            W_init = np.random.randn(*W.shape).astype(np.float32) * scale
+            scale = sqrt(2.0 / (W.shape[0] + W.shape[1]))
+            W_init = random.randn(*W.shape).astype(float32) * scale
 
         delta = W - W_init
 
@@ -221,13 +221,13 @@ class CorrelationCompressor:
         # Correlation через SVD: W = U @ S @ Vt
         # Корреляция: C = W @ W.T = U @ S² @ U.T
 
-        U, S, Vt = np.linalg.svd(W, full_matrices=False)
+        U, S, Vt = linalg.svd(W, full_matrices=False)
 
         # Храним только top-k eigenvectors и eigenvalues
         self.correlation_eigen = {
-            "U": U[:, :k].astype(np.float16),
-            "S": S[:k].astype(np.float16),
-            "Vt": Vt[:k, :].astype(np.float16),
+            "U": U[:, :k].astype(float16),
+            "S": S[:k].astype(float16),
+            "Vt": Vt[:k, :].astype(float16),
             "k": k,
             "shape": W.shape,
         }
@@ -237,11 +237,11 @@ class CorrelationCompressor:
     def decompress_correlation_svd(self):
         """Восстановление из correlation SVD"""
         c = self.correlation_eigen
-        U = c["U"].astype(np.float32)
-        S = c["S"].astype(np.float32)
-        Vt = c["Vt"].astype(np.float32)
+        U = c["U"].astype(float32)
+        S = c["S"].astype(float32)
+        Vt = c["Vt"].astype(float32)
 
-        return U @ np.diag(S) @ Vt
+        return U @ diag(S) @ Vt
 
     def compress_graph(self, W, threshold=0.5):
         """
@@ -253,24 +253,24 @@ class CorrelationCompressor:
         m, n = W.shape
 
         # Бинарный граф — есть связь или нет
-        mask = np.abs(W) > threshold * np.abs(W).max()
+        mask = abs(W) > threshold * abs(W).max()
 
         # Индексы сильных связей
-        rows, cols = np.where(mask)
+        rows, cols = where(mask)
         values = W[mask]
 
         # Кодируем
         data = b""
-        data += struct.pack("<ii", m, n)
-        data += struct.pack("<i", len(rows))
+        data += pack("<ii", m, n)
+        data += pack("<i", len(rows))
 
         for r, c in zip(rows, cols):
-            data += struct.pack("<II", r, c)
+            data += pack("<II", r, c)
 
         # Значения — int8 с масштабом
-        scale = np.abs(values).max()
-        data += struct.pack("<f", scale)
-        values_q = (values / scale * 127).round().astype(np.int8)
+        scale = abs(values).max()
+        data += pack("<f", scale)
+        values_q = (values / scale * 127).round().astype(int8)
         data += values_q.tobytes()
 
         return data, len(rows) / (m * n)  # sparsity
@@ -298,11 +298,11 @@ def test_methods():
     print("Correlation-based Compression")
     print("=" * 60)
 
-    np.random.seed(42)
+    random.seed(42)
 
     # Typical weight matrix
     m, n = 4096, 4096
-    W = np.random.randn(m, n).astype(np.float32)
+    W = random.randn(m, n).astype(float32)
     original = W.nbytes
 
     print(f"\nОригинал: {original / 1024**2:.1f} MB")
@@ -329,7 +329,7 @@ def test_methods():
 
     # Восстановление
     W_rec = comp.decompress_correlation_svd()
-    error = np.linalg.norm(W - W_rec) / np.linalg.norm(W)
+    error = linalg.norm(W - W_rec) / linalg.norm(W)
 
     print("\n2. Correlation SVD (k=8):")
     print(f"   Size: {size / 1024**2:.2f} MB")
@@ -346,7 +346,7 @@ def test_methods():
         ratio2 = original / size2
 
         W_rec2 = comp2.decompress_correlation_svd()
-        error2 = np.linalg.norm(W - W_rec2) / np.linalg.norm(W)
+        error2 = linalg.norm(W - W_rec2) / linalg.norm(W)
 
         print(f"\n   k={k}: ratio={ratio2:.0f}x, error={error2 * 100:.1f}%")
 

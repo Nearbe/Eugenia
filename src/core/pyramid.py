@@ -18,8 +18,8 @@ from typing import Optional
 
 from numpy import array
 
-from core.constants import D_ID
-from core.spine import ridge_level
+from .constants import D_ID
+from .spine import ridge_level
 
 
 def fractal_pyramid_level(n: int) -> tuple[str, str, str]:
