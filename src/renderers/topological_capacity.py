@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-r"""
+"""
 Information field scales analysis.
 
 Computes and visualizes four different measures (I, Q, rho, M) of the
@@ -54,7 +54,7 @@ def render(data, sweep, out_dir):
     Render information field scales visualization.
 
     ========================================
-    MATHEMATICAL FOUNDATION: MOMENTS OF OCCUPANCY
+    MATHEMATICAL FOUNDATION: MOMENTS OF OCCUPANCY (CAPACITY)
     ========================================
 
     This module analyzes the "Information Field" by calculating different
@@ -66,6 +66,11 @@ def render(data, sweep, out_dir):
     $M_k(t) = \sum_{c=1}^{N} (p_{t,c})^k$
 
     where $k$ is the order of the moment.
+
+    According to Essentials [30_Информация.md]:
+    - Information I = L(M) where M is mass (complexity)
+    - Capacity = branching depth = log2(mass)
+    - These moments approximate the capacity at each threshold level.
 
     Args:
         data: VisualizationData containing loaded data and configuration
@@ -104,7 +109,7 @@ def render(data, sweep, out_dir):
         },
     ]
 
-    fig, axes = plt.subplots(2, 2, figsize=configuration["figure_entropy"])
+    fig, axes = plt.subplots(2, 2, figsize=configuration["figure_capacity"])
     axes_flat = axes.flatten()
 
     for i, params in enumerate(measures):
@@ -121,5 +126,5 @@ def render(data, sweep, out_dir):
         "These metrics capture the higher-order statistical properties of the topological filtration."
     )
     save_visualization(
-        "08_entropy_analysis.png", out_dir, configuration, "dpi_default", description=description
+        "08_capacity_analysis.png", out_dir, configuration, "dpi_default", description=description
     )
