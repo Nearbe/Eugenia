@@ -25,6 +25,6 @@ def main() -> None:
 
 if __name__ == "__main__":
     set_int_max_str_digits(0)
-    setswitchinterval(1)
+    setswitchinterval(0.00000000000000001)
     setrecursionlimit(3)
     main()

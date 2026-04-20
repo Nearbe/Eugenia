@@ -20,7 +20,9 @@ from .spine import L
 Number = Union[int, float]
 
 
-def delta_distance(a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]) -> Union[float, list[float]]:
+def delta_distance(
+    a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]
+) -> Union[float, list[float]]:
     """
     Расстояние между состояниями на логарифмической шкале Хребта.
 
@@ -36,17 +38,19 @@ def delta_distance(a: Union[Number, Sequence[Number]], b: Union[Number, Sequence
     Returns:
         Distance on the logarithmic spine scale.
     """
-    La = L(a)
-    Lb = L(b)
-    if isinstance(La, (int, float)) and isinstance(Lb, (int, float)):
-        return abs(La - Lb)
+    la = L(a)
+    lb = L(b)
+    if isinstance(la, (int, float)) and isinstance(lb, (int, float)):
+        return abs(la - lb)
     # Element-wise distance
-    if isinstance(La, list) and isinstance(Lb, list):
-        return [abs(x - y) for x, y in zip(La, Lb)]
-    return abs(La - Lb)
+    if isinstance(la, list) and isinstance(lb, list):
+        return [abs(x - y) for x, y in zip(la, lb)]
+    return abs(la - lb)  # type: ignore[operator]
 
 
-def euclidean_distance(a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]) -> float:
+def euclidean_distance(
+    a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]
+) -> float:
     """
     Евклидово расстояние — стандартное, для сравнения.
 
@@ -64,5 +68,5 @@ def euclidean_distance(a: Union[Number, Sequence[Number]], b: Union[Number, Sequ
     """
     if isinstance(a, (int, float)) and isinstance(b, (int, float)):
         return math.sqrt((a - b) ** 2)
-    diff = [float(x) - float(y) for x, y in zip(a, b)]
-    return math.sqrt(sum(d ** 2 for d in diff))
+    diff = [float(x) - float(y) for x, y in zip(a, b)]  # type: ignore[arg-type]
+    return math.sqrt(sum(d**2 for d in diff))

@@ -19,7 +19,9 @@ from typing import Sequence, Tuple, Union
 Number = Union[int, float]
 
 
-def complex_norm(x: Union[Number, Sequence[Number]], y: Union[Number, Sequence[Number]]) -> Union[float, list[float]]:
+def complex_norm(
+    x: Union[Number, Sequence[Number]], y: Union[Number, Sequence[Number]]
+) -> Union[float, list[float]]:
     """
     Норма комплексного числа: ‖z‖ = √(x² + y²).
 
@@ -36,11 +38,13 @@ def complex_norm(x: Union[Number, Sequence[Number]], y: Union[Number, Sequence[N
         Norm ‖z‖ = √(x² + y²).
     """
     if isinstance(x, (int, float)) and isinstance(y, (int, float)):
-        return math.sqrt(x ** 2 + y ** 2)
-    return [math.sqrt(xi ** 2 + yi ** 2) for xi, yi in zip(x, y)]
+        return math.sqrt(x**2 + y**2)
+    return [math.sqrt(xi**2 + yi**2) for xi, yi in zip(x, y)]  # type: ignore[arg-type]
 
 
-def complex_norm_squared(x: Union[Number, Sequence[Number]], y: Union[Number, Sequence[Number]]) -> Union[float, list[float]]:
+def complex_norm_squared(
+    x: Union[Number, Sequence[Number]], y: Union[Number, Sequence[Number]]
+) -> Union[float, list[float]]:
     """
     Квадрат нормы комплексного числа: ‖z‖² = x² + y².
 
@@ -55,11 +59,13 @@ def complex_norm_squared(x: Union[Number, Sequence[Number]], y: Union[Number, Se
         Squared norm ‖z‖² = x² + y².
     """
     if isinstance(x, (int, float)) and isinstance(y, (int, float)):
-        return x ** 2 + y ** 2
-    return [xi ** 2 + yi ** 2 for xi, yi in zip(x, y)]
+        return x**2 + y**2
+    return [xi**2 + yi**2 for xi, yi in zip(x, y)]  # type: ignore[arg-type]
 
 
-def complex_conjugate(x: Union[Number, Sequence[Number]], y: Union[Number, Sequence[Number]]) -> Tuple[Union[float, list[float]], Union[float, list[float]]]:
+def complex_conjugate(
+    x: Union[Number, Sequence[Number]], y: Union[Number, Sequence[Number]]
+) -> Tuple[Union[float, list[float]], Union[float, list[float]]]:
     """
     Сопряжение: z̄ = x − i·y.
 
@@ -74,10 +80,15 @@ def complex_conjugate(x: Union[Number, Sequence[Number]], y: Union[Number, Seque
     """
     if isinstance(x, (int, float)) and isinstance(y, (int, float)):
         return x, -y
-    return (x, [-yi for yi in y])
+    return x, [-yi for yi in y]  # type: ignore[return-value]
 
 
-def complex_multiply(x1: Union[Number, Sequence[Number]], y1: Union[Number, Sequence[Number]], x2: Union[Number, Sequence[Number]], y2: Union[Number, Sequence[Number]]) -> Tuple[Union[float, list[float]], Union[float, list[float]]]:
+def complex_multiply(
+    x1: Union[Number, Sequence[Number]],
+    y1: Union[Number, Sequence[Number]],
+    x2: Union[Number, Sequence[Number]],
+    y2: Union[Number, Sequence[Number]],
+) -> Tuple[Union[float, list[float]], Union[float, list[float]]]:
     """
     Умножение комплексных чисел:
 
@@ -93,15 +104,17 @@ def complex_multiply(x1: Union[Number, Sequence[Number]], y1: Union[Number, Sequ
         Tuple (real, imag) of the product.
     """
     if all(isinstance(v, (int, float)) for v in (x1, y1, x2, y2)):
-        real = x1 * x2 - y1 * y2
-        imag = x1 * y2 + x2 * y1
+        real = x1 * x2 - y1 * y2  # type: ignore[operator]
+        imag = x1 * y2 + x2 * y1  # type: ignore[operator]
         return real, imag
-    real = [xi1 * xi2 - yi1 * yi2 for xi1, yi1, xi2, yi2 in zip(x1, y1, x2, y2)]
-    imag = [xi1 * yi2 + xi2 * yi1 for xi1, yi1, xi2, yi2 in zip(x1, y1, x2, y2)]
+    real = [xi1 * xi2 - yi1 * yi2 for xi1, yi1, xi2, yi2 in zip(x1, y1, x2, y2)]  # type: ignore[arg-type]
+    imag = [xi1 * yi2 + xi2 * yi1 for xi1, yi1, xi2, yi2 in zip(x1, y1, x2, y2)]  # type: ignore[arg-type]
     return real, imag
 
 
-def complex_branch(x: Union[Number, Sequence[Number]], y: Union[Number, Sequence[Number]]) -> Tuple[Union[float, list[float]], Union[float, list[float]]]:
+def complex_branch(
+    x: Union[Number, Sequence[Number]], y: Union[Number, Sequence[Number]]
+) -> Tuple[Union[float, list[float]], Union[float, list[float]]]:
     """
     Ветвление комплексного числа: z : Ω = D(x) + i·D(y).
 
@@ -120,10 +133,12 @@ def complex_branch(x: Union[Number, Sequence[Number]], y: Union[Number, Sequence
 
     if isinstance(x, (int, float)) and isinstance(y, (int, float)):
         return D(x), D(y)
-    return (D(x), D(y))
+    return D(x), D(y)
 
 
-def complex_compress(x: Union[Number, Sequence[Number]], y: Union[Number, Sequence[Number]]) -> Tuple[Union[float, list[float]], Union[float, list[float]]]:
+def complex_compress(
+    x: Union[Number, Sequence[Number]], y: Union[Number, Sequence[Number]]
+) -> Tuple[Union[float, list[float]], Union[float, list[float]]]:
     """
     Сжатие комплексного числа: z : D(Id) = (x:D(Id)) + i·(y:D(Id)).
 
@@ -141,10 +156,12 @@ def complex_compress(x: Union[Number, Sequence[Number]], y: Union[Number, Sequen
 
     if isinstance(x, (int, float)) and isinstance(y, (int, float)):
         return H(x), H(y)
-    return (H(x), H(y))
+    return H(x), H(y)
 
 
-def complex_rotate(x: Union[Number, Sequence[Number]], y: Union[Number, Sequence[Number]], theta: float) -> Tuple[Union[float, list[float]], Union[float, list[float]]]:
+def complex_rotate(
+    x: Union[Number, Sequence[Number]], y: Union[Number, Sequence[Number]], theta: float
+) -> Tuple[Union[float, list[float]], Union[float, list[float]]]:
     """
     Вращение комплексного числа на угол θ.
 
@@ -167,6 +184,6 @@ def complex_rotate(x: Union[Number, Sequence[Number]], y: Union[Number, Sequence
         real = x * c - y * s
         imag = x * s + y * c
         return real, imag
-    real = [xi * c - yi * s for xi, yi in zip(x, y)]
-    imag = [xi * s + yi * c for xi, yi in zip(x, y)]
+    real = [xi * c - yi * s for xi, yi in zip(x, y)]  # type: ignore[arg-type]
+    imag = [xi * s + yi * c for xi, yi in zip(x, y)]  # type: ignore[arg-type]
     return real, imag

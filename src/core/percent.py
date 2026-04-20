@@ -16,10 +16,9 @@ This is consistent with Essentials [12_Алгебра_процентов.md]:
 - Ω = 0% (spine level -∞)
 """
 
-import math
 from typing import Sequence, Union
 
-from .spine import L, percentage_to_ridge, ridge_level, ridge_to_percentage
+from .spine import percentage_to_ridge, ridge_level, ridge_to_percentage
 
 Number = Union[int, float]
 
@@ -65,10 +64,12 @@ def from_percentage(pct: Union[Number, Sequence[Number]]) -> Union[float, list[f
     """
     if isinstance(pct, (int, float)):
         return percentage_to_ridge(max(min(float(pct), 100.0), 0.0))
-    return [percentage_to_ridge(max(min(float(p), 100.0), 0.0)) for p in pct]
+    return [percentage_to_ridge(max(min(float(p), 100.0), 0.0)) for p in pct]  # type: ignore[misc]
 
 
-def percentage_add(a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]) -> Union[float, list[float]]:
+def percentage_add(
+    a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]
+) -> Union[float, list[float]]:
     """
     Сложение долей: (a:Π) ⊕ (b:Π) = (a⊕b) : Π.
 
@@ -89,12 +90,14 @@ def percentage_add(a: Union[Number, Sequence[Number]], b: Union[Number, Sequence
     # Convert percentages to spine levels, add, convert back
     sa = percentage_to_ridge(pa)
     sb = percentage_to_ridge(pb)
-    s_sum = sa + sb
+    s_sum = sa + sb  # type: ignore[operator]
     # Map back: spine level → absolute value = 2^spine_level
-    return 2.0 ** s_sum
+    return 2.0**s_sum
 
 
-def percentage_multiply(a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]) -> Union[float, list[float]]:
+def percentage_multiply(
+    a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]
+) -> Union[float, list[float]]:
     """
     Умножение долей: (a:Π) ⊗ (b:Π) = (a⊗b) : Π.
 
@@ -116,5 +119,5 @@ def percentage_multiply(a: Union[Number, Sequence[Number]], b: Union[Number, Seq
     sa = percentage_to_ridge(pa)
     sb = percentage_to_ridge(pb)
     # Geometric mean: average of log-spaces
-    s_mean = (sa + sb) / 2.0
-    return 2.0 ** s_mean
+    s_mean = (sa + sb) / 2.0  # type: ignore[operator]
+    return 2.0**s_mean

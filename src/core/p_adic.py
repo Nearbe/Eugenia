@@ -56,7 +56,9 @@ def _v2_scalar(val: float) -> float:
     return float(n)
 
 
-def p_adic_distance(a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]) -> Union[float, list[float]]:
+def p_adic_distance(
+    a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]
+) -> Union[float, list[float]]:
     """
     p-адическое расстояние: d_p(a, b) = |a - b|_p = p^(-v_p(a-b))
 
@@ -73,14 +75,16 @@ def p_adic_distance(a: Union[Number, Sequence[Number]], b: Union[Number, Sequenc
         v = _v2_scalar(diff)
         return 0 if diff == 0 else 2 ** (-v)
     results = []
-    for av, bv in zip(a, b):
+    for av, bv in zip(a, b):  # type: ignore[arg-type]
         diff = abs(av - bv)
         v = _v2_scalar(diff)
         results.append(0 if diff == 0 else 2 ** (-v))
     return results
 
 
-def p_adic_threshold_spacing(sweep_min: float, sweep_max: float, n_levels: int = 160000) -> list[float]:
+def p_adic_threshold_spacing(
+    sweep_min: float, sweep_max: float, n_levels: int = 160000
+) -> list[float]:
     """
     Генерация порогов с p-адическим расстоянием.
 
@@ -108,9 +112,9 @@ def p_adic_threshold_spacing(sweep_min: float, sweep_max: float, n_levels: int =
     log_levels = range(int(math.floor(sweep_min)), int(math.ceil(sweep_max)) + 1)
 
     for level in log_levels:
-        level_val = 2.0 ** level
+        level_val = 2.0**level
         for k in range(-8, 9):
-            offset = level_val * (2.0 ** k)
+            offset = level_val * (2.0**k)
             if sweep_min <= offset <= sweep_max:
                 thresholds.add(offset)
 
@@ -261,7 +265,7 @@ def gcd(a: int, b: int) -> int:
     va = v2_adic_valuation(int(a))
     vb = v2_adic_valuation(int(b))
     min_v = min(va, vb)
-    return 2 ** int(min_v)
+    return 2 ** int(min_v)  # type: ignore[operator]
 
 
 def lcm(a: int, b: int) -> int:
@@ -285,7 +289,7 @@ def lcm(a: int, b: int) -> int:
     va = v2_adic_valuation(int(a))
     vb = v2_adic_valuation(int(b))
     max_v = max(va, vb)
-    return 2 ** int(max_v)
+    return 2 ** int(max_v)  # type: ignore[operator]
 
 
 def mod_congruence(a: int, b: int, m: int) -> bool:

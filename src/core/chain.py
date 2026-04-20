@@ -13,11 +13,11 @@
 - chain_identity_check: проверка тождества left:0:right = 1
 """
 
-from core.branching import D
-from core.constants import D_ID, OMEGA
-from core.delta import delta_field
-from core.pyramid import fractal_pyramid_level
-from core.spine import ridge_level, ridge_to_percentage
+from .branching import D
+from .constants import D_ID, OMEGA
+from .delta import delta_field
+from .pyramid import fractal_pyramid_level
+from .spine import ridge_level, ridge_to_percentage
 
 
 def _isscalar(val) -> bool:
@@ -25,11 +25,14 @@ def _isscalar(val) -> bool:
     return isinstance(val, (int, float))
 
 
-def _to_float_scalar(val):
+def _to_float_scalar(val: float | list[float]) -> float:
     """Convert scalar-like value to float."""
     if isinstance(val, (int, float)):
         return float(val)
-    return float(val[0])
+    # val is list[float]
+    if val:
+        return float(val[0])
+    return 0.0
 
 
 def omega_to_pi_chain(max_steps: int = 10) -> list:
@@ -63,7 +66,7 @@ def omega_to_pi_chain(max_steps: int = 10) -> list:
             "symbol": "Id",
             "value": 1.0,
             "spine_level": 0.0,
-            "percentage": ridge_to_percentage([0.0])[0],
+            "percentage": ridge_to_percentage(0.0),
             "description": "Единство — начало ветвления",
         }
     )
@@ -71,8 +74,8 @@ def omega_to_pi_chain(max_steps: int = 10) -> list:
     # Шаги 2..max_steps: Dⁿ(Id)
     for n in range(2, max_steps + 1):
         val = D_ID ** (n - 1)  # D¹(Id) = 2, D²(Id) = 4, ...
-        spine_lvl = ridge_level([val])[0]
-        pct = ridge_to_percentage([spine_lvl])[0]
+        spine_lvl = ridge_level(val)
+        pct = ridge_to_percentage(spine_lvl)
 
         if n == max_steps and val >= 1e100:
             symbol = "Π"

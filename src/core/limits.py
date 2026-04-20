@@ -14,6 +14,14 @@ from .branching import D, H
 from .constants import D_ID, OMEGA, PI
 
 
+def _continuity_error(x_limit: float, fn, x_sequence: list) -> float:
+    """Compute continuity error: |fn(lim xₙ) - lim fn(xₙ)|."""
+    f_of_limit = fn(x_limit)
+    f_sequence = [fn(x) for x in x_sequence]
+    f_limit = f_sequence[-1] if f_sequence else 0.0
+    return abs(float(f_of_limit) - float(f_limit))  # type: ignore[arg-type]
+
+
 def limit_branching(n: int) -> float:
     """
     Предел ветвления: lim Dⁿ(Id) = Π.
@@ -52,18 +60,8 @@ def continuity_D(x_sequence: list, n_steps: int = 1000) -> float:
     Returns:
         Разность |D(lim xₙ) - lim D(xₙ)| — должна быть ≈ 0.
     """
-    # Limit of xₙ
     x_limit = x_sequence[-1] if x_sequence else 0.0
-
-    # D(lim xₙ)
-    d_of_limit = D(x_limit)
-
-    # lim D(xₙ)
-    d_sequence = [D(x) for x in x_sequence[:n_steps]]
-    d_limit = d_sequence[-1] if d_sequence else 0.0
-
-    # Continuity error (should be ≈ 0 for continuous D)
-    return abs(float(d_of_limit) - float(d_limit))
+    return _continuity_error(x_limit, D, x_sequence[:n_steps])
 
 
 def continuity_H(x_sequence: list, n_steps: int = 1000) -> float:
@@ -82,15 +80,5 @@ def continuity_H(x_sequence: list, n_steps: int = 1000) -> float:
     Returns:
         Разность |H(lim xₙ) - lim H(xₙ)| — должна быть ≈ 0.
     """
-    # Limit of xₙ
     x_limit = x_sequence[-1] if x_sequence else 0.0
-
-    # H(lim xₙ)
-    h_of_limit = H(x_limit)
-
-    # lim H(xₙ)
-    h_sequence = [H(x) for x in x_sequence[:n_steps]]
-    h_limit = h_sequence[-1] if h_sequence else 0.0
-
-    # Continuity error (should be ≈ 0 for continuous H)
-    return abs(float(h_of_limit) - float(h_limit))
+    return _continuity_error(x_limit, H, x_sequence[:n_steps])

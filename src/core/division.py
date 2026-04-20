@@ -16,7 +16,9 @@ from .constants import D_ID, OMEGA
 Number = Union[int, float]
 
 
-def safe_divide(a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]) -> Union[float, list[float]]:
+def safe_divide(
+    a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]
+) -> Union[float, list[float]]:
     """
     Деление a : b с учётом ветвления.
 
@@ -31,13 +33,13 @@ def safe_divide(a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Nu
     if isinstance(a, (int, float)) and isinstance(b, (int, float)):
         if b == OMEGA:
             return D(a)
-        if abs(b - D_ID) < 1e-10:
+        if abs(b - D_ID) < 1e-10:  # type: ignore[operator]
             return H(a)
         return a / b
 
     # Sequence case
     results = []
-    for av, bv in zip(a, b):
+    for av, bv in zip(a, b):  # type: ignore[arg-type]
         if bv == OMEGA:
             results.append(D(av))
         elif abs(bv - D_ID) < 1e-10:
@@ -47,6 +49,8 @@ def safe_divide(a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Nu
     return results
 
 
-def div_safe(a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]) -> Union[float, list[float]]:
+def div_safe(
+    a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]
+) -> Union[float, list[float]]:
     """Alias for safe_divide."""
     return safe_divide(a, b)

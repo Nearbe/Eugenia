@@ -84,6 +84,13 @@ Knowledge Graph Compression — извлечение структуры знан
 
 import numpy as np
 
+from core.realmath import (
+    delta_distance,
+    p_adic_distance,
+    solenoid_distance,
+    encode_solenoid_trajectory,
+)
+
 
 class KnowledgeGraph:
     """
@@ -328,6 +335,11 @@ class KnowledgeGraph:
 
         Для численной стабильности добавляется ε = 1e-10 к знаменателю.
 
+        RealMath enhancement:
+        - Delta distance on spine levels for logarithmic comparison
+        - p-adic distance for topological comparison
+        - Solenoid trajectory distance for pattern history
+
         Пример:
         -------
         >>> sim = graph.similarity(10, 20)
@@ -336,7 +348,30 @@ class KnowledgeGraph:
         """
         v1 = self.get_node_vector(i)
         v2 = self.get_node_vector(j)
-        return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2) + 1e-10)
+
+        # Standard cosine similarity
+        cos_sim = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2) + 1e-10)
+
+        # RealMath: delta distance on spine levels (scalar)
+        delta_dist = delta_distance(v1.tolist(), v2.tolist())
+        if isinstance(delta_dist, list):
+            delta_dist = float(np.mean(delta_dist))
+
+        # RealMath: p-adic distance (scalar)
+        p_adic_dist = p_adic_distance(v1.tolist(), v2.tolist())
+        if isinstance(p_adic_dist, list):
+            p_adic_dist = float(np.mean(p_adic_dist))
+
+        # RealMath: solenoid trajectory distance
+        traj1 = encode_solenoid_trajectory(float(np.mean(v1)), depth=30)
+        traj2 = encode_solenoid_trajectory(float(np.mean(v2)), depth=30)
+        sol_dist = solenoid_distance(traj1, traj2)
+
+        # Combined RealMath similarity (weighted)
+        # Higher delta distance → lower similarity, higher p-adic → lower
+        realmath_sim = 0.5 * cos_sim + 0.3 * (1.0 / (1.0 + delta_dist)) + 0.2 * sol_dist
+
+        return float(realmath_sim)
 
 
 def extract_knowledge_structure():

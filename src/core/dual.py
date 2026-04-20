@@ -22,7 +22,9 @@ Number = Union[int, float]
 NDArray = Union[Sequence[float], float]
 
 
-def dual_form(x: Union[Number, Sequence[Number]], v: Union[Number, Sequence[Number]]) -> Tuple[Union[float, list[float]], Union[float, list[float]]]:
+def dual_form(
+    x: Union[Number, Sequence[Number]], v: Union[Number, Sequence[Number]]
+) -> Tuple[Union[float, Sequence[float]], Union[float, Sequence[float]]]:
     """
     Создание дуального числа: Z = x + v·ε.
 
@@ -59,8 +61,11 @@ def dual_add(x1: NDArray, v1: NDArray, x2: NDArray, v2: NDArray) -> Tuple[NDArra
         Tuple (x_sum, v_sum).
     """
     if isinstance(x1, (int, float)) and isinstance(x2, (int, float)):
+        # noinspection PyTypeChecker,PyUnresolvedReferences
         return x1 + x2, v1 + v2
+    # noinspection PyUnresolvedReferences,PyTypeChecker
     x_sum = [a + b for a, b in zip(x1, x2)]
+    # noinspection PyUnresolvedReferences,PyTypeChecker
     v_sum = [a + b for a, b in zip(v1, v2)]
     return x_sum, v_sum
 
@@ -85,9 +90,12 @@ def dual_multiply(x1: NDArray, v1: NDArray, x2: NDArray, v2: NDArray) -> Tuple[N
     """
     if isinstance(x1, (int, float)) and isinstance(x2, (int, float)):
         x_result = x1 * x2
+        # noinspection PyTypeChecker
         v_result = x1 * v2 + x2 * v1
         return x_result, v_result
+    # noinspection PyUnresolvedReferences,PyTypeChecker
     x_result = [a * b for a, b in zip(x1, x2)]
+    # noinspection PyUnresolvedReferences,PyTypeChecker
     v_result = [a * b2 + b * a2 for a, b, a2, b2 in zip(x1, v2, x2, v1)]
     return x_result, v_result
 
@@ -148,10 +156,12 @@ def dual_power(x: NDArray, v: NDArray, n: int) -> Tuple[NDArray, NDArray]:
         Tuple (real_part, infinitesimal_part) of Zⁿ.
     """
     if isinstance(x, (int, float)):
-        x_result = x ** n
+        x_result = x**n
+        # noinspection PyTypeChecker
         v_result = n * (x ** (n - 1)) * v
         return x_result, v_result
-    x_result = [xi ** n for xi in x]
+    x_result = [xi**n for xi in x]
+    # noinspection PyUnresolvedReferences,PyTypeChecker
     v_result = [n * (xi ** (n - 1)) * vi for xi, vi in zip(x, v)]
     return x_result, v_result
 
@@ -174,4 +184,5 @@ def dual_func(x: NDArray, v: NDArray, f, df) -> Tuple[NDArray, NDArray]:
     Returns:
         Tuple (f(x), f'(x)·v).
     """
+    # noinspection PyTypeChecker,PyUnresolvedReferences
     return f(x), df(x) * v

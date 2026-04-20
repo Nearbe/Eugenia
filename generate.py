@@ -110,7 +110,9 @@ def run_source(
         source_name: Name of the data source (mnist, png, cmyk)
         source_file: Optional specific file to use (e.g., latin, cyrillic)
         num_workers: Number of parallel workers for rendering.
-        sweep_min, sweep_max, sweep_step: Custom sweep parameters.
+        sweep_min: Minimum threshold for sweep.
+        sweep_max: Maximum threshold for sweep.
+        sweep_step: Step size for sweep.
         jump_threshold: Custom jump detection threshold.
         renderers: Comma-separated list of renderers to run.
 

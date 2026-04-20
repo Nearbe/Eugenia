@@ -26,7 +26,9 @@ def _clip(val: float, lo: float, hi: float) -> float:
     return val
 
 
-def similarity(a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]) -> Union[float, list[float]]:
+def similarity(
+    a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]
+) -> Union[float, list[float]]:
     """
     Сходство через алгебру долей (процентов).
 
@@ -41,9 +43,9 @@ def similarity(a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Num
     if isinstance(a, (int, float)) and isinstance(b, (int, float)):
         pa = to_percentage(a)
         pb = to_percentage(b)
-        norm_a = math.sqrt(pa ** 2)
-        norm_b = math.sqrt(pb ** 2)
-        dot = pa * pb
+        norm_a = math.sqrt(pa**2)  # type: ignore[operator]
+        norm_b = math.sqrt(pb**2)  # type: ignore[operator]
+        dot = pa * pb  # type: ignore[operator]
         denom = norm_a * norm_b
         if denom < 1e-10:
             return 1.0
@@ -52,9 +54,9 @@ def similarity(a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Num
     # Sequence case: element-wise cosine similarity
     pa = to_percentage(a)
     pb = to_percentage(b)
-    norm_a = math.sqrt(sum(x ** 2 for x in pa))
-    norm_b = math.sqrt(sum(x ** 2 for x in pb))
-    dot = sum(x * y for x, y in zip(pa, pb))
+    norm_a = math.sqrt(sum(x**2 for x in pa))  # type: ignore[arg-type]
+    norm_b = math.sqrt(sum(x**2 for x in pb))  # type: ignore[arg-type]
+    dot = sum(x * y for x, y in zip(pa, pb))  # type: ignore[arg-type]
     denom = norm_a * norm_b
     if denom < 1e-10:
         return 1.0

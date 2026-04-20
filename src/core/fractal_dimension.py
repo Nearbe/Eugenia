@@ -110,17 +110,17 @@ def fractal_dimension_from_betti(
     Returns:
         Фрактальная размерность D_f
     """
-    thresh_list = list(thresholds)
-    betti_list = list(betti_values)
+    thresh_list: list[float] = list(thresholds)
+    betti_list: list[float] = list(betti_values)
 
-    ref_idx = min(range(len(thresh_list)), key=lambda i: abs(thresh_list[i] - reference_threshold))
+    ref_idx = min(range(len(thresh_list)), key=lambda i: abs(thresh_list[i] - reference_threshold))  # type: ignore[arg-type]
     ref_betti = betti_list[ref_idx]
 
     if ref_betti <= 0:
         return 0.0
 
     half_threshold = reference_threshold / 2.0
-    half_idx = min(range(len(thresh_list)), key=lambda i: abs(thresh_list[i] - half_threshold))
+    half_idx = min(range(len(thresh_list)), key=lambda i: abs(thresh_list[i] - half_threshold))  # type: ignore[arg-type]
     half_betti = betti_list[half_idx]
 
     if half_betti <= 0:
@@ -218,9 +218,9 @@ def compute_betti_scaling_exponent(
     sum_x = sum(log_t)
     sum_y = sum(log_beta)
     sum_xy = sum(x * y for x, y in zip(log_t, log_beta))
-    sum_x2 = sum(x ** 2 for x in log_t)
+    sum_x2 = sum(x**2 for x in log_t)
 
-    denom = n * sum_x2 - sum_x ** 2
+    denom = n * sum_x2 - sum_x**2
     if abs(denom) < 1e-10:
         return 0.0
 

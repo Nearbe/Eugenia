@@ -21,7 +21,7 @@ from typing import Tuple
 
 import numpy as np
 
-from nucleus import safe_divide, is_potential
+from src.core.realmath import safe_divide, is_potential
 
 
 @dataclass

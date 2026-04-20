@@ -9,6 +9,12 @@ This package contains the core NUCLEUS modules:
 - geometric_extractor: BINARY SWEEP → TOPOLOGY
 - correlation_compressor: SVD weight compression
 - nucleus_seed_system: Correlation seed system
+
+Integration with src/core/ (RealMath):
+- All RealMath operators are available via: from core.realmath import *
+- GeometricExtractor uses delta_field, complex_delta, solenoid, fractal operators
+- DeterministicKnowledgeCore uses delta_distance, p_adic_distance, solenoid_distance
+- KnowledgeGraph uses combined RealMath similarity operators
 """
 
 from .correlation_compressor import CorrelationCompressor

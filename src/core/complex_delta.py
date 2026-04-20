@@ -15,7 +15,7 @@ Complex delta field — Комплексное дельта-поле.
 - Q = exp(Δ)        ← энергия вибрации
 """
 
-import math
+from math import exp
 from typing import Sequence, Tuple, Union
 
 Number = Union[int, float]
@@ -30,7 +30,7 @@ def _clip(val: float, lo: float, hi: float) -> float:
     return val
 
 
-def complex_delta_field(X: Union[Number, Sequence[Number]]) -> Union[complex, list[complex]]:
+def complex_delta_field(x_val: Union[Number, Sequence[Number]]) -> Union[complex, list[complex]]:
     """
     Комплексное дельта-поле: z = x + i·y.
 
@@ -42,23 +42,22 @@ def complex_delta_field(X: Union[Number, Sequence[Number]]) -> Union[complex, li
     Согласно Essentials — Essentials mathematics.
 
     Args:
-        X: Входные данные (пиксели 0-255)
+        x_val: Входные данные (пиксели 0-255)
 
     Returns:
         Комплексный массив: x + i·y
     """
-    if isinstance(X, (int, float)):
-        x_clamped = _clip(float(X), 0, 254.999)
+    if isinstance(x_val, (int, float)):
+        x_clamped = _clip(float(x_val), 0, 254.999)
         x = x_clamped / 255.0
         y = 1.0 - x
         return complex(x, y)
-    return [
-        complex(float(x) / 255.0, 1.0 - float(x) / 255.0)
-        for x in X
-    ]
+    return [complex(float(x) / 255.0, 1.0 - float(x) / 255.0) for x in x_val]
 
 
-def complex_delta_properties(X: Union[Number, Sequence[Number]]) -> Tuple[Union[float, list[float]], Union[float, list[float]]]:
+def complex_delta_properties(
+    x_val: Union[Number, Sequence[Number]],
+) -> Tuple[Union[float, list[float]], Union[float, list[float]]]:
     """
     Возвращает (delta, Q) для каждого пикселя.
 
@@ -68,28 +67,28 @@ def complex_delta_properties(X: Union[Number, Sequence[Number]]) -> Tuple[Union[
     Согласно Essentials — Essentials mathematics.
 
     Args:
-        X: Входные данные (пиксели 0-255)
+        x_val: Входные данные (пиксели 0-255)
 
     Returns:
         Кортеж (delta, Q)
     """
-    if isinstance(X, (int, float)):
-        x_clamped = _clip(float(X), 0, 254.999)
+    if isinstance(x_val, (int, float)):
+        x_clamped = _clip(float(x_val), 0, 254.999)
         x = x_clamped / 255.0
         y = 1.0 - x
         delta = x / y
-        Q = math.exp(delta)
-        return delta, Q
+        q_val = exp(delta)
+        return delta, q_val
     deltas = []
-    Qs = []
-    for x in X:
+    qs = []
+    for x in x_val:
         x_clamped = _clip(float(x), 0, 254.999)
-        x_val = x_clamped / 255.0
-        y = 1.0 - x_val
-        delta = x_val / y
+        x_inner = x_clamped / 255.0
+        y = 1.0 - x_inner
+        delta = x_inner / y
         deltas.append(delta)
-        Qs.append(math.exp(delta))
-    return deltas, Qs
+        qs.append(exp(delta))
+    return deltas, qs
 
 
 def inverse_complex_delta_field(z: Union[complex, Sequence[complex]]) -> Union[float, list[float]]:
@@ -110,14 +109,14 @@ def inverse_complex_delta_field(z: Union[complex, Sequence[complex]]) -> Union[f
         imag = z.imag
         denom = real + imag
         denom = denom if denom != 0 else 1e-300
-        X = 255.0 * real / denom
-        return _clip(X, 0, 255.0)
+        x_out = 255.0 * real / denom
+        return _clip(x_out, 0, 255.0)
     results = []
     for c in z:
         real = c.real
         imag = c.imag
         denom = real + imag
         denom = denom if denom != 0 else 1e-300
-        X = 255.0 * real / denom
-        results.append(_clip(X, 0, 255.0))
+        x_out = 255.0 * real / denom
+        results.append(_clip(x_out, 0, 255.0))
     return results

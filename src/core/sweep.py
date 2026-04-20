@@ -6,11 +6,11 @@ This module implements the core sweep algorithm that measures pixel occupancy
 across a range of threshold values in the delta field.
 """
 
-import math
+from math import ceil, comb
 from concurrent.futures import ThreadPoolExecutor
 from logging import getLogger
 from time import time
-from typing import Sequence, Union
+from typing import Union
 
 from models.config import CONFIG
 from models.types import SweepResults, VisualizationData
@@ -117,15 +117,15 @@ def rg_aware_sweep(sweep_min: float, sweep_max: float, n_levels: int = 160000) -
     thresholds: set[float] = set()
 
     for level in range(int(sweep_min), int(sweep_max) + 1):
-        base = 2.0 ** level
+        base = 2.0**level
         if sweep_min <= base <= sweep_max:
             thresholds.add(base)
             for k in range(-4, 5):
-                refined = base * (2.0 ** k)
+                refined = base * (2.0**k)
                 if sweep_min <= refined <= sweep_max and refined not in thresholds:
                     thresholds.add(refined)
 
-    thresholds = sorted(thresholds)
+    thresholds: list[float] = sorted(thresholds)
 
     if len(thresholds) < n_levels:
         extra = [sweep_min + i * (sweep_max - sweep_min) / (n_levels - 1) for i in range(n_levels)]
@@ -133,8 +133,9 @@ def rg_aware_sweep(sweep_min: float, sweep_max: float, n_levels: int = 160000) -
         return combined[:n_levels]
     else:
         step = len(thresholds) / n_levels
+        sorted_thresholds = sorted(thresholds)
         indices = [int(i * step) for i in range(n_levels)]
-        return [thresholds[i] for i in indices]
+        return [sorted_thresholds[i] for i in indices]
 
 
 # ============================================================
@@ -212,7 +213,7 @@ def binomial_probability(k: int, n: int) -> float:
     """
     from math import comb
 
-    total_branches = 2 ** n
+    total_branches = 2**n
     favorable_branches = comb(n, k)
     return favorable_branches / total_branches
 
@@ -236,9 +237,7 @@ def theoretical_occupancy(n_pixels: int, threshold_fraction: float) -> float:
     """
     k = int(n_pixels * threshold_fraction)
     n = n_pixels
-    prob = binomial_probability(k, n)
-
-    cumulative = sum(comb(n, i) / (2 ** n) for i in range(k, n + 1))
+    cumulative = sum(comb(n, i) / (2**n) for i in range(k, n + 1))
     return cumulative
 
 
@@ -285,15 +284,15 @@ def compute_sweep(data: VisualizationData) -> SweepResults:
     sweep_min = CONFIG.sweep_min
     sweep_max = CONFIG.sweep_max
     sweep_step = CONFIG.sweep_step
-    num_thresholds = int(math.ceil((sweep_max - sweep_min) / sweep_step))
+    num_thresholds = int(ceil((sweep_max - sweep_min) / sweep_step))
     thresholds = [sweep_min + i * sweep_step for i in range(num_thresholds)]
 
     # Вычисление доли "активных" пикселей для каждого класса. Для оптимизации вместо
     # прямого сравнения каждого пикселя с каждым порогом используется гистограммный метод.
     occupancy_rates: list[list[float]] = [[] for _ in range(num_thresholds)]
 
-    def process_class(class_id):
-        symbol = symbol_delta_fields[class_id]
+    def process_class(cid):
+        symbol = symbol_delta_fields[cid]
         n_pixels = len(symbol)
 
         # Build histogram: bin each delta value into the threshold range
@@ -315,17 +314,16 @@ def compute_sweep(data: VisualizationData) -> SweepResults:
             cumulative[i] = running
 
         # Convert to percentage
-        rates = [c / n_pixels * 100.0 if n_pixels > 0 else 0.0 for c in cumulative]
-        return class_id, rates
+        rates_list = [c / n_pixels * 100.0 if n_pixels > 0 else 0.0 for c in cumulative]
+        return cid, rates_list
 
     # Parallel processing per class
+    results = []
     if number_of_classes <= 1:
         results = [process_class(0)]
     else:
         with ThreadPoolExecutor(max_workers=min(number_of_classes, 8)) as executor:
-            results = list(
-                executor.map(process_class, range(number_of_classes))
-            )
+            results = list(executor.map(process_class, range(number_of_classes)))
 
     for class_id, rates in results:
         occupancy_rates[class_id] = rates
@@ -344,8 +342,8 @@ def compute_sweep(data: VisualizationData) -> SweepResults:
                 jump_events.append((threshold_value, class_id, before, after, change))
 
     sweep_results = SweepResults(
-        thresholds=thresholds,
-        occupancy_rates=occupancy_rates,
+        thresholds=thresholds,  # type: ignore[arg-type]
+        occupancy_rates=occupancy_rates,  # type: ignore[arg-type]
         jump_events=jump_events,
         jump_count=len(jump_events),
     )
