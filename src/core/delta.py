@@ -8,17 +8,13 @@ Delta field operators — Операторы дельта-поля.
 L(256) = log2(256) = 8 — глубина рекурсии Хребта.
 """
 
-from numpy import (
-    asarray,
-    clip,
-    exp2,
-    float64,
-    log2,
-    ndarray,
-)
+import math
+from typing import Sequence, Union
+
+Number = Union[int, float]
 
 
-def delta_field(X: ndarray) -> ndarray:
+def delta_field(X: Union[Number, Sequence[Number]]) -> Union[float, list[float]]:
     """
     Дельта-поле: D = log2(X+1) - log2(256-X).
 
@@ -31,18 +27,23 @@ def delta_field(X: ndarray) -> ndarray:
     256 = 2⁸ = D⁸(Id) — 8 уровней ветвления (Хребет).
     L(256) = log2(256) = 8 — информация по Essentials [30_Информация.md].
     """
-    X = asarray(X, dtype=float64)
-    X_clamped = clip(X, 0, 254.999)
-    return log2(X_clamped + 1.0) - log2(256.0 - X_clamped)
+    if isinstance(X, (int, float)):
+        x = max(min(float(X), 254.999), 0.0)
+        return math.log2(x + 1.0) - math.log2(256.0 - x)
+    return [
+        math.log2(max(min(float(x), 254.999), 0.0) + 1.0) - math.log2(256.0 - max(min(float(x), 254.999), 0.0))
+        for x in X
+    ]
 
 
-def inverse_delta_field(D: ndarray) -> ndarray:
+def inverse_delta_field(D: Union[Number, Sequence[Number]]) -> Union[float, list[float]]:
     """
     Обратное отображение: D → X.
 
     D = log2(X+1) - log2(256-X)
     X = (256*2^D - 1) / (2^D + 1)
     """
-    D = asarray(D, dtype=float64)
-    exp_D = exp2(D)  # 2^D, not e^D — inverse of log2
-    return (256.0 * exp_D - 1.0) / (exp_D + 1.0)
+    if isinstance(D, (int, float)):
+        exp_D = 2.0 ** D  # 2^D, not e^D — inverse of log2
+        return (256.0 * exp_D - 1.0) / (exp_D + 1.0)
+    return [(256.0 * (2.0 ** d) - 1.0) / ((2.0 ** d) + 1.0) for d in D]

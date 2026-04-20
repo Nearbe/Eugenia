@@ -9,10 +9,24 @@ Cosine similarity — на алгебре долей.
 Это работает на всех уровнях Хребта, включая Π и Ω.
 """
 
-from numpy import clip, ndarray, sqrt, sum, where
+import math
+from typing import Sequence, Union
+
+from .percent import to_percentage
+
+Number = Union[int, float]
 
 
-def similarity(a: ndarray, b: ndarray) -> ndarray:
+def _clip(val: float, lo: float, hi: float) -> float:
+    """Pure Python clip."""
+    if val < lo:
+        return lo
+    if val > hi:
+        return hi
+    return val
+
+
+def similarity(a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]) -> Union[float, list[float]]:
     """
     Сходство через алгебру долей (процентов).
 
@@ -23,23 +37,25 @@ def similarity(a: ndarray, b: ndarray) -> ndarray:
     Returns:
         Cosine similarity in [-1, 1] computed in percentage space.
     """
-    from .percent import to_percentage
+    # Scalar case
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+        pa = to_percentage(a)
+        pb = to_percentage(b)
+        norm_a = math.sqrt(pa ** 2)
+        norm_b = math.sqrt(pb ** 2)
+        dot = pa * pb
+        denom = norm_a * norm_b
+        if denom < 1e-10:
+            return 1.0
+        return _clip(dot / denom, -1.0, 1.0)
 
-    # Convert to percentages (fractions of Π)
+    # Sequence case: element-wise cosine similarity
     pa = to_percentage(a)
     pb = to_percentage(b)
-
-    # Norms in percentage space
-    norm_a = sqrt(sum(pa**2, axis=-1, keepdims=True))
-    norm_b = sqrt(sum(pb**2, axis=-1, keepdims=True))
-
-    # Dot product in percentage space
-    dot = sum(pa * pb, axis=-1, keepdims=True)
-
-    # Cosine similarity with branching-aware normalization
-    # When norm → 0 (Ω), return 1 (identity: Π:Π = Id)
+    norm_a = math.sqrt(sum(x ** 2 for x in pa))
+    norm_b = math.sqrt(sum(x ** 2 for x in pb))
+    dot = sum(x * y for x, y in zip(pa, pb))
     denom = norm_a * norm_b
-    mask_zero = denom < 1e-10
-    result = where(mask_zero, 1.0, dot / denom)
-
-    return clip(result, -1.0, 1.0)
+    if denom < 1e-10:
+        return 1.0
+    return _clip(dot / denom, -1.0, 1.0)

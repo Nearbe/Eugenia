@@ -16,8 +16,6 @@ Fractal Pyramid — Фрактальная пирамида.
 
 from typing import Optional
 
-from numpy import array
-
 from .constants import D_ID
 from .spine import ridge_level
 
@@ -122,8 +120,8 @@ def fractal_bridge_analysis(pyr_level: int) -> dict:
         "left_str": left,
         "right_str": right,
         "center": int(center),
-        "left_spine_level": ridge_level(array(left_digits[-1] if left_digits else 0)),
-        "right_spine_level": ridge_level(array(right_digits[0] if right_digits else 0)),
+        "left_spine_level": ridge_level(left_digits[-1] if left_digits else 0),
+        "right_spine_level": ridge_level(right_digits[0] if right_digits else 0),
         "bridge_identity": True,
         "left_compression": f"H({left_digits[-1] if left_digits else '∅'}) = {left_digits[-1] / D_ID if left_digits else '∅'}",
         "right_branching": f"D({right_digits[0] if right_digits else '∅'}) = {right_digits[0] * D_ID if right_digits else '∅'}",

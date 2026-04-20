@@ -12,26 +12,17 @@ p-adic threshold spacing — p-адическое расстояние для п
 - Используем p-adic distance: d_p(a, b) = |a-b|_D = 2^(-v₂(a-b))
 - Где v₂(x) — 2-адическая оценка (степень деления на 2)
 
-Это даёт фрактальное распрежение порогов, согласованное со
+Это даёт фрактальное распределение порогов, согласованное со
 структурой ветвления Хребта.
 """
 
-from numpy import (
-    abs,
-    arange,
-    asarray,
-    float64,
-    linspace,
-    log2,
-    ndarray,
-    searchsorted,
-    unique,
-    where,
-    zeros_like,
-)
+import math
+from typing import Sequence, Union
+
+Number = Union[int, float]
 
 
-def v2_adic_valuation(x: ndarray) -> ndarray:
+def v2_adic_valuation(x: Union[Number, Sequence[Number]]) -> Union[float, list[float]]:
     """
     2-адическая оценка: v₂(x) = максимальное n, такое что 2ⁿ делит x.
 
@@ -39,26 +30,33 @@ def v2_adic_valuation(x: ndarray) -> ndarray:
     D(Id) = 2 — единственный атом системы.
     Делимость на 2 определяет "близость" к Ω.
 
+    Для целых: v₂(12) = v₂(4×3) = 2 (12 делится на 2², но не на 2³).
+    Для float: округляем до ближайшего целого перед вычислением.
+
     Args:
         x: Входные значения
 
     Returns:
         Степень деления на 2 для каждого элемента
     """
-    x = asarray(x, dtype=float64)
-    result = zeros_like(x)
-
-    # For each non-zero value, count factors of 2
-    mask = x != 0
-    result[mask] = [int(log2(abs(int(round(x_val))))) if x_val != 0 else 0 for x_val in x[mask]]
-
-    # Handle zeros: v₂(0) = ∞ (zero is divisible by any power of 2)
-    result[~mask] = float("inf")
-
-    return result
+    if isinstance(x, (int, float)):
+        return _v2_scalar(float(x))
+    return [_v2_scalar(float(v)) for v in x]
 
 
-def p_adic_distance(a: ndarray, b: ndarray) -> ndarray:
+def _v2_scalar(val: float) -> float:
+    """Scalar v2 computation."""
+    if val == 0:
+        return float("inf")
+    abs_val = abs(int(round(val)))
+    n = 0
+    while abs_val > 0 and (abs_val & 1) == 0:
+        abs_val >>= 1
+        n += 1
+    return float(n)
+
+
+def p_adic_distance(a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]) -> Union[float, list[float]]:
     """
     p-адическое расстояние: d_p(a, b) = |a - b|_p = p^(-v_p(a-b))
 
@@ -70,14 +68,19 @@ def p_adic_distance(a: ndarray, b: ndarray) -> ndarray:
     Согласно Essentials [24_p-адические_числа.md]:
     |a : Ω|_D = |D(a)|_D = |a|_D : D(Id)
     """
-    diff = abs(asarray(a, dtype=float64) - asarray(b, dtype=float64))
-    v = v2_adic_valuation(diff)
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+        diff = abs(a - b)
+        v = _v2_scalar(diff)
+        return 0 if diff == 0 else 2 ** (-v)
+    results = []
+    for av, bv in zip(a, b):
+        diff = abs(av - bv)
+        v = _v2_scalar(diff)
+        results.append(0 if diff == 0 else 2 ** (-v))
+    return results
 
-    # |x|_D = 2^(-v₂(x))
-    return where(diff == 0, 0, 2 ** (-v))
 
-
-def p_adic_threshold_spacing(sweep_min: float, sweep_max: float, n_levels: int = 160000) -> ndarray:
+def p_adic_threshold_spacing(sweep_min: float, sweep_max: float, n_levels: int = 160000) -> list[float]:
     """
     Генерация порогов с p-адическим расстоянием.
 
@@ -87,7 +90,7 @@ def p_adic_threshold_spacing(sweep_min: float, sweep_max: float, n_levels: int =
     Согласно Essentials [28_Масштабная_инвариантность.md]:
     РГ-поток: g_{n+1} = D(g_n) — экспоненциальный рост.
 
-    Мы используем это для создания фрактального распрежения порогов:
+    Мы используем это для создания фрактального распределения порогов:
     - Больше точек вблизи "важных" значений (целые степени 2)
     - Меньше точек в "пустых" зонах
 
@@ -97,44 +100,37 @@ def p_adic_threshold_spacing(sweep_min: float, sweep_max: float, n_levels: int =
         n_levels: Количество порогов
 
     Returns:
-        Массив порогов с p-адическим распределением
+        Список порогов с p-адическим распределением
     """
+    thresholds: set[float] = set()
+
     # Generate base thresholds in log-space (matching branching depth)
-    # Each level n corresponds to Dⁿ(I'd) = 2ⁿ
-    log_levels = arange(sweep_min, sweep_max, 0.5)  # Coarse log-scale grid
+    log_levels = range(int(math.floor(sweep_min)), int(math.ceil(sweep_max)) + 1)
 
-    # For each level, generate p-adic refined thresholds
-    thresholds = []
     for level in log_levels:
-        # At each branching level, add refined thresholds
-        # using p-adic distance from the branching point
-        level_val = 2**level  # Dⁿ(Id)
-        refined = []
-
-        for k in range(-8, 9):  # v₂ range
-            # p-adic offset from branching point
-            offset = level_val * (2**k)
+        level_val = 2.0 ** level
+        for k in range(-8, 9):
+            offset = level_val * (2.0 ** k)
             if sweep_min <= offset <= sweep_max:
-                refined.append(offset)
+                thresholds.add(offset)
 
-        thresholds.extend(refined)
-
-    thresholds = unique(array(thresholds))
+    sorted_thresholds = sorted(thresholds)
 
     # If we have too many, sample to n_levels
-    if len(thresholds) > n_levels:
-        indices = searchsorted(thresholds, linspace(thresholds[0], thresholds[-1], n_levels))
-        thresholds = thresholds[indices]
+    if len(sorted_thresholds) > n_levels:
+        step = len(sorted_thresholds) / n_levels
+        indices = [int(i * step) for i in range(n_levels)]
+        return [sorted_thresholds[i] for i in indices]
 
-    return thresholds
+    return sorted_thresholds
 
 
-def bernoulli_shift(binary_sequence: ndarray) -> ndarray:
+def bernoulli_shift(binary_sequence: list[int]) -> list[int]:
     """
     Сдвиг Бернулли — действие ветвления на соленоиде.
 
     Согласно Essentials [23_Соленоид.md]:
-    Акт Ветвления сдвигает двоичную запись влеов:
+    Акт Ветвления сдвигает двоичную запись влево:
     0.ε₀ε₁ε₂… → 0.ε₁ε₂ε₃…
     Первый бит отбрасывается. История переписывается.
 
@@ -149,7 +145,7 @@ def bernoulli_shift(binary_sequence: ndarray) -> ndarray:
     return binary_sequence[1:]
 
 
-def solenoid_trajectory(initial_value: float, n_steps: int = 100) -> list:
+def solenoid_trajectory(initial_value: float, n_steps: int = 100) -> list[dict]:
     """
     Траектория точки на соленоиде.
 
@@ -161,7 +157,7 @@ def solenoid_trajectory(initial_value: float, n_steps: int = 100) -> list:
     ξ = 0.ε₀ε₁ε₂…
 
     Args:
-        initial_value: Начальное значение
+        initial_value: Начальное значение (может быть отрицательным)
         n_steps: Количество шагов
 
     Returns:
@@ -169,25 +165,27 @@ def solenoid_trajectory(initial_value: float, n_steps: int = 100) -> list:
     """
     trajectory = []
     current = initial_value
+    sign = 1.0 if current >= 0 else -1.0
+    abs_current = abs(current)
 
-    for _ in range(n_steps):
-        # Convert to binary representation
+    for step in range(n_steps):
+        # Convert to binary representation of absolute value
         binary = []
-        temp = abs(current)
+        temp = abs_current
         for _ in range(20):  # 20 bits of precision
             bit = 1 if temp >= 0.5 else 0
             binary.append(bit)
             temp = temp * 2 - bit if bit else temp * 2
 
-        # Bernoulli shift
+        # Bernoulli shift (left shift, first bit discarded)
         shifted = binary[1:]
 
-        # Convert back to value
-        shifted_value = sum(b * 2 ** (-i - 1) for i, b in enumerate(shifted))
+        # Convert back to value (preserve sign)
+        shifted_value = sign * sum(b * 2 ** (-i - 1) for i, b in enumerate(shifted))
 
         trajectory.append(
             {
-                "step": _,
+                "step": step,
                 "value": current,
                 "binary": binary,
                 "shifted_binary": shifted,
@@ -195,7 +193,7 @@ def solenoid_trajectory(initial_value: float, n_steps: int = 100) -> list:
             }
         )
 
-        # Apply D (branching) to current value
+        # Apply D (branching) to current value: D(x) = 2x
         current = 2.0 * current
 
     return trajectory
@@ -209,6 +207,9 @@ def d_adic_convergence(a: float, b: float, max_depth: int = 30) -> float:
     Две числа близки в D-адической топологии, если
     их разность делится на высокую степень D(Id) = 2.
 
+    Для float: округляем разность до ближайшего целого,
+    затем считаем v₂ как обычно.
+
     Args:
         a: Первое число
         b: Второе число
@@ -218,13 +219,116 @@ def d_adic_convergence(a: float, b: float, max_depth: int = 30) -> float:
         Глубина D-адической близости: максимальное n, такое что 2ⁿ | (a-b)
     """
     diff = abs(a - b)
-    if diff == 0:
-        return float("inf")  # Identical in all D-adic metrics
+    if diff < 1e-15:
+        return float("inf")
+
+    diff_int = int(round(diff))
+    if diff_int == 0:
+        return float("inf")
 
     depth = 0
-    temp = diff
-    while temp > 1e-15 and temp % 2 == 0:
-        temp /= 2
+    temp = diff_int
+    while temp > 0 and (temp & 1) == 0 and depth < max_depth:
+        temp >>= 1
         depth += 1
 
-    return min(depth, max_depth)
+    return float(depth)
+
+
+# ============================================================
+# GCD, LCM, Modular congruence per Essentials [25_Строение_чисел.md]
+# ============================================================
+
+
+def gcd(a: int, b: int) -> int:
+    """
+    НОД(a, b) — наибольший общий делитель.
+
+    Согласно Essentials [25_Строение_чисел.md]:
+    НОД(Dⁿ, Dᵐ) = D^{min(n,m)}(Id)
+
+    Для степеней D(Id)=2: НОД(2ⁿ, 2ᵐ) = 2^{min(n,m)}.
+
+    Args:
+        a: Первое число (должно быть степенью 2).
+        b: Второе число (должно быть степенью 2).
+
+    Returns:
+        НОД(a, b).
+    """
+    if a <= 0 or b <= 0:
+        return 1  # D⁰(Id) = Id = 1
+    va = v2_adic_valuation(int(a))
+    vb = v2_adic_valuation(int(b))
+    min_v = min(va, vb)
+    return 2 ** int(min_v)
+
+
+def lcm(a: int, b: int) -> int:
+    """
+    НОК(a, b) — наименьшее общее кратное.
+
+    Согласно Essentials [25_Строение_чисел.md]:
+    НОК(Dⁿ, Dᵐ) = D^{max(n,m)}(Id)
+
+    Для степеней D(Id)=2: НОК(2ⁿ, 2ᵐ) = 2^{max(n,m)}.
+
+    Args:
+        a: Первое число (должно быть степенью 2).
+        b: Второе число (должно быть степенью 2).
+
+    Returns:
+        НОК(a, b).
+    """
+    if a <= 0 or b <= 0:
+        return 1  # D⁰(Id) = Id = 1
+    va = v2_adic_valuation(int(a))
+    vb = v2_adic_valuation(int(b))
+    max_v = max(va, vb)
+    return 2 ** int(max_v)
+
+
+def mod_congruence(a: int, b: int, m: int) -> bool:
+    """
+    Проверка сравнения по модулю: a ≡ b (mod m).
+
+    Согласно Essentials [25_Строение_чисел.md]:
+    a ≡ b (mod m) означает: a и b неотличимы на масштабе m.
+
+    При Ветвлении:
+    a : Ω ≡ b : Ω (mod D(m))  ⟺  a ≡ b (mod m)
+
+    Args:
+        a: Первое число.
+        b: Второе число.
+        m: Модуль.
+
+    Returns:
+        True если a ≡ b (mod m), False иначе.
+    """
+    if m <= 0:
+        return a == b
+    return (a - b) % m == 0
+
+
+def mod_congruence_branch_invariant(a: int, b: int, m: int) -> bool:
+    """
+    Проверка инвариантности сравнения при ветвлении.
+
+    Согласно Essentials [25_Строение_чисел.md]:
+    a ≡ b (mod m)  ⟺  D(a) ≡ D(b) (mod D(m))
+
+    То есть: a и b сравнимы по mod m тогда и только тогда,
+    когда D(a) и D(b) сравнимы по mod D(m).
+
+    Args:
+        a: Первое число.
+        b: Второе число.
+        m: Модуль.
+
+    Returns:
+        True если ветвление сохраняет сравнимость.
+    """
+    congruent_original = mod_congruence(a, b, m)
+    congruent_branch = mod_congruence(2 * a, 2 * b, 2 * m)
+    return congruent_original == congruent_branch

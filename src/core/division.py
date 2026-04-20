@@ -8,13 +8,15 @@ Branching-aware division — a : b с учётом ветвления.
 Это не «защита от деления на ноль». Это **смена масштаба**.
 """
 
-from numpy import abs, any, ndarray, zeros_like
+from typing import Sequence, Union
 
 from .branching import D, H
 from .constants import D_ID, OMEGA
 
+Number = Union[int, float]
 
-def safe_divide(a: ndarray, b: ndarray) -> ndarray:
+
+def safe_divide(a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]) -> Union[float, list[float]]:
     """
     Деление a : b с учётом ветвления.
 
@@ -25,29 +27,26 @@ def safe_divide(a: ndarray, b: ndarray) -> ndarray:
     Returns:
         Branching-aware division result.
     """
-    result = zeros_like(a, dtype=float)
+    # Scalar case
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+        if b == OMEGA:
+            return D(a)
+        if abs(b - D_ID) < 1e-10:
+            return H(a)
+        return a / b
 
-    # Case 1: b = Ω → Ветвление (branching)
-    # a : Ω = D(a) = a ⊕ a
-    mask_branch = b == OMEGA
-    if any(mask_branch):
-        result[mask_branch] = D(a[mask_branch])
-
-    # Case 2: b = D(Id) → Сжатие (compression)
-    # a : D(Id) = H(a) = a / 2
-    mask_compress = (abs(b - D_ID) < 1e-10) & ~mask_branch
-    if any(mask_compress):
-        result[mask_compress] = H(a[mask_compress])
-
-    # Case 3: Standard division
-    # a : b = a / b (b ∉ Ω)
-    mask_normal = ~mask_branch & ~mask_compress
-    if any(mask_normal):
-        result[mask_normal] = a[mask_normal] / b[mask_normal]
-
-    return result
+    # Sequence case
+    results = []
+    for av, bv in zip(a, b):
+        if bv == OMEGA:
+            results.append(D(av))
+        elif abs(bv - D_ID) < 1e-10:
+            results.append(H(av))
+        else:
+            results.append(av / bv)
+    return results
 
 
-def div_safe(a: ndarray, b: ndarray) -> ndarray:
+def div_safe(a: Union[Number, Sequence[Number]], b: Union[Number, Sequence[Number]]) -> Union[float, list[float]]:
     """Alias for safe_divide."""
     return safe_divide(a, b)

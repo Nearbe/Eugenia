@@ -29,17 +29,25 @@ from .delta import (
 from .complex_delta import (
     complex_delta_field,
     complex_delta_properties,
+    inverse_complex_delta_field,
 )
 from .complex import (
+    complex_branch,
+    complex_compress,
     complex_conjugate,
     complex_multiply,
     complex_norm,
+    complex_norm_squared,
+    complex_rotate,
 )
 from .dual import (
+    dual_add,
     dual_branch,
     dual_compress,
     dual_form,
+    dual_func,
     dual_multiply,
+    dual_power,
 )
 from .potential import (
     has_potential,
@@ -50,6 +58,8 @@ from .vector import normalize_vector_safe
 from .limits import (
     limit_branching,
     limit_compression,
+    continuity_D,
+    continuity_H,
 )
 from .percent import (
     from_percentage,
@@ -73,6 +83,10 @@ from .p_adic import (
     p_adic_threshold_spacing,
     bernoulli_shift,
     solenoid_trajectory,
+    gcd,
+    lcm,
+    mod_congruence,
+    mod_congruence_branch_invariant,
 )
 from .fractal_dimension import (
     fractal_dimension_from_betti,
@@ -80,6 +94,8 @@ from .fractal_dimension import (
     compute_betti_scaling_exponent,
     fractal_volume_scaling,
     fractal_similarity_score,
+    solenoid_similarity,
+    solenoid_distance_from_masks,
 )
 from .sweep import (
     compute_sweep,
@@ -91,6 +107,7 @@ from .sweep import (
     theoretical_occupancy,
 )
 from .spine import (
+    L,
     ridge_level,
     ridge_to_percentage,
     percentage_to_ridge,
@@ -124,15 +141,23 @@ __all__ = [
     # Complex delta (Nucleus)
     "complex_delta_field",
     "complex_delta_properties",
+    "inverse_complex_delta_field",
     # Complex (Nucleus)
     "complex_norm",
+    "complex_norm_squared",
     "complex_conjugate",
     "complex_multiply",
+    "complex_branch",
+    "complex_compress",
+    "complex_rotate",
     # Dual (Nucleus)
     "dual_form",
+    "dual_add",
     "dual_multiply",
     "dual_branch",
     "dual_compress",
+    "dual_power",
+    "dual_func",
     # Potential
     "has_potential",
     "is_potential",
@@ -142,6 +167,8 @@ __all__ = [
     # Limits
     "limit_branching",
     "limit_compression",
+    "continuity_D",
+    "continuity_H",
     # Percent
     "to_percentage",
     "from_percentage",
@@ -162,12 +189,18 @@ __all__ = [
     "p_adic_threshold_spacing",
     "bernoulli_shift",
     "solenoid_trajectory",
+    "gcd",
+    "lcm",
+    "mod_congruence",
+    "mod_congruence_branch_invariant",
     # Fractal dimension
     "fractal_dimension_from_betti",
     "fractal_dimension_from_multiple_scales",
     "compute_betti_scaling_exponent",
     "fractal_volume_scaling",
     "fractal_similarity_score",
+    "solenoid_similarity",
+    "solenoid_distance_from_masks",
     # Sweep
     "compute_sweep",
     "encode_solenoid_trajectory",
@@ -177,6 +210,7 @@ __all__ = [
     "binomial_probability",
     "theoretical_occupancy",
     # Spine
+    "L",
     "ridge_level",
     "ridge_to_percentage",
     "percentage_to_ridge",

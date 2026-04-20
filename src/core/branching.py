@@ -14,33 +14,38 @@ Compression (Сжатие): H(a) = a : D(Id)
     L(H(a)) = L(a) - 1
 """
 
-from numpy import ndarray
+from typing import Sequence, Union
 
 from .constants import D_ID
 
+Number = Union[int, float]
 
-def D(x: ndarray) -> ndarray:
+
+def D(x: Union[Number, Sequence[Number]]) -> Union[float, list[float]]:
     """
     Ветвление (Branching): D(a) = a : Ω = a ⊕ a.
 
     Args:
-        x: Input array of values.
+        x: Input scalar or sequence of values.
 
     Returns:
         Doubled values (x * 2).
     """
+    if isinstance(x, (int, float)):
+        return x * D_ID
+    return [v * D_ID for v in x]
 
-    return x * D_ID
 
-
-def H(x: ndarray) -> ndarray:
+def H(x: Union[Number, Sequence[Number]]) -> Union[float, list[float]]:
     """
     Сжатие (Compression): H(a) = a : D(Id).
 
     Args:
-        x: Input array of values.
+        x: Input scalar or sequence of values.
 
     Returns:
         Halved values (x / 2).
     """
-    return x / D_ID
+    if isinstance(x, (int, float)):
+        return x / D_ID
+    return [v / D_ID for v in x]

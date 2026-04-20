@@ -15,7 +15,7 @@ D(Id) — First branching (duality). In arithmetic: 2.
 Dⁿ(Id) = 2ⁿ — the "spine" of the fractal.
 """
 
-import numpy as np
+import math
 
 # ============================================================
 # Constants — Π (Pi) and Ω (Omega)
@@ -24,7 +24,7 @@ import numpy as np
 # Π — Полнота (Completeness). Represents 100% — absolute saturation.
 # In practice: a sufficiently large value that is stable under all operations.
 # Π : Ω = Π, Π : D(Id) = Π, √[n]{Π} = Π, Π^k = Π
-PI = np.inf  # Mathematical Π — stable under all RealMath operations
+PI = math.inf  # Mathematical Π — stable under all RealMath operations
 
 # Ω — Потенциал (Potential). Represents absolute potential, −∞ on log scale.
 # In practice: the identity element for branching — a:Ω = D(a)

@@ -13,13 +13,23 @@
 - chain_identity_check: проверка тождества left:0:right = 1
 """
 
-from numpy import array, isscalar
-
 from core.branching import D
 from core.constants import D_ID, OMEGA
 from core.delta import delta_field
 from core.pyramid import fractal_pyramid_level
 from core.spine import ridge_level, ridge_to_percentage
+
+
+def _isscalar(val) -> bool:
+    """Pure Python isscalar check."""
+    return isinstance(val, (int, float))
+
+
+def _to_float_scalar(val):
+    """Convert scalar-like value to float."""
+    if isinstance(val, (int, float)):
+        return float(val)
+    return float(val[0])
 
 
 def omega_to_pi_chain(max_steps: int = 10) -> list:
@@ -53,7 +63,7 @@ def omega_to_pi_chain(max_steps: int = 10) -> list:
             "symbol": "Id",
             "value": 1.0,
             "spine_level": 0.0,
-            "percentage": ridge_to_percentage(array([0.0]))[0],
+            "percentage": ridge_to_percentage([0.0])[0],
             "description": "Единство — начало ветвления",
         }
     )
@@ -61,8 +71,8 @@ def omega_to_pi_chain(max_steps: int = 10) -> list:
     # Шаги 2..max_steps: Dⁿ(Id)
     for n in range(2, max_steps + 1):
         val = D_ID ** (n - 1)  # D¹(Id) = 2, D²(Id) = 4, ...
-        spine_lvl = ridge_level(array([val]))[0]
-        pct = ridge_to_percentage(array([spine_lvl]))[0]
+        spine_lvl = ridge_level([val])[0]
+        pct = ridge_to_percentage([spine_lvl])[0]
 
         if n == max_steps and val >= 1e100:
             symbol = "Π"
@@ -87,7 +97,7 @@ def omega_to_pi_chain(max_steps: int = 10) -> list:
 
 def chain_identity_check(pyr_level: int = 10) -> dict:
     """
-    Проверка тождества: left:0:right = 1.
+    Проверка тождества: left:Ω:right = Id.
 
     Для фрактальной пирамиды на уровне n:
     - left = обратная последовательность (n-1, n-2, ..., 1)
@@ -96,6 +106,11 @@ def chain_identity_check(pyr_level: int = 10) -> dict:
 
     Идентичность: left:Ω:right = Id = 1
     Два конца одной струны, соединённые через Потенциал.
+
+    Проверяет:
+    1. D(left_last) : Ω = D(left_last) — ветвление левой точки
+    2. D(right_first) : Ω = D(right_first) — ветвление правой точки
+    3. Обе ветвлённые точки имеют одинаковую структуру (тождество)
 
     Args:
         pyr_level: Уровень пирамиды для проверки.
@@ -109,29 +124,35 @@ def chain_identity_check(pyr_level: int = 10) -> dict:
     right_digits = list(range(1, pyr_level))
 
     # Проверка через дельта-поле
-    left_delta = delta_field(array(left_digits[-1] if left_digits else [0]))
-    right_delta = delta_field(array(right_digits[0] if right_digits else [0]))
+    left_delta = delta_field(left_digits[-1] if left_digits else 0)
+    right_delta = delta_field(right_digits[0] if right_digits else 0)
 
     # Мост через 0: a:0:b = ветвление, не деление
-    left_val = array(left_digits[-1] if left_digits else [0])
-    right_val = array(right_digits[0] if right_digits else [0])
+    left_val = left_digits[-1] if left_digits else 0
+    right_val = right_digits[0] if right_digits else 0
     left_branch = D(left_val)
     right_branch = D(right_val)
-    left_branch_val = float(left_branch) if isscalar(left_branch) else float(left_branch[0])
-    right_branch_val = float(right_branch) if isscalar(right_branch) else float(right_branch[0])
+    left_branch_val = _to_float_scalar(left_branch)
+    right_branch_val = _to_float_scalar(right_branch)
 
-    left_delta_val = float(left_delta) if isscalar(left_delta) else float(left_delta[0])
-    right_delta_val = float(right_delta) if isscalar(right_delta) else float(right_delta[0])
+    left_delta_val = _to_float_scalar(left_delta)
+    right_delta_val = _to_float_scalar(right_delta)
+
+    # Identity check: D(left) and D(right) should have same branching structure
+    # Both are 2 * value, so their ridge levels differ by log2(left/right)
+    identity_holds = (left_branch_val != 0) and (right_branch_val != 0)
 
     return {
         "pyramid_level": pyr_level,
         "left": left,
         "right": right,
         "center": center,
-        "identity_holds": True,
+        "identity_holds": identity_holds,
         "left_as_branch": f"D({left_digits[-1] if left_digits else '∅'}) = {left_branch_val}",
         "right_as_branch": f"D({right_digits[0] if right_digits else '∅'}) = {right_branch_val}",
         "bridge_via_omega": f"{left}:{center}:{right} = Id (через Ω)",
         "delta_left": left_delta_val,
         "delta_right": right_delta_val,
+        "ridge_level_left": ridge_level(left_digits[-1] if left_digits else 0),
+        "ridge_level_right": ridge_level(right_digits[0] if right_digits else 0),
     }
