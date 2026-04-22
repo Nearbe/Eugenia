@@ -1,0 +1,13 @@
+{
+  "prettier": {
+    "allowed": true
+  },
+  "document_symbols": "on",
+  "document_folding_ranges": "on",
+  "semantic_tokens": "combined",
+  "inlay_hints": {
+    "enabled": true,
+    "show_background": true
+  },
+  "project_name": "Physics"
+}

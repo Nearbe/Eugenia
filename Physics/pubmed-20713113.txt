@@ -1,0 +1,89 @@
+PMID- 20713113
+OWN - NLM
+STAT- MEDLINE
+DCOM- 20110503
+LR  - 20220310
+IS  - 1878-4216 (Electronic)
+IS  - 0278-5846 (Linking)
+VI  - 35
+IP  - 1
+DP  - 2011 Jan 15
+TI  - The increase in theta/beta ratio on resting-state EEG in boys with 
+      attention-deficit/hyperactivity disorder is mediated by slow alpha peak 
+      frequency.
+PG  - 47-52
+LID - 10.1016/j.pnpbp.2010.08.004 [doi]
+AB  - Attention-deficit/hyperactivity disorder (ADHD) was found to be characterized by 
+      a deviant pattern of electrocortical activity during resting state, particularly 
+      increased theta and decreased beta activity. The first objective of the present 
+      study is to confirm whether individuals with slow alpha peak frequency contribute 
+      to the finding of increased theta activity in ADHD. The second objective is to 
+      explore the relation between resting-state brain oscillations and specific 
+      cognitive functions. From 49 boys with ADHD and 49 healthy control boys, 
+      resting-state EEG during eyes open and eyes closed was recorded, and a variety of 
+      cognitive tasks were administered. Theta and beta power and theta/beta ratio were 
+      calculated using both fixed frequency bands and individualized frequency bands. 
+      As expected, theta/beta ratio, calculated using fixed frequency bands, was 
+      significantly higher in ADHD children than control children. However, this group 
+      effect was not significant when theta/beta ratio was assessed using 
+      individualized frequency bands. No consistent relation was found between 
+      resting-state brain oscillations and cognition. The present results suggest that 
+      previous findings of increased theta/beta ratio in ADHD may reflect individuals 
+      with slow alpha peak frequencies in addition to individuals with true increased 
+      theta activity. Therefore, the often reported theta/beta ratio in ADHD can be 
+      considered a non-specific measure combining several distinct neurophysiological 
+      subgroups such as frontal theta and slowed alpha peak frequencies. Future 
+      research should elucidate the functional role of resting-state brain oscillations 
+      by investigating neurophysiological subgroups, which may have a clearer relation 
+      to cognitive functions than single frequency bands.
+CI  - Crown Copyright © 2010. Published by Elsevier Inc. All rights reserved.
+FAU - Lansbergen, Marieke M
+AU  - Lansbergen MM
+AD  - Department of Psychiatry, Radboud University Nijmegen Medical Centre, Donders 
+      Institute for Brain, Cognition and Behaviour, Nijmegen, The Netherlands. 
+      M.Lansbergen@psy.umcn.nl
+FAU - Arns, Martijn
+AU  - Arns M
+FAU - van Dongen-Boomsma, Martine
+AU  - van Dongen-Boomsma M
+FAU - Spronk, Desirée
+AU  - Spronk D
+FAU - Buitelaar, Jan K
+AU  - Buitelaar JK
+LA  - eng
+PT  - Journal Article
+PT  - Research Support, Non-U.S. Gov't
+DEP - 20100813
+PL  - England
+TA  - Prog Neuropsychopharmacol Biol Psychiatry
+JT  - Progress in neuro-psychopharmacology & biological psychiatry
+JID - 8211617
+SB  - IM
+MH  - Adolescent
+MH  - Alpha Rhythm/*physiology
+MH  - Analysis of Variance
+MH  - Attention Deficit Disorder with Hyperactivity/*physiopathology
+MH  - Beta Rhythm/*physiology
+MH  - Child
+MH  - Electroencephalography/methods
+MH  - Electrooculography/methods
+MH  - Humans
+MH  - Male
+MH  - Neuropsychological Tests
+MH  - *Rest
+MH  - Statistics as Topic
+MH  - Theta Rhythm/*physiology
+EDAT- 2010/08/18 06:00
+MHDA- 2011/05/04 06:00
+CRDT- 2010/08/18 06:00
+PHST- 2010/06/01 00:00 [received]
+PHST- 2010/07/21 00:00 [revised]
+PHST- 2010/08/05 00:00 [accepted]
+PHST- 2010/08/18 06:00 [entrez]
+PHST- 2010/08/18 06:00 [pubmed]
+PHST- 2011/05/04 06:00 [medline]
+AID - S0278-5846(10)00307-6 [pii]
+AID - 10.1016/j.pnpbp.2010.08.004 [doi]
+PST - ppublish
+SO  - Prog Neuropsychopharmacol Biol Psychiatry. 2011 Jan 15;35(1):47-52. doi: 
+      10.1016/j.pnpbp.2010.08.004. Epub 2010 Aug 13.
