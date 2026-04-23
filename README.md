@@ -62,13 +62,13 @@ pip install -e ".[dev]"
 
 | Source    | Input                                      | Classes                            |
 |-----------|--------------------------------------------|------------------------------------|
-| `mnist`   | `eugenia_data/mnist.npz`                   | 10 digits                          |
-| `fashion` | `eugenia_data/fashion_mnist.npz`           | 10 clothing categories             |
+| `mnist`   | `data/mnist.npz` (or set `VIZ_DATA_DIR`)  | 10 digits                          |
+| `fashion` | `data/fashion_mnist.npz` (or set `VIZ_DATA_DIR`) | 10 clothing categories    |
 | `png`     | `Eugene.jpeg` (or `--file latin/cyrillic`) | Extracted via connected components |
 | `cmyk`    | `Eugene_cmyk.tiff`                         | 4 channels (C, M, Y, K)            |
 
 > Datasets are loaded from `data/` (or a custom path via `VIZ_DATA_DIR` env var). Required files: `mnist.npz`
-> (with `x_train` and `y_train` keys), `fashion_mnist.npz` (same format).
+> (with `x_train` and `y_train` keys), `fashion_mnist.npz` (same format). Place these files in `data/` before running.
 
 ## Usage
 
@@ -76,7 +76,7 @@ pip install -e ".[dev]"
 
 ```bash
 # Full pipeline for all sources
-make run-all
+python3 generate.py
 
 # Single source
 python3 generate.py --source mnist
@@ -95,6 +95,8 @@ python3 generate.py --sweep-min -6.0 --sweep-max 6.0 --sweep-step 0.0005 --jump-
 python3 generate.py --renderers betti_0_components,tsne_analysis
 ```
 
+> **Note**: No Makefile is included. Run code quality commands manually (see below).
+
 ### CLI Arguments
 
 | Argument           | Description                                           |
@@ -111,7 +113,7 @@ python3 generate.py --renderers betti_0_components,tsne_analysis
 
 ## Output Structure
 
-Results are saved to `output/{source}/`. Each run generates **23 visualization files** (22 PNG + 1 GIF) per source:
+Results are saved to `output/{source}/`. Each run generates **22 visualization files** (21 PNG + 1 GIF) per source:
 
 | File                              | Description                                          |
 |-----------------------------------|------------------------------------------------------|
@@ -123,7 +125,7 @@ Results are saved to `output/{source}/`. Each run generates **23 visualization f
 | `tsne_analysis.png`               | t-SNE visualization of binary occupancy profiles     |
 | `surface_3d_projection.png`       | 3D mesh representation of the delta field            |
 | `cumulative_distribution.png`     | Cumulative distribution functions of delta values    |
-| `topological_entropy.png`         | Shannon entropy across the threshold sweep           |
+| `topological_capacity.png`        | Topological capacity analysis                        |
 | `symbol_grid.png`                 | Visual grid of source symbols                        |
 | `betti_0_components.png`          | Betti-0 number (connected components) persistence    |
 | `betti_1_holes.png`               | Betti-1 number (holes) persistence                   |
@@ -135,7 +137,6 @@ Results are saved to `output/{source}/`. Each run generates **23 visualization f
 | `individual_histograms/`          | Directory with per-symbol high-resolution histograms |
 | `jump_footprint.png`              | Jump event footprint analysis                        |
 | `noise_robustness.png`            | Noise robustness testing results                     |
-| `topological_capacity.png`        | Topological capacity analysis                        |
 | `threshold_comparison.png`        | Threshold comparison visualization                   |
 | `summary_dashboard.png`           | Summary dashboard of all metrics                     |
 
@@ -147,22 +148,26 @@ Results are saved to `output/{source}/`. Each run generates **23 visualization f
 Eugenia/
 ├── generate.py              # CLI entry point (delta field pipeline)
 ├── pyproject.toml           # Project metadata, deps, tool config
-├── Makefile                 # Common tasks
 ├── README.md                # This file
 ├── output/                  # Generated visualizations (gitignored)
-├── data/ / eugenia_data/   # Dataset files (mnist.npz, etc.)
+├── data/                    # Dataset files (place mnist.npz, fashion_mnist.npz here)
 ├── venv/                    # Python virtual environment (gitignored)
 ├── src/
-│   ├── orchestrator.py      # Pipeline orchestration (load → sweep → render)
 │   ├── core/                # Sweep algorithms, math utilities, delta operations
 │   │   ├── sweep.py         # compute_sweep(): histogram-based occupancy + jump detection
-│   │   └── math.py          # safe_divide, normalize_vector_safe, resolve_potential
+│   │   └── division.py      # safe_divide, div_safe
 │   ├── data/                # Data loaders (MNIST, Fashion-MNIST, PNG, CMYK)
 │   │   └── loaders.py
+│   ├── extractors/          # GGUF/model weight extraction
+│   │   ├── __init__.py
+│   │   ├── __main__.py
+│   │   ├── cli_extract.py
+│   │   ├── correlation_extractor.py
+│   │   └── gguf_extractor.py
 │   ├── models/              # Configuration & types
 │   │   ├── config.py        # CONFIG dataclass (sweep params, colors, figure sizes)
 │   │   └── types.py         # VisualizationData, SweepResults dataclasses
-│   ├── nucleus/             # 🔥 Deterministic knowledge system (17+ modules)
+│   ├── nucleus/             # 🔥 Deterministic knowledge system (19 modules)
 │   │   ├── __init__.py      # Package exports (all classes)
 │   │   ├── deterministic_core.py
 │   │   ├── universal_knowledge_map.py
@@ -180,8 +185,10 @@ Eugenia/
 │   │   ├── universal_knowledge_protocol.py
 │   │   ├── semantic_knowledge_storage.py
 │   │   ├── fractal_compressor.py
-│   │   └── llm_crisis_analysis.py
-│   ├── renderers/           # 22 visualization modules (each exports render())
+│   │   ├── cross_layer_compressor.py
+│   │   ├── llm_crisis_analysis.py
+│   │   └── nucleus_data/    # (internal, not listed individually)
+│   ├── renderers/           # 21 visualization modules (each exports render())
 │   │   ├── betti_0_components.py
 │   │   ├── betti_1_holes.py
 │   │   ├── class_correlation.py
@@ -202,7 +209,6 @@ Eugenia/
 │   │   ├── surface_3d_projection.py
 │   │   ├── symbol_grid.py
 │   │   ├── threshold_comparison.py
-│   │   ├── topological_entropy.py
 │   │   └── tsne_analysis.py
 │   └── utils/               # Shared utilities
 │       ├── image_utils.py   # Image processing & color conversions
@@ -294,7 +300,7 @@ analysis = explorer.analyze()
 | `VIZ_SOURCE`      | Data source: `mnist`, `png`, `cmyk`, `fashion` |
 | `VIZ_SOURCE_FILE` | Specific file for `png` source                 |
 | `VIZ_OUTPUT_DIR`  | Output directory for visualizations            |
-| `VIZ_DATA_DIR`    | Custom path to `eugenia_data/` directory       |
+| `VIZ_DATA_DIR`    | Custom path to data directory            |
 | `VIZ_WORKERS`     | Number of parallel workers (default: auto)     |
 | `PYTHONPATH`      | Auto-set by `generate.py` to include `src/`    |
 
@@ -308,17 +314,17 @@ analysis = explorer.analyze()
 | `CACHE_DIR`       | Intermediate results cache directory           |
 | `OUTPUT_DIR`      | Generated files output directory               |
 
-Create `.env` manually (or run `make local-env` which copies from template if present).
+Create `.env` manually if needed.
 
 ## Development
 
 ### Code Quality
 
 ```bash
-make lint           # Ruff check
-make format         # Ruff format
-make typecheck      # Mypy
-make test           # Run pytest
+ruff check .          # Lint
+ruff format .         # Format
+mypy src/             # Type check
+pytest tests/         # Tests
 ```
 
 ### Adding New Components
@@ -329,16 +335,14 @@ make test           # Run pytest
 3. Run `python3 generate.py` — the new renderer is auto-discovered
 
 **New Module** (nucleus system):
-```bash
-make generate-module name=my_module desc="My new module"
-```
+Create a new Python file under `src/nucleus/` following the existing module conventions.
 
 ### Development Conventions
 
 - **Line length**: 100 characters (ruff config)
 - **Typing**: `disallow_untyped_defs = false` but `check_untyped_defs = true`
 - **Imports**: Uses direct imports (e.g., `from core.sweep import ...`, `from data.loaders import ...`)
-- **Caching**: Global `_cached_data` and `_cached_sweep` in `orchestrator.py` prevent redundant computation
+- **Caching**: Session-level cache prevents redundant computation within `generate.py`
 - **Parallel rendering**: `ProcessPoolExecutor` with up to 8 workers for visualization modules
 - **Parallel sweep**: `ThreadPoolExecutor` for per-class histogram computation (MPS falls back to sequential)
 - **Comments**: Mix of English and Russian — Russian comments explain algorithmic rationale
@@ -346,14 +350,13 @@ make generate-module name=my_module desc="My new module"
 ## Performance Notes
 
 - **SVD Parallelization**: Uses ProcessPoolExecutor for heavy computations
-- **GPU Support**: Automatic CUDA/MPS detection in orchestrator
+- **GPU Support**: Automatic CUDA/MPS detection in data loaders
 - **Caching**: Global cache prevents re-loading data within session
 - **Memory**: 8-worker limit prevents OOM with large datasets
 
 ## Testing
 
 ```bash
-make test           # Run all tests
 python3 -m pytest tests/ -v
 ```
 
@@ -397,7 +400,7 @@ from nucleus import DeterministicKnowledgeCore  # ✓ correct
 ## Clean
 
 ```bash
-make clean          # Remove output/ and __pycache__
+rm -rf output/ __pycache__
 ```
 
 ## License

@@ -17,7 +17,7 @@ Nucleus — Seed-Based Knowledge System
 
         corr(a, b) = ⟨a, b⟩ / (‖a‖ · ‖b‖)
 
-    где ⟨·,·⟩ — скалярное произведение, ‖·‖ — евклидова норма.
+    Где ⟨·, ·⟩ — скалярное произведение, ‖·‖ — евклидова норма.
 
 Ключевые принципы:
     1. Детерминизм: корреляции вычисляются, а не обучаются
@@ -48,7 +48,7 @@ Nucleus — Seed-Based Knowledge System
 Ссылки
 ------
     [1] Eckart, C., & Young, G. (1936). The approximation of one matrix
-        by another of lower rank. Psychometrika, 1(3), 211-218.
+        by another of lower rank. Psychometric, 1(3), 211-218.
     [2] Golub, G. H., & Van Loan, C. F. (2013). Matrix computations.
         JHU Press. (SVD и разложения матриц)
 """
@@ -58,7 +58,6 @@ from dataclasses import dataclass
 from typing import Dict, List, Set, Tuple
 
 import numpy as np
-
 
 # ============================================================
 # BASE SEEDS — фундаментальные паттерны

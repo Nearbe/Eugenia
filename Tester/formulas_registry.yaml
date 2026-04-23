@@ -1,0 +1,29 @@
+formulas:
+  - id: proton_mass
+    name: "Масса протона (CODATA)"
+    type: codata_lookup
+    codata_query: proton mass energy equivalent in MeV
+    expected: 938.272
+    unit: MeV/c²
+
+  - id: lhcb_delta_example
+    name: "Δ для χ_b(3P) (LHCb)"
+    type: sympy
+    formula: 2 * ln(m / mp)
+    inputs:
+      mp: proton_mass
+    params:
+      m: 10530  # Из таблицы
+    expected: 4.84
+    data_file: lhc_particles.csv  # Для batch
+
+  - id: alpha_lhcb_fit
+    name: "Линейный фит α из ln m vs Q (LHCb)"
+    type: linear_fit
+    data_file: lhc_particles.csv
+    x_col: Q
+    y_col: mass  # ln(mass) внутри
+    expected: 0.30
+    groups: [2,3,4,5]  # Фильтр Q
+
+# Расширение: добавляйте формулы из Physics/Формулы/*.md

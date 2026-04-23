@@ -86,9 +86,9 @@ import numpy as np
 
 from core.realmath import (
     delta_distance,
+    encode_solenoid_trajectory,
     p_adic_distance,
     solenoid_distance,
-    encode_solenoid_trajectory,
 )
 
 
