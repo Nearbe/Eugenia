@@ -1,0 +1,9 @@
+[submodule "Universe"]
+	path = Universe
+	url = git@github.com:Nearbe/Universe.git
+[submodule "Formatter"]
+	path = Formatter
+	url = git@github.com:Nearbe/Formatter.git
+[submodule "Physics"]
+	path = Physics
+	url = git@github.com:Nearbe/Physics.git

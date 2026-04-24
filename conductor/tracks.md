@@ -6,3 +6,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 - [~] **Track: Создать Formatter для приведения Python-кода к inline-формату**
   *Link: [./track_formatter_20260422/](./track_formatter_20260422/)*
+
+---
+
+- [ ] **Track: Создать систему хранения и тестирования формул проекта (CODATA + Physics)**
+  *Link: [./formula_db_20260424/](./formula_db_20260424/)*
