@@ -1,36 +1,28 @@
-"""
-dual_pattern_transform — Дуальное преобразование паттерна.
+"""Dual pattern transformation."""
 
-Z = x + v·ε where:
-    - x = current pattern values (Form / Явное)
-    - v = derivative/potential (Growth potential / Скрытое)
-    - ε² = Ω (acceleration is negligible)
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
+from .dual_form import dual_form
 
-This captures both the current state AND the potential for change,
-enabling more sophisticated pattern matching in the Nucleus system.
-"""
-
-from .dual import dual_form
+DERIVATIVE_SCALE = 0.1
 
 
-def dual_pattern_transform(
-    values: list[float],
-    derivative: list[float],
-) -> tuple[list[float], list[float]]:
-    """
-    Apply dual number transformation to a pattern.
+def dual_pattern_transform(values: list[float], velocities: list[float] | None = None):
+    if not values:
+        return [], []
 
-    Args:
-        values: Current pattern values.
-        derivative: Derivative/growth potential values.
+    if velocities is None:
+        mean_value = sum(values) / len(values)
+        velocities = [DERIVATIVE_SCALE * (value - mean_value) for value in values]
 
-    Returns:
-        Tuple (form, velocity) representing the dual number Z.
-    """
-    form, velocity = dual_form(values, derivative)
-
-    if isinstance(form, float):
-        form = [form]
-    if isinstance(velocity, float):
-        velocity = [velocity]
-    return form, velocity
+    forms = [dual_form(value, velocity)[0] for value, velocity in zip(values, velocities)]
+    growth = [dual_form(value, velocity)[1] for value, velocity in zip(values, velocities)]
+    return forms, growth

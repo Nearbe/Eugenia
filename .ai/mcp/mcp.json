@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "IDEA": {
+      "command": "/Users/nearbe/Applications/IntelliJ IDEA.app/Contents/jbr/Contents/Home/bin/java",
+      "args": [
+        "-classpath",
+        "/Users/nearbe/Applications/IntelliJ IDEA.app/Contents/plugins/mcpserver/lib/mcpserver-frontend.jar:/Users/nearbe/Applications/IntelliJ IDEA.app/Contents/lib/util-8.jar:/Users/nearbe/Applications/IntelliJ IDEA.app/Contents/lib/intellij.libraries.kotlinx.coroutines.core.jar:/Users/nearbe/Applications/IntelliJ IDEA.app/Contents/lib/intellij.libraries.ktor.client.cio.jar:/Users/nearbe/Applications/IntelliJ IDEA.app/Contents/lib/intellij.libraries.ktor.client.jar:/Users/nearbe/Applications/IntelliJ IDEA.app/Contents/lib/intellij.libraries.ktor.network.tls.jar:/Users/nearbe/Applications/IntelliJ IDEA.app/Contents/lib/intellij.libraries.ktor.io.jar:/Users/nearbe/Applications/IntelliJ IDEA.app/Contents/lib/intellij.libraries.ktor.utils.jar:/Users/nearbe/Applications/IntelliJ IDEA.app/Contents/lib/intellij.libraries.kotlinx.io.jar:/Users/nearbe/Applications/IntelliJ IDEA.app/Contents/lib/intellij.libraries.kotlinx.serialization.core.jar:/Users/nearbe/Applications/IntelliJ IDEA.app/Contents/lib/intellij.libraries.kotlinx.serialization.json.jar",
+        "com.intellij.mcpserver.stdio.McpStdioRunnerKt"
+      ],
+      "env": {
+        "IJ_MCP_SERVER_PORT": "64343"
+      },
+      "type": "stdio"
+    }
+  }
+}

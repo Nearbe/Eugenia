@@ -1,27 +1,35 @@
-"""
-pattern_bridge_identity — Идентичность моста через Ω.
+"""Bridge identity diagnostics for pattern values via Eugenia core math."""
 
-For a value v at pyramid level n:
-    - left: reverse sequence (n-1, n-2, ..., 1) → compression H
-    - right: forward sequence (1, 2, ..., n-1) → branching D
-    - center: 0 = Ω (bridge, not barrier)
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
+from collections.abc import Iterable
 
-Identity: left:Ω:right = Id (through potential, not division)
-"""
-
-from .pyramid import fractal_bridge_analysis
-from .pattern_pyramid_depth import pattern_pyramid_depth
+from .L import L
+from .linear_algebra import EPSILON, mean, to_vector, variance
 
 
-def pattern_bridge_identity(value: float) -> dict:
-    """
-    Check the bridge identity for a value through Ω.
+def pattern_bridge_identity(values) -> dict:
+    if isinstance(values, Iterable) and not isinstance(values, (str, bytes)):
+        source = values
+    else:
+        source = [float(values)]
 
-    Args:
-        value: A numeric value to analyze.
+    vector = to_vector(source)
+    if not vector:
+        return {"bridge_identity": False, "variance": 0.0, "mean_spine_level": 0.0}
 
-    Returns:
-        Bridge analysis dict with identity check results.
-    """
-    depth = pattern_pyramid_depth(value)
-    return fractal_bridge_analysis(max(depth, 1))
+    levels = [L(float(value)) for value in vector]
+    level_variance = float(variance(levels))
+    return {
+        "bridge_identity": level_variance < EPSILON,
+        "variance": level_variance,
+        "mean_spine_level": float(mean(levels)),
+    }

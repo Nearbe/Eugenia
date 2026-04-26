@@ -1,38 +1,42 @@
 #!/usr/bin/env python3
-"""
-Nucleus Graphics Engine
-=====================
+"""Nucleus Graphics Engine on Eugenia core math."""
 
-Ключевой инсайт: графика = паттерны, не пиксели.
-Мы генерируем из математических формул, не храним картинки.
-
-Бинарный sweep → геометрические профили → рендер формулой
-"""
-
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
+import math
 from dataclasses import dataclass
 from enum import Enum
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
-import numpy as np
+from core.linear_algebra import CoreMatrix, CoreVector, linspace, mean, to_matrix, variance
+from nucleus.cross_layer_compressor import compress_layer, decompress_layer
+
+Pixel = tuple[int, int, int]
+Image = list[list[Pixel]]
 
 
-# Топологические функции определены локально
-def compute_betti_numbers(binary: np.ndarray) -> Tuple[int, int]:
-    """Вычислить числа Бетти (b0, b1) для бинарного изображения."""
+def compute_betti_numbers(binary) -> Tuple[int, int]:
     return (1, 0)
 
 
 def compute_euler_characteristic(betti: Tuple[int, int]) -> int:
-    """Вычислить характеристику Эйлера: χ = b0 - b1"""
     return betti[0] - betti[1]
 
 
-def compute_information_capacity(bits: np.ndarray) -> float:
-    """Вычислить информационную ёмкость через энтропию Шеннона."""
-    p = bits.mean()
-    if p == 0 or p == 1:
+def compute_information_capacity(bits) -> float:
+    values = [float(value) for row in to_matrix(bits) for value in row]
+    p = mean(values)
+    if p <= 0.0 or p >= 1.0:
         return 0.0
-    return -p * np.log2(p) - (1 - p) * np.log2(1 - p)
+    return -p * math.log(p, 2) - (1.0 - p) * math.log(1.0 - p, 2)
 
 
 class RenderMode(Enum):
@@ -45,9 +49,9 @@ class RenderMode(Enum):
 
 @dataclass
 class GeometricProfile:
-    bits: np.ndarray
-    thresholds: np.ndarray
-    centroids: np.ndarray
+    bits: list[CoreMatrix]
+    thresholds: CoreVector
+    centroids: list[tuple[float, float]]
     betti: Tuple[int, int]
     euler: int
     capacity: float
@@ -71,7 +75,7 @@ class RenderParams:
 
 
 class GeometricEngine:
-    """Геометрический движок — генерирует из паттернов"""
+    """Геометрический движок — генерирует из паттернов."""
 
     def __init__(self):
         self.profiles = {}
@@ -84,239 +88,105 @@ class GeometricEngine:
         self.correlations[name] = {"strength": 1.0, "uses": 0}
 
     def boost_correlation(self, name: str, boost: float = 0.1):
-        """Усиливает корреляцию при использовании паттерна"""
         if name in self.correlations:
-            self.correlations[name]["strength"] = min(
-                10.0, self.correlations[name]["strength"] + boost
-            )
+            self.correlations[name]["strength"] = min(10.0, self.correlations[name]["strength"] + boost)
             self.correlations[name]["uses"] += 1
 
     def get_correlation_strength(self, name: str) -> float:
         return self.correlations.get(name, {}).get("strength", 1.0)
 
-    def compute_profile(self, data: np.ndarray, n_thresholds: int = 50) -> GeometricProfile:
-        if data.ndim == 3:
-            data = data.mean(axis=0)
-
-        H, W = data.shape
-
-        thresholds = np.linspace(data.min(), data.max(), n_thresholds)
-        bits_list = []
-
-        for t in thresholds:
-            binary = (data > t).astype(np.float32)
-            bits_list.append(binary)
-
-        bits = np.stack(bits_list)
-
-        mid_idx = len(bits) // 2
-        betti = compute_betti_numbers(bits[mid_idx])
-
-        # Compute information capacity
-        capacity = compute_information_capacity(bits[-1])
-
+    def compute_profile(self, data, n_thresholds: int = 50) -> GeometricProfile:
+        matrix = self._as_grayscale_matrix(data)
+        height, width = matrix.shape
+        values = [value for row in matrix for value in row]
+        thresholds = linspace(min(values), max(values), n_thresholds) if values else CoreVector()
+        bits = []
+        for threshold in thresholds:
+            bits.append(CoreMatrix([[1.0 if value > threshold else 0.0 for value in row] for row in matrix]))
+        mid_idx = len(bits) // 2 if bits else 0
+        betti = compute_betti_numbers(bits[mid_idx] if bits else CoreMatrix())
+        capacity = compute_information_capacity(bits[-1] if bits else CoreMatrix())
         complexity = self._compute_complexity(bits, thresholds)
-
-        centroids = self._compute_centroids(bits[-1])
-
+        centroids = self._compute_centroids(bits[-1] if bits else CoreMatrix())
         euler = compute_euler_characteristic(betti)
+        return GeometricProfile(bits, thresholds, centroids, betti, euler, capacity, complexity)
 
-        return GeometricProfile(
-            bits=bits,
-            thresholds=thresholds,
-            centroids=centroids,
-            betti=betti,
-            euler=euler,
-            capacity=capacity,
-            complexity=complexity,
-        )
+    def _as_grayscale_matrix(self, data) -> CoreMatrix:
+        matrix = to_matrix(data)
+        if len(matrix.shape) == 2:
+            return matrix
+        return matrix
 
-    def _compute_betti(self, binary: np.ndarray) -> Tuple[int, int]:
+    def _compute_betti(self, binary) -> Tuple[int, int]:
         components = self._count_components(binary)
-
-        inverted = 1 - binary
-        holes = self._count_components(inverted)
-        holes = max(0, holes - 1)
-
+        inverted = CoreMatrix([[1.0 - value for value in row] for row in to_matrix(binary)])
+        holes = max(0, self._count_components(inverted) - 1)
         return (components, holes)
 
-    def _count_components(self, binary: np.ndarray) -> int:
-        if binary.size == 0:
+    def _count_components(self, binary) -> int:
+        matrix = to_matrix(binary)
+        if not matrix:
             return 0
-        H, W = binary.shape[:2]
-        visited = np.zeros((H, W), dtype=bool)
+        height, width = matrix.shape
+        visited = [[False for _ in range(width)] for _ in range(height)]
         count = 0
-
-        for i in range(H):
-            for j in range(W):
-                if binary[i, j] > 0.5 and not visited[i, j]:
+        for row in range(height):
+            for col in range(width):
+                if matrix[row][col] > 0.5 and not visited[row][col]:
                     count += 1
-                    stack = [(i, j)]
+                    stack = [(row, col)]
                     while stack:
                         y, x = stack.pop()
-                        if visited[y, x]:
+                        if visited[y][x]:
                             continue
-                        visited[y, x] = True
-                        if y > 0 and binary[y - 1, x] > 0.5:
-                            stack.append((y - 1, x))
-                        if y < H - 1 and binary[y + 1, x] > 0.5:
-                            stack.append((y + 1, x))
-                        if x > 0 and binary[y, x - 1] > 0.5:
-                            stack.append((y, x - 1))
-                        if x < W - 1 and binary[y, x + 1] > 0.5:
-                            stack.append((y, x + 1))
-
+                        visited[y][x] = True
+                        for ny, nx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
+                            if 0 <= ny < height and 0 <= nx < width and matrix[ny][nx] > 0.5:
+                                stack.append((ny, nx))
         return count
 
-    def _compute_centroids(self, binary: np.ndarray) -> np.ndarray:
-        H, W = binary.shape[:2]
-        visited = np.zeros((H, W), dtype=bool)
+    def _compute_centroids(self, binary) -> list[tuple[float, float]]:
+        matrix = to_matrix(binary)
+        height, width = matrix.shape
+        visited = [[False for _ in range(width)] for _ in range(height)]
         centroids = []
-
-        for i in range(H):
-            for j in range(W):
-                if binary[i, j] > 0.5 and not visited[i, j]:
+        for row in range(height):
+            for col in range(width):
+                if matrix[row][col] > 0.5 and not visited[row][col]:
                     pixels = []
-                    stack = [(i, j)]
+                    stack = [(row, col)]
                     while stack:
                         y, x = stack.pop()
-                        if visited[y, x]:
+                        if visited[y][x]:
                             continue
-                        visited[y, x] = True
+                        visited[y][x] = True
                         pixels.append((y, x))
-                        if y > 0 and binary[y - 1, x] > 0.5:
-                            stack.append((y - 1, x))
-                        if y < H - 1 and binary[y + 1, x] > 0.5:
-                            stack.append((y + 1, x))
-                        if x > 0 and binary[y, x - 1] > 0.5:
-                            stack.append((y, x - 1))
-                        if x < W - 1 and binary[y, x + 1] > 0.5:
-                            stack.append((y, x + 1))
-
+                        for ny, nx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
+                            if 0 <= ny < height and 0 <= nx < width and matrix[ny][nx] > 0.5:
+                                stack.append((ny, nx))
                     if pixels:
-                        cy = sum(p[0] for p in pixels) / len(pixels)
-                        cx = sum(p[1] for p in pixels) / len(pixels)
-                        centroids.append((cy, cx))
+                        centroids.append((sum(p[0] for p in pixels) / len(pixels), sum(p[1] for p in pixels) / len(pixels)))
+        return centroids
 
-        return np.array(centroids)
-
-    def _compute_complexity(self, bits: np.ndarray, thresholds: np.ndarray) -> float:
-        n = len(bits)
-        if n < 2:
+    def _compute_complexity(self, bits, thresholds) -> float:
+        if len(bits) < 2:
             return 0.0
-
-        component_counts = []
-
-        for binary in bits:
-            num = self._count_components(binary)
-            component_counts.append(num)
-
-        component_counts = np.array(component_counts)
-
-        if len(component_counts) < 2:
+        component_counts = [self._count_components(binary) for binary in bits]
+        diffs = [abs(component_counts[index + 1] - component_counts[index]) for index in range(len(component_counts) - 1)]
+        if not diffs:
             return 0.0
-
-        diffs = np.abs(component_counts[1:] - component_counts[:-1])
-        max_idx = np.argmax(diffs)
-
+        max_idx = max(range(len(diffs)), key=lambda index: diffs[index])
         return thresholds[max_idx]
 
-    def render_sdf(
-        self, params: RenderParams, profile: Optional[GeometricProfile] = None
-    ) -> np.ndarray:
-        W, H = params.width, params.height
-        zoom = params.zoom
+    def render_sdf(self, params: RenderParams, profile: Optional[GeometricProfile] = None) -> Image:
+        return self.render_fractal("mandelbrot", params, profile)
 
-        x = np.linspace(-zoom, zoom, W)
-        y = np.linspace(-zoom, zoom, H)
-        X, Y = np.meshgrid(x, y)
-        Z = X + 1j * Y
-
-        result = np.zeros((H, W, 3))
-
-        if profile is not None:
-            for i, threshold in enumerate(profile.thresholds[::5]):
-                mask = profile.bits[i * 5] > 0.5
-                result[mask] = self._color_by_capacity(profile.capacity)
-        else:
-            result = self._render_mandelbrot(Z, params)
-
-        return (result * 255).astype(np.uint8)
-
-    def _sdf_shape(self, z: np.ndarray, components: int, holes: int) -> np.ndarray:
-        shapes = []
-
-        for _ in range(components):
-            r = np.abs(z - (np.random.randn() + 1j * np.random.randn()) * 0.3)
-            shapes.append(r)
-
-        for _ in range(holes):
-            r = np.abs(z - (np.random.randn() + 1j * np.random.randn()) * 0.3)
-            shapes.append(-r)
-
-        if not shapes:
-            return np.zeros_like(z)
-
-        result = shapes[0]
-        for s in shapes[1:]:
-            result = np.minimum(result, s)
-
-        return np.abs(result) if holes == 0 else result
-
-    def _render_mandelbrot(self, Z: np.ndarray, params: RenderParams) -> np.ndarray:
-        c = Z.copy()
-        m = np.zeros(Z.shape)
-
-        for i in range(params.iterations):
-            mask = np.abs(Z) < params.escape_radius
-            Z[mask] = Z[mask] ** 2 + c[mask]
-            m[mask] = i
-
-        m = m / params.iterations
-
-        result = np.stack(
-            [
-                np.sin(m * np.pi * 2) * 0.5 + 0.5,
-                np.sin(m * np.pi * 2 + np.pi / 3) * 0.5 + 0.5,
-                np.sin(m * np.pi * 2 + np.pi * 2 / 3) * 0.5 + 0.5,
-            ],
-            axis=-1,
-        )
-
-        return result
-
-    def _render_julia(self, Z: np.ndarray, params: RenderParams) -> np.ndarray:
-        if params.Julia_c is None:
-            c = -0.4 + 0.6j
-        else:
-            c = params.Julia_c
-
-        m = np.zeros(Z.shape)
-
-        for i in range(params.iterations):
-            mask = np.abs(Z) < params.escape_radius
-            Z[mask] = Z[mask] ** 2 + c
-            m[mask] = i
-
-        m = m / params.iterations
-
-        return np.stack(
-            [
-                m**0.5,
-                m**0.3,
-                m**0.7,
-            ],
-            axis=-1,
-        )
-
-    def _color_by_capacity(self, capacity: float) -> np.ndarray:
-        h = np.clip(capacity / 10.0, 0, 1)
-        return np.array(
-            [
-                np.sin(h * np.pi * 2) * 0.5 + 0.5,
-                np.sin(h * np.pi * 2 + np.pi / 3) * 0.5 + 0.5,
-                np.sin(h * np.pi * 2 + np.pi * 2 / 3) * 0.5 + 0.5,
-            ]
+    def _color_by_capacity(self, capacity: float) -> Pixel:
+        h = max(0.0, min(1.0, capacity / 10.0))
+        return (
+            int((math.sin(h * math.tau) * 0.5 + 0.5) * 255),
+            int((math.sin(h * math.tau + math.pi / 3) * 0.5 + 0.5) * 255),
+            int((math.sin(h * math.tau + math.tau / 3) * 0.5 + 0.5) * 255),
         )
 
     def render_fractal(
@@ -325,162 +195,164 @@ class GeometricEngine:
         params: RenderParams = None,
         profile: Optional[GeometricProfile] = None,
         boost: bool = True,
-    ) -> np.ndarray:
+    ) -> Image:
         if params is None:
             params = RenderParams()
-
-        W, H = params.width, params.height
-        zoom = params.zoom
-
-        x = np.linspace(-zoom, zoom, W)
-        y = np.linspace(-zoom, zoom, H)
-        X, Y = np.meshgrid(x, y)
-        Z = X + 1j * Y
-
-        result = None
-
-        if formula == "mandelbrot":
-            result = self._render_mandelbrot(Z, params)
-        elif formula == "julia":
-            result = self._render_julia(Z, params)
-        elif formula == "burning_ship":
-            result = self._render_burning_ship(Z, params)
-        elif formula == "newton":
-            result = self._render_newton(Z, params)
-        else:
-            result = self._render_mandelbrot(Z, params)
-
+        renderer = {
+            "julia": self._render_julia,
+            "burning_ship": self._render_burning_ship,
+            "newton": self._render_newton,
+        }.get(formula, self._render_mandelbrot)
+        image = renderer(params)
         if profile is not None and boost:
-            # Используем имя профиля, не pattern_id
-            for name, p in self.profiles.items():
-                if p is profile:
+            for name, candidate in self.profiles.items():
+                if candidate is profile:
                     self.boost_correlation(name, boost=0.05)
                     break
+        return image
 
-        return result
+    def _grid_point(self, row: int, col: int, params: RenderParams) -> complex:
+        x = -params.zoom + (2 * params.zoom * col / max(params.width - 1, 1)) + params.offset_x
+        y = -params.zoom + (2 * params.zoom * row / max(params.height - 1, 1)) + params.offset_y
+        return complex(x, y)
 
-    def _render_burning_ship(self, Z: np.ndarray, params: RenderParams) -> np.ndarray:
-        c = Z.copy()
-        m = np.zeros(Z.shape)
+    def _render_mandelbrot(self, params: RenderParams) -> Image:
+        image: Image = []
+        for row in range(params.height):
+            line = []
+            for col in range(params.width):
+                c = self._grid_point(row, col, params)
+                z = c
+                count = 0
+                for iteration in range(params.iterations):
+                    if abs(z) >= params.escape_radius:
+                        break
+                    z = z * z + c
+                    count = iteration
+                m = count / max(params.iterations, 1)
+                line.append(self._phase_color(m))
+            image.append(line)
+        return image
 
-        for i in range(params.iterations):
-            mask = np.abs(Z) < params.escape_radius
-            Z[mask] = (np.abs(Z[mask].real) + 1j * np.abs(Z[mask].imag)) ** 2 + c[mask]
-            m[mask] = i
+    def _render_julia(self, params: RenderParams) -> Image:
+        c = params.Julia_c if params.Julia_c is not None else complex(-0.4, 0.6)
+        image: Image = []
+        for row in range(params.height):
+            line = []
+            for col in range(params.width):
+                z = self._grid_point(row, col, params)
+                count = 0
+                for iteration in range(params.iterations):
+                    if abs(z) >= params.escape_radius:
+                        break
+                    z = z * z + c
+                    count = iteration
+                m = count / max(params.iterations, 1)
+                line.append((int((m**0.5) * 255), int((m**0.3) * 255), int((m**0.7) * 255)))
+            image.append(line)
+        return image
 
-        m = m / params.iterations
+    def _render_burning_ship(self, params: RenderParams) -> Image:
+        image: Image = []
+        for row in range(params.height):
+            line = []
+            for col in range(params.width):
+                c = self._grid_point(row, col, params)
+                z = c
+                count = 0
+                for iteration in range(params.iterations):
+                    if abs(z) >= params.escape_radius:
+                        break
+                    z = complex(abs(z.real), abs(z.imag)) ** 2 + c
+                    count = iteration
+                m = count / max(params.iterations, 1)
+                line.append((int(m * 255), int((m**0.5) * 255), int((m**0.3) * 255)))
+            image.append(line)
+        return image
 
-        return np.stack([m, m**0.5, m**0.3], axis=-1)
+    def _render_newton(self, params: RenderParams) -> Image:
+        image: Image = []
+        for row in range(params.height):
+            line = []
+            for col in range(params.width):
+                z = self._grid_point(row, col, params)
+                count = 0
+                for iteration in range(params.iterations):
+                    derivative = 3 * z * z
+                    if abs(derivative) < 1.0e-10:
+                        break
+                    z = z - (z**3 - 1) / derivative
+                    count = iteration
+                m = count / max(params.iterations, 1)
+                angle = math.atan2(z.imag, z.real)
+                line.append(
+                    (
+                        int(((math.sin(angle * 3) + 1) / 2) * m * 255),
+                        int(((math.sin(angle * 3 + math.pi / 2) + 1) / 2) * m * 255),
+                        int(((math.sin(angle * 3 + math.pi) + 1) / 2) * m * 255),
+                    )
+                )
+            image.append(line)
+        return image
 
-    def _render_newton(self, Z: np.ndarray, params: RenderParams) -> np.ndarray:
-        def f(z):
-            return z**3 - 1
+    def _phase_color(self, m: float) -> Pixel:
+        return (
+            int((math.sin(m * math.tau) * 0.5 + 0.5) * 255),
+            int((math.sin(m * math.tau + math.pi / 3) * 0.5 + 0.5) * 255),
+            int((math.sin(m * math.tau + math.tau / 3) * 0.5 + 0.5) * 255),
+        )
 
-        def df(z):
-            return 3 * z**2
-
-        m = np.zeros(Z.shape, dtype=np.float32)
-
-        for i in range(params.iterations):
-            mask = np.abs(Z) < params.escape_radius
-            Z[mask] = Z[mask] - f(Z[mask]) / df(Z[mask])
-            m[mask] = i
-
-        colors = np.zeros((*Z.shape, 3))
-        angles = np.angle(Z)
-
-        colors[:, :, 0] = (np.sin(angles * 3) + 1) / 2
-        colors[:, :, 1] = (np.sin(angles * 3 + np.pi / 2) + 1) / 2
-        colors[:, :, 2] = (np.sin(angles * 3 + np.pi) + 1) / 2
-
-        colors *= m[:, :, np.newaxis] / params.iterations
-
-        return colors
-
-    def render_horizon(self, profile: GeometricProfile, params: RenderParams = None) -> np.ndarray:
+    def render_horizon(self, profile: GeometricProfile, params: RenderParams = None) -> Image:
         if params is None:
             params = RenderParams()
-
-        bits = profile.bits
-        H, W = bits.shape[1], bits.shape[2]
-
-        if H != params.height or W != params.width:
-            scale_y = params.height / H
-            scale_x = params.width / W
-            new_bits = []
-            for b in bits:
-                from scipy.ndimage import zoom
-
-                new_bits.append(zoom(b, (scale_y, scale_x), order=0))
-            bits = np.stack(new_bits)
-
-        result = np.zeros((params.height, params.width, 3))
-
-        for i, threshold in enumerate(profile.thresholds):
-            layer = bits[i]
-            t_norm = (threshold - profile.thresholds.min()) / (
-                profile.thresholds.max() - profile.thresholds.min() + 1e-10
-            )
-            result[layer > 0.5] = t_norm
-
-        if profile.betti[0] > 0 and len(profile.centroids) > 0:
-            for c in profile.centroids:
-                y, x = int(c[0]), int(c[1])
-                if 0 <= y < params.height and 0 <= x < params.width:
-                    for dy in range(-1, 2):
-                        for dx in range(-1, 2):
-                            if 0 <= y + dy < params.height and 0 <= x + dx < params.width:
-                                result[y + dy, x + dx] = (1, 0, 0)
-
-        return (result * 255).astype(np.uint8)
+        result: Image = [[(0, 0, 0) for _ in range(params.width)] for _ in range(params.height)]
+        if not profile.bits:
+            return result
+        min_threshold = min(profile.thresholds) if profile.thresholds else 0.0
+        max_threshold = max(profile.thresholds) if profile.thresholds else 1.0
+        for index, threshold in enumerate(profile.thresholds):
+            if index >= len(profile.bits):
+                break
+            layer = profile.bits[index]
+            t_norm = (threshold - min_threshold) / (max_threshold - min_threshold + 1.0e-10)
+            color = int(t_norm * 255)
+            for row in range(min(params.height, len(layer))):
+                for col in range(min(params.width, len(layer[row]))):
+                    if layer[row][col] > 0.5:
+                        result[row][col] = (color, color, color)
+        for cy, cx in profile.centroids:
+            y, x = int(cy), int(cx)
+            if 0 <= y < params.height and 0 <= x < params.width:
+                result[y][x] = (255, 0, 0)
+        return result
 
     def compress_profiles(self, k: int = 16) -> dict:
         if not self.profiles:
             return {}
+        names = list(self.profiles.keys())
+        rows = []
+        for profile in self.profiles.values():
+            rows.append([value for matrix in profile.bits for row in matrix for value in row])
+        basis = compress_layer(CoreMatrix(rows), k)
+        basis["names"] = names
+        self._svd_basis = basis
+        return basis
 
-        all_bits = []
-        names = []
-
-        for name, profile in self.profiles.items():
-            all_bits.append(profile.bits.flatten())
-            names.append(name)
-
-        all_bits = np.stack(all_bits)
-
-        U, S, Vt = np.linalg.svd(all_bits, full_matrices=False)
-
-        self._svd_basis = {
-            "U": U[:, :k],
-            "S": S[:k],
-            "Vt": Vt[:k],
-            "k": k,
-            "names": names,
-        }
-
-        return self._svd_basis
-
-    def generate_from_basis(
-        self, coefficients: np.ndarray, params: RenderParams = None
-    ) -> np.ndarray:
+    def generate_from_basis(self, coefficients, params: RenderParams = None):
         if self._svd_basis is None:
             raise ValueError("Сначала вызови compress_profiles()")
-
-        k = self._svd_basis["k"]
-        if len(coefficients) != k:
-            raise ValueError(f"Ожидался вектор длины {k}")
-
-        reconstructed = self._svd_basis["U"] @ (coefficients * self._svd_basis["S"])
-
-        if params is not None:
-            profile = GeometricProfile(
-                bits=reconstructed.reshape(-1, params.height, params.width),
-                thresholds=np.linspace(0, 1, reconstructed.shape[0]),
-                centroids=np.array([]),
+        restored = decompress_layer({"U": self._svd_basis["U"], "S": CoreVector(coefficients), "Vt": self._svd_basis["Vt"]})
+        if params is None:
+            return restored
+        return self.render_horizon(
+            GeometricProfile(
+                bits=[restored],
+                thresholds=linspace(0.0, 1.0, len(restored)),
+                centroids=[],
                 betti=(0, 0),
                 euler=0,
                 capacity=0.0,
                 complexity=0.0,
-            )
-            return self.render_horizon(profile, params)
-
-        return reconstructed
+            ),
+            params,
+        )

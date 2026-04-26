@@ -1,60 +1,47 @@
-"""
-fractal_pattern_signature — Топологический fingerprint паттерна.
+"""Fractal-like pattern signature from numeric values via Eugenia core math."""
 
-Combines:
-    1. Binary sweep profile (n_thresholds thresholds)
-    2. Jump events (topological changes)
-    3. Fractal dimension (Betti scaling)
-    4. Spine levels (ridge mapping)
-"""
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
+from .L import L
+from .linear_algebra import diff, linspace, mean, std, to_vector
+from .ridge_to_percentage import ridge_to_percentage
 
-from .fractal_dimension import fractal_dimension_from_betti
-from .spine import ridge_level, ridge_to_percentage
-from .delta import delta_field
+PROFILE_SIZE = 64
+TOP_JUMP_COUNT = 5
 
 
-def fractal_pattern_signature(
-    values: list[float],
-    n_thresholds: int = 64,
-) -> dict:
-    """
-    Compute a fractal pattern signature for a data series.
+def fractal_pattern_signature(values) -> dict:
+    vector = to_vector(values)
+    if not vector:
+        return {
+            "profile": [0.0] * PROFILE_SIZE,
+            "top_jumps": [],
+            "fractal_dimension": 0.0,
+            "spine_level": 0.0,
+            "percentage": 0.0,
+            "avg_value": 0.0,
+        }
 
-    Args:
-        values: Data values (pixel intensities, normalized data, etc.).
-        n_thresholds: Number of sweep thresholds.
-
-    Returns:
-        Dictionary with fractal signature components.
-    """
-    thresholds = [i / n_thresholds for i in range(n_thresholds + 1)]
-    binary_profile = [float(v > t) for v in values for t in thresholds]
-
-    profile = []
-    bin_size = len(values)
-    for i in range(n_thresholds + 1):
-        start = i * bin_size
-        end = start + bin_size
-        profile.append(sum(binary_profile[start:end]) / bin_size)
-
-    jumps = [abs(profile[i + 1] - profile[i]) for i in range(len(profile) - 1)]
-    top_jumps = sorted(jumps, reverse=True)[:5]
-
-    betti_values = [max(1, int(p * len(values))) for p in profile]
-    try:
-        fd = fractal_dimension_from_betti(betti_values, thresholds, reference_threshold=0.5)
-    except (ValueError, ZeroDivisionError):
-        fd = 0.0
-
-    avg_val = sum(values) / len(values) if values else 0.0
-    spine_lvl = ridge_level(avg_val)
+    thresholds = linspace(min(vector), max(vector), PROFILE_SIZE)
+    profile = [sum(1 for value in vector if value > threshold) / len(vector) for threshold in thresholds]
+    jumps = [abs(value) for value in diff(profile)]
+    top_jumps = sorted((float(value) for value in jumps), reverse=True)[:TOP_JUMP_COUNT]
+    avg_value = float(mean(vector))
+    spine_level = float(L(avg_value))
 
     return {
         "profile": profile,
         "top_jumps": top_jumps,
-        "fractal_dimension": fd,
-        "spine_level": spine_lvl,
-        "percentage": ridge_to_percentage(spine_lvl),
-        "avg_value": avg_val,
-        "delta_value": delta_field(avg_val) if values else 0.0,
+        "fractal_dimension": float(std(profile)),
+        "spine_level": spine_level,
+        "percentage": float(ridge_to_percentage(spine_level)),
+        "avg_value": avg_value,
     }

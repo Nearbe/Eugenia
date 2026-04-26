@@ -1,35 +1,18 @@
-"""
-pattern_distance_from_delta — Расстояние на delta-field.
+"""Pattern distance in delta space via Eugenia core math."""
 
-Uses delta_distance on the spine levels of the delta field values,
-which respects the branching structure of the data.
-"""
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
+from .delta_field import delta_field
+from .linear_algebra import euclidean_distance
 
-from .delta import delta_field
-from .distance import delta_distance
 
-
-def pattern_distance_from_delta(
-    values_a: list[float],
-    values_b: list[float],
-) -> float:
-    """
-    Compute delta-aware distance between two data series.
-
-    Args:
-        values_a: First data series.
-        values_b: Second data series.
-
-    Returns:
-        Distance on the logarithmic spine scale.
-    """
-    if not values_a or not values_b:
-        return float("inf")
-
-    delta_a = delta_field(values_a)
-    delta_b = delta_field(values_b)
-    dist = delta_distance(delta_a, delta_b)
-
-    if isinstance(dist, list):
-        return sum(dist) / len(dist) if dist else 0.0
-    return dist
+def pattern_distance_from_delta(values_a, values_b) -> float:
+    return float(euclidean_distance(delta_field(values_a), delta_field(values_b)))

@@ -1,29 +1,36 @@
 #!/usr/bin/env python3
-"""
-Nucleus Model Pattern Extractor
-=========================
+"""Nucleus Model Pattern Extractor on Eugenia core math."""
 
-Извлечение паттернов из весов моделей через SVD.
-
-Ключевой инсайт: веса модели = геометрические паттерны.
-Мы извлекаем эти паттерны через SVD и храним как профили.
-
-111GB весов → ~1GB паттернов (k=4)
-"""
-
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
+import json
+import math
+import random
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, List, Tuple, Dict
+from typing import Dict, List, Optional, Tuple
 
-import numpy as np
+from core.linear_algebra import CoreMatrix, CoreVector, mean, norm, to_matrix
+from nucleus.cross_layer_compressor import compress_layer, decompress_layer
+
+DEFAULT_RANDOM_SEED = 42
+IMAGE_CHANNELS = 3
 
 
 @dataclass
 class ModelProfile:
     name: str
-    svd_U: np.ndarray
-    svd_S: np.ndarray
-    svd_Vt: np.ndarray
+    svd_U: CoreMatrix
+    svd_S: CoreVector
+    svd_Vt: CoreMatrix
     k: int
     original_shape: Tuple[int, ...]
     layer_type: str
@@ -31,346 +38,178 @@ class ModelProfile:
 
     @property
     def compression_ratio(self) -> float:
-        original_size = np.prod(self.original_shape)
+        if len(self.original_shape) < 2:
+            return 0.0
+        original_size = self.original_shape[0] * self.original_shape[1]
         compressed_size = self.k * (self.original_shape[0] + self.original_shape[1])
-        return compressed_size / original_size
+        return compressed_size / original_size if original_size else 0.0
 
     def save(self, path: str):
-        np.savez(
-            path,
-            svd_U=self.svd_U,
-            svd_S=self.svd_S,
-            svd_Vt=self.svd_Vt,
-            k=self.k,
-            original_shape=np.array(self.original_shape),
-            name=self.name,
-            layer_type=self.layer_type,
-        )
+        payload = {
+            "name": self.name,
+            "svd_U": self.svd_U.tolist(),
+            "svd_S": self.svd_S.tolist(),
+            "svd_Vt": self.svd_Vt.tolist(),
+            "k": self.k,
+            "original_shape": self.original_shape,
+            "layer_type": self.layer_type,
+        }
+        Path(path).write_text(json.dumps(payload), encoding="utf-8")
 
     @classmethod
     def load(cls, path: str) -> "ModelProfile":
-        data = np.load(path)
+        payload = json.loads(Path(path).read_text(encoding="utf-8"))
+        singular = CoreVector(payload["svd_S"])
         return cls(
-            name=data["name"],
-            svd_U=data["svd_U"],
-            svd_S=data["svd_S"],
-            svd_Vt=data["svd_Vt"],
-            k=int(data["k"]),
-            original_shape=tuple(data["original_shape"]),
-            layer_type=data["layer_type"],
-            n_params=int(data["svd_S"].sum()),
+            name=payload["name"],
+            svd_U=CoreMatrix(payload["svd_U"]),
+            svd_S=singular,
+            svd_Vt=CoreMatrix(payload["svd_Vt"]),
+            k=int(payload["k"]),
+            original_shape=tuple(payload["original_shape"]),
+            layer_type=payload["layer_type"],
+            n_params=int(sum(singular)),
         )
 
 
 class ModelLoader:
-    """
-    Универсальный загрузчик моделей
+    """Универсальный загрузчик моделей без внешней математики."""
 
-    Поддерживает:
-    - GGUF (llama.cpp)
-    - MLX (Apple)
-    - Safetensors
-    - PyTorch .pt
-    """
-
-    SUPPORTED_FORMATS = {".gguf", ".mlx", ".safetensors", ".pt", ".pth"}
+    SUPPORTED_FORMATS = {".gguf", ".mlx", ".safetensors", ".pt", ".pth", ".json"}
 
     def __init__(self, model_dir: str):
         self.model_dir = Path(model_dir)
         self.layers = {}
 
     def discover_models(self) -> List[Dict]:
+        if not self.model_dir.exists():
+            return []
         models = []
-
-        for subdir in self.model_dir.iterdir():
-            if not subdir.is_dir():
-                continue
-
-            for fp in subdir.rglob("*"):
-                if fp.suffix.lower() in self.SUPPORTED_FORMATS:
-                    models.append(
-                        {
-                            "path": str(fp),
-                            "name": fp.stem,
-                            "parent": fp.parent.name,
-                            "format": fp.suffix.lower(),
-                            "size": fp.stat().st_size,
-                        }
-                    )
-
+        for fp in self.model_dir.rglob("*"):
+            if fp.is_file() and fp.suffix.lower() in self.SUPPORTED_FORMATS:
+                models.append(
+                    {
+                        "path": str(fp),
+                        "name": fp.stem,
+                        "parent": fp.parent.name,
+                        "format": fp.suffix.lower(),
+                        "size": fp.stat().st_size,
+                    }
+                )
         return models
 
-    def load_safetensors(self, path: str) -> Dict[str, np.ndarray]:
+    def load_safetensors(self, path: str) -> Dict[str, CoreMatrix]:
+        return self._load_generic(path)
+
+    def _load_generic(self, path: str) -> Dict[str, CoreMatrix]:
         try:
-            from safetensors import safe_open
-        except ImportError:
-            print("  safetensors не установлен, пробую numpy")
-            return self._load_generic(path)
-
-        layers = {}
-        with safe_open(path, framework="numpy") as f:
-            for key in f.keys():
-                layers[key] = f.get_tensor(key)
-
-        return layers
-
-    def _load_generic(self, path: str) -> Dict[str, np.ndarray]:
-        """Generic fallback — для простых случаев"""
-        try:
-            data = np.load(path, allow_pickle=True)
-            if isinstance(data, np.ndarray):
-                return {"data": data}
-            return dict(data.items()) if hasattr(data, "items") else {}
-        except Exception as e:
-            print(f"  Не удалось загрузить: {e}")
+            payload = json.loads(Path(path).read_text(encoding="utf-8"))
+        except Exception as exc:
+            print(f"  Не удалось загрузить: {exc}")
             return {}
+        if isinstance(payload, list):
+            return {"data": to_matrix(payload)}
+        if isinstance(payload, dict):
+            return {name: to_matrix(value) for name, value in payload.items() if isinstance(value, list)}
+        return {}
 
-    def load_layer(self, path: str, layer_name: Optional[str] = None) -> Optional[np.ndarray]:
-        ext = Path(path).suffix.lower()
-
-        if ext == ".safetensors":
-            layers = self.load_safetensors(path)
-            if layer_name and layer_name in layers:
-                return layers[layer_name]
-            return layers.get(list(layers.keys())[0]) if layers else None
-
-        elif ext == ".npy":
-            return np.load(path)
-
-        elif ext == ".npz":
-            data = np.load(path)
-            if layer_name and layer_name in data:
-                return data[layer_name]
-            return data.get(data.files[0]) if hasattr(data, "files") else None
-
-        return None
+    def load_layer(self, path: str, layer_name: Optional[str] = None) -> Optional[CoreMatrix]:
+        layers = self._load_generic(path)
+        if layer_name and layer_name in layers:
+            return layers[layer_name]
+        return next(iter(layers.values()), None)
 
 
 class PatternExtractor:
-    """
-    Извлекает геометрические паттерны из весов
-
-    Ключевой принцип:
-    - SVD раскладывает веса на U, S, Vt
-    - S (сингулярные значения) = "геометрия" паттерна
-    - U, Vt = пространственные паттерны
-    - k = количество главных компонент
-    """
+    """Извлекает геометрические паттерны из весов."""
 
     def __init__(self, k: int = 16):
         self.k = k
         self.profiles = {}
 
-    def extract_from_weights(
-        self,
-        weights: np.ndarray,
-        layer_name: str = "linear",
-        layer_type: str = "linear",
-    ) -> ModelProfile:
-        """Извлекает паттерны через SVD"""
-
-        original_shape = weights.shape
-
-        # SVD
-        U, S, Vt = np.linalg.svd(weights, full_matrices=False)
-
-        # Топ-k компонент
-        k = min(self.k, len(S))
+    def extract_from_weights(self, weights, layer_name: str = "linear", layer_type: str = "linear") -> ModelProfile:
+        matrix = to_matrix(weights)
+        original_shape = matrix.shape
+        layer = compress_layer(matrix, self.k)
+        singular = CoreVector(layer["S"])
         profile = ModelProfile(
             name=layer_name,
-            svd_U=U[:, :k],
-            svd_S=S[:k],
-            svd_Vt=Vt[:k],
-            k=k,
+            svd_U=layer["U"],
+            svd_S=singular,
+            svd_Vt=layer["Vt"],
+            k=layer["k"],
             original_shape=original_shape,
             layer_type=layer_type,
-            n_params=int(S.sum()),
+            n_params=int(sum(singular)),
         )
-
         self.profiles[layer_name] = profile
-
         return profile
 
-    def extract_all_layers(
-        self, layers: Dict[str, np.ndarray], k: Optional[int] = None
-    ) -> Dict[str, ModelProfile]:
-        """Извлекает паттерны из всех слоёв"""
-
-        if k is None:
-            k = self.k
-
+    def extract_all_layers(self, layers: Dict[str, object], k: Optional[int] = None) -> Dict[str, ModelProfile]:
+        old_k = self.k
+        if k is not None:
+            self.k = k
         profiles = {}
-
         for name, weights in layers.items():
             try:
-                profile = self.extract_from_weights(weights, name)
-                profile.k = k
-                profiles[name] = profile
-            except Exception as e:
-                print(f"  Слой {name}: ошибка {e}")
-
+                profiles[name] = self.extract_from_weights(weights, name)
+            except Exception as exc:
+                print(f"  Слой {name}: ошибка {exc}")
+        self.k = old_k
         return profiles
 
-    def compress_weights(
-        self, profile: ModelProfile, coefficients: Optional[np.ndarray] = None
-    ) -> np.ndarray:
-        """Восстанавливает веса из SVD паттернов"""
-
+    def compress_weights(self, profile: ModelProfile, coefficients: Optional[CoreVector] = None) -> CoreMatrix:
         if coefficients is None:
             coefficients = profile.svd_S
-
-        return profile.svd_U @ (coefficients * profile.svd_Vt)
+        return decompress_layer({"U": profile.svd_U, "S": coefficients, "Vt": profile.svd_Vt})
 
     def get_pattern_geometry(self, profile: ModelProfile) -> dict:
-        """Возвращает геометрию паттерна"""
-
-        S = profile.svd_S
-        total = S.sum()
-
-        # Нормализованные сингулярные значения
-        S_norm = S / (total + 1e-10)
-
-        # Ёмкость паттерна
-        capacity = -np.sum(S_norm * np.log2(S_norm + 1e-10))
-
+        singular = CoreVector(profile.svd_S)
+        total = sum(singular)
+        singular_norm = CoreVector(value / (total + 1.0e-10) for value in singular)
+        capacity = -sum(value * math.log(value + 1.0e-10, 2) for value in singular_norm)
+        energy_concentration = sum(value * value for value in singular_norm)
         return {
             "name": profile.name,
             "layer_type": profile.layer_type,
             "k": profile.k,
             "n_params": profile.n_params,
-            "singular_values": S.tolist(),
-            "singular_norm": S_norm.tolist(),
+            "singular_values": singular.tolist(),
+            "singular_norm": singular_norm.tolist(),
             "capacity": float(capacity),
-            "energy_concentration": float((S_norm**2).sum()),
+            "energy_concentration": float(energy_concentration),
             "original_shape": profile.original_shape,
             "compression_ratio": profile.compression_ratio,
         }
 
-    def generate_profile_image(self, profile: ModelProfile, size: int = 128) -> np.ndarray:
-        """Генерирует изображение профиля паттерна"""
-
-        S = profile.svd_S[: min(len(profile.svd_S), size)]
-
-        # нормализация
-        S = S / (S.max() + 1e-10)
-
-        # Создаём 2D представление
-        img = np.zeros((size, size, 3))
-
-        for i, s in enumerate(S):
-            freq = i / len(S)
-            img[int(s * (size - 1)), i] = (
-                np.sin(freq * np.pi * 2) * 0.5 + 0.5,
-                np.sin(freq * np.pi * 2 + np.pi / 3) * 0.5 + 0.5,
-                np.sin(freq * np.pi * 2 + np.pi * 2 / 3) * 0.5 + 0.5,
-            )
-
-        return (img * 255).astype(np.uint8)
-
-
-# ─────────────────────────────────────────────────────────────────
-# ИНТЕГРАЦИЯ С NUCLEUS GRAPHICS
-# ─────────────────────────────────────────────────────────────────
+    def generate_profile_image(self, profile: ModelProfile, size: int = 128) -> list[list[list[int]]]:
+        singular = CoreVector(profile.svd_S[: min(len(profile.svd_S), size)])
+        peak = max(singular) if singular else 1.0
+        image = [[[0, 0, 0] for _ in range(size)] for _ in range(size)]
+        for index, value in enumerate(singular):
+            freq = index / max(len(singular), 1)
+            normalized = value / (peak + 1.0e-10)
+            y = max(0, min(size - 1, int(normalized * (size - 1))))
+            image[y][index % size] = [
+                int((math.sin(freq * math.tau) * 0.5 + 0.5) * 255),
+                int((math.sin(freq * math.tau + math.pi / 3) * 0.5 + 0.5) * 255),
+                int((math.sin(freq * math.tau + math.tau / 3) * 0.5 + 0.5) * 255),
+            ]
+        return image
 
 
 def integrate_with_graphics():
-    """Интегрирует паттерны с Graphics Engine"""
     from nucleus_graphics import GeometricEngine
-
-    print("Интеграция Nucleus Graphics + Model Patterns")
-    print("-" * 40)
 
     return GeometricEngine
 
 
-# ─────────────────────────────────────────────────────────────────
-# DEMO
-# ─────────────────────────────────────────────────────────────────
-
-
 def demo_extraction():
-    """Демонстрация извлечения паттернов"""
-    print("=" * 60)
-    print("NUCLEUS MODEL PATTERN EXTRACTOR")
-    print("=" * 60)
-
-    # Ищем модели
-    loader = ModelLoader("/Users/nearbe/.lmstudio/models")
-    models = loader.discover_models()
-
-    print(f"\nНайдено моделей: {len(models)}")
-
-    for m in models[:5]:
-        size_mb = m["size"] / (1024 * 1024)
-        print(f"  - {m['parent']}/{m['name']} ({m['format']}, {size_mb:.1f}MB)")
-
-    # Тест: симулированные веса
-    print("\n" + "-" * 40)
-    print("Тест SVD извлечения:")
-
-    extractor = PatternExtractor(k=16)
-
-    # Симулированные веса (1024, 4096) - like linear layer
-    np.random.seed(42)
-    weights = np.random.randn(1024, 4096)
-
+    rng = random.Random(DEFAULT_RANDOM_SEED)
+    weights = CoreMatrix([[rng.gauss(0.0, 1.0) for _ in range(64)] for _ in range(32)])
+    extractor = PatternExtractor(k=8)
     profile = extractor.extract_from_weights(weights, "test_layer", "linear")
-
-    geometry = extractor.get_pattern_geometry(profile)
-
-    print(f"  Размер оригинальный: {profile.original_shape}")
-    print(f"  k (компонент): {profile.k}")
-    print(f"  Ёмкость паттерна: {geometry['capacity']:.2f}")
-    print(f"  Концентрация энергии: {geometry['energy_concentration']:.4f}")
-    print(f"  Compression ratio: {geometry['compression_ratio']:.6f}x")
-
-    # Тест с реальной моделью
-    print("\n" + "-" * 40)
-    print("Поиск реальных моделей...")
-
-    loader = ModelLoader("/Users/nearbe/.lmstudio/models")
-    models = loader.discover_models()
-
-    gemma_models = [m for m in models if "gemma" in m["name"].lower()]
-
-    if gemma_models:
-        print(f"\nНайдено Gemma: {len(gemma_models)}")
-        for m in gemma_models[:3]:
-            size_mb = m["size"] / (1024 * 1024)
-            print(f"  - {m['name']} ({size_mb:.1f}MB)")
-    else:
-        print("Gemma не найдены, пробуем другие...")
-
-        safetensors = [m for m in models if m["format"] == ".safetensors"]
-        if safetensors:
-            print(f"  Найдено safetensors: {len(safetensors)}")
-            m = safetensors[0]
-            print(f"  Пробуем: {m['path']}")
-
-            layers = loader.load_safetensors(m["path"])
-            print(f"  Слоёв: {len(layers)}")
-
-            if layers:
-                first_layer = list(layers.keys())[0]
-                weights = layers[first_layer]
-                print(f"  Первый слой: {first_layer}, shape={weights.shape}")
-
-                profile = extractor.extract_from_weights(weights, first_layer)
-                geometry = extractor.get_pattern_geometry(profile)
-                print(f"  Ёмкость: {geometry['capacity']:.2f}")
-
-    print("\n" + "=" * 60)
-    print("Ключевой вывод:")
-    print("=" * 60)
-    print("""
-    Веса = геометрические паттерны!
-
-    SVD извлекает главные компоненты.
-    Эти компоненты = "суть" знаний модели.
-    Их можно сжать и использовать для генерации.
-
-    111GB весов → ~1GB паттернов (k=4)
-    """)
+    print(extractor.get_pattern_geometry(profile))
 
 
 if __name__ == "__main__":

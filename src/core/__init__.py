@@ -1,234 +1,86 @@
-"""
-Core mathematical operators for the RealMath / Essentials framework.
+"""Core mathematical operators for Eugenia."""
 
-Exports:
-- delta: delta_field, inverse_delta_field (для sweep)
-- complex_delta: complex_delta_field, complex_delta_properties (для Nucleus)
-- complex: complex_norm, complex_conjugate, complex_multiply (для Nucleus)
-- dual: dual_form, dual_multiply, dual_branch, dual_compress (для Nucleus)
-- potential: has_potential, is_potential, resolve_potential
-- vector: normalize_vector_safe
-- limits: limit_branching, limit_compression
-- percent: to_percentage, from_percentage, percentage_add, percentage_multiply
-- similarity: similarity (cosine на алгебре долей)
-- distance: delta_distance, euclidean_distance
-- p_adic: v2_adic_valuation, p_adic_distance, d_adic_convergence
-- fractal_dimension: fractal_dimension_from_betti, compute_betti_scaling_exponent
-- sweep: compute_sweep, encode_solenoid_trajectory, solenoid_distance, rg_aware_sweep
-- spine: ridge_level, ridge_to_percentage, percentage_to_ridge, spine_value, spine_value_array
-- pyramid: fractal_pyramid_level, fractal_pyramid, fractal_pyramid_to_string, fractal_bridge_analysis
-- chain: omega_to_pi_chain, chain_identity_check
-- branching: D, H
-- constants: PI, OMEGA, D_ID
-"""
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
+from .D import D
+from .H import H
+from .L import L
+from .binomial_probability import binomial_probability
+from .complex_delta_field import complex_delta_field
+from .compute_jump_events import compute_jump_events
+from .compute_sweep import compute_sweep
+from .compute_thresholds import compute_thresholds
+from .constants import D_ID, EPS
+from .delta_distance import delta_distance
+from .delta_field import delta_field
+from .euclidean_distance import euclidean_distance
+from .fractal_pattern_signature import fractal_pattern_signature
+from .fractal_pyramid_structure import fractal_pyramid_structure
+from .has_potential import has_potential
+from .is_potential import is_potential
+from .log2 import log2
+from .normalize_vector_safe import normalize_vector_safe
+from .p_adic_distance import p_adic_distance
+from .pattern_bridge_identity import pattern_bridge_identity
+from .pattern_distance_from_delta import pattern_distance_from_delta
+from .pattern_pyramid_depth import pattern_pyramid_depth
+from .pattern_similarity_from_complex import pattern_similarity_from_complex
+from .pattern_similarity_from_delta import pattern_similarity_from_delta
+from .pattern_spine_chain import pattern_spine_chain
+from .resolve_potential import resolve_potential
+from .safe_divide import safe_divide
+from .solenoid_distance import solenoid_distance
+from .solenoid_encode_pattern import solenoid_encode_pattern
+from .solenoid_pattern_distance import solenoid_pattern_distance
+from .sweep_results import SweepResults
 
-from .delta import (
-    delta_field,
-    inverse_delta_field,
-)
-from .complex_delta import (
-    complex_delta_field,
-    complex_delta_properties,
-    inverse_complex_delta_field,
-)
-from .complex import (
-    complex_branch,
-    complex_compress,
-    complex_conjugate,
-    complex_multiply,
-    complex_norm,
-    complex_norm_squared,
-    complex_rotate,
-)
-from .dual import (
-    dual_add,
-    dual_branch,
-    dual_compress,
-    dual_form,
-    dual_func,
-    dual_multiply,
-    dual_power,
-)
-from .potential import (
-    has_potential,
-    is_potential,
-    resolve_potential,
-)
-from .vector import normalize_vector_safe
-from .limits import (
-    limit_branching,
-    limit_compression,
-    continuity_D,
-    continuity_H,
-)
-from .percent import (
-    from_percentage,
-    percentage_add,
-    percentage_multiply,
-    to_percentage,
-)
-from .similarity import similarity
-from .distance import (
-    delta_distance,
-    euclidean_distance,
-)
-from .division import (
-    safe_divide,
-    div_safe,
-)
-from .p_adic import (
-    v2_adic_valuation,
-    p_adic_distance,
-    d_adic_convergence,
-    p_adic_threshold_spacing,
-    bernoulli_shift,
-    solenoid_trajectory,
-    gcd,
-    lcm,
-    mod_congruence,
-    mod_congruence_branch_invariant,
-)
-from .fractal_dimension import (
-    fractal_dimension_from_betti,
-    fractal_dimension_from_multiple_scales,
-    compute_betti_scaling_exponent,
-    fractal_volume_scaling,
-    fractal_similarity_score,
-    solenoid_similarity,
-    solenoid_distance_from_masks,
-)
-from .sweep import (
-    compute_sweep,
-    encode_solenoid_trajectory,
-    solenoid_distance,
-    rg_aware_sweep,
-    inverse_jump_analysis,
-    binomial_probability,
-    theoretical_occupancy,
-)
-from .spine import (
-    L,
-    ridge_level,
-    ridge_to_percentage,
-    percentage_to_ridge,
-    spine_value,
-    spine_value_array,
-)
-from .pyramid import (
-    fractal_pyramid_level,
-    fractal_pyramid,
-    fractal_pyramid_to_string,
-    fractal_bridge_analysis,
-)
-from .chain import (
-    omega_to_pi_chain,
-    chain_identity_check,
-)
-from .branching import (
-    D,
-    H,
-)
-from .constants import (
-    PI,
-    OMEGA,
-    D_ID,
-)
+PI = float("inf")
+OMEGA = 0.0
+
+div_safe = safe_divide
 
 __all__ = [
-    # Delta field
-    "delta_field",
-    "inverse_delta_field",
-    # Complex delta (Nucleus)
+    "D",
+    "D_ID",
+    "EPS",
+    "H",
+    "L",
+    "OMEGA",
+    "PI",
+    "SweepResults",
+    "binomial_probability",
     "complex_delta_field",
-    "complex_delta_properties",
-    "inverse_complex_delta_field",
-    # Complex (Nucleus)
-    "complex_norm",
-    "complex_norm_squared",
-    "complex_conjugate",
-    "complex_multiply",
-    "complex_branch",
-    "complex_compress",
-    "complex_rotate",
-    # Dual (Nucleus)
-    "dual_form",
-    "dual_add",
-    "dual_multiply",
-    "dual_branch",
-    "dual_compress",
-    "dual_power",
-    "dual_func",
-    # Potential
+    "compute_jump_events",
+    "compute_sweep",
+    "compute_thresholds",
+    "delta_distance",
+    "delta_field",
+    "div_safe",
+    "euclidean_distance",
+    "fractal_pattern_signature",
+    "fractal_pyramid_structure",
     "has_potential",
     "is_potential",
-    "resolve_potential",
-    # Vector
+    "log2",
     "normalize_vector_safe",
-    # Limits
-    "limit_branching",
-    "limit_compression",
-    "continuity_D",
-    "continuity_H",
-    # Percent
-    "to_percentage",
-    "from_percentage",
-    "percentage_add",
-    "percentage_multiply",
-    # Similarity
-    "similarity",
-    # Distance
-    "delta_distance",
-    "euclidean_distance",
-    # Division
-    "safe_divide",
-    "div_safe",
-    # p-adic
-    "v2_adic_valuation",
     "p_adic_distance",
-    "d_adic_convergence",
-    "p_adic_threshold_spacing",
-    "bernoulli_shift",
-    "solenoid_trajectory",
-    "gcd",
-    "lcm",
-    "mod_congruence",
-    "mod_congruence_branch_invariant",
-    # Fractal dimension
-    "fractal_dimension_from_betti",
-    "fractal_dimension_from_multiple_scales",
-    "compute_betti_scaling_exponent",
-    "fractal_volume_scaling",
-    "fractal_similarity_score",
-    "solenoid_similarity",
-    "solenoid_distance_from_masks",
-    # Sweep
-    "compute_sweep",
-    "encode_solenoid_trajectory",
+    "pattern_bridge_identity",
+    "pattern_distance_from_delta",
+    "pattern_pyramid_depth",
+    "pattern_similarity_from_complex",
+    "pattern_similarity_from_delta",
+    "pattern_spine_chain",
+    "resolve_potential",
+    "safe_divide",
     "solenoid_distance",
-    "rg_aware_sweep",
-    "inverse_jump_analysis",
-    "binomial_probability",
-    "theoretical_occupancy",
-    # Spine
-    "L",
-    "ridge_level",
-    "ridge_to_percentage",
-    "percentage_to_ridge",
-    "spine_value",
-    "spine_value_array",
-    # Pyramid
-    "fractal_pyramid_level",
-    "fractal_pyramid",
-    "fractal_pyramid_to_string",
-    "fractal_bridge_analysis",
-    # Chain
-    "omega_to_pi_chain",
-    "chain_identity_check",
-    # Branching
-    "D",
-    "H",
-    # Constants
-    "PI",
-    "OMEGA",
-    "D_ID",
+    "solenoid_encode_pattern",
+    "solenoid_pattern_distance",
 ]

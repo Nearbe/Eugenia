@@ -1,547 +1,306 @@
 #!/usr/bin/env python3
-"""
-Semantic Knowledge Storage System
-==================================
+"""Semantic Knowledge Storage System on Eugenia core math."""
 
-Основано на концепциях из RealMath/Essentials:
-- L(M) = глубина структуры, не величина
-- D(a) — создаёт различие между паттернами
-- Ω — потенциал (все возможные семантические связи)
-- Π — полнота (актуальные знания)
-
-Система хранит НЕ веса, а СЕМАНТИЧЕСКИЕ ПАТТЕРНЫ:
-1. Eigenpatterns — главные паттерны знаний
-2. Cross-pattern relationships — как паттерны связаны
-3. Semantic adjacency — семантическая близость
-
-Это даёт:
-- Компактное хранение (111GB → ~1GB)
-- Knowledge retrieval по семантике
-- Runtime inference через pattern reconstruction
-"""
-
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
+import math
+import random
 import struct
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
-import numpy as np
+from core.linear_algebra import (
+    CoreMatrix,
+    CoreVector,
+    cosine_similarity,
+    dot,
+    mean,
+    norm,
+    outer,
+    scalar_multiply,
+    to_vector,
+    zeros,
+)
+from nucleus.cross_layer_compressor import compress_layer
 
-
-# ============================================================
-# Базовые операторы из RealMath
-# ============================================================
+DEFAULT_RANDOM_SEED = 42
+FLOAT_BYTES = 4
 
 
 class SemanticOperators:
-    """
-    Семантические операторы:
-    - D(a): создаёт различие, новый паттерн
-    - H(a): схлопывает к сути, убирает шум
-    - L(M): глубина структуры = информация
-    """
+    """Семантические D/H/L операторы."""
 
     @staticmethod
-    def D_pattern(pattern: np.ndarray) -> np.ndarray:
-        """Создаёт новый паттерн через удвоение"""
-        return np.concatenate([pattern, pattern])
+    def D_pattern(pattern) -> CoreVector:
+        vector = CoreVector(to_vector(pattern))
+        return CoreVector(list(vector) + list(vector))
 
     @staticmethod
-    def H_pattern(pattern: np.ndarray, target_len: int) -> np.ndarray:
-        """Схлопывает паттерн к нужной длине"""
-        if len(pattern) <= target_len:
-            return pattern
-        # Усреднение блоков
-        blocks = len(pattern) // target_len
-        return np.array([pattern[i * blocks : (i + 1) * blocks].mean() for i in range(target_len)])
+    def H_pattern(pattern, target_len: int) -> CoreVector:
+        vector = CoreVector(to_vector(pattern))
+        if len(vector) <= target_len:
+            return vector
+        block = max(1, len(vector) // target_len)
+        return CoreVector(mean(vector[index * block : (index + 1) * block]) for index in range(target_len))
 
     @staticmethod
-    def L_pattern(pattern: np.ndarray) -> float:
-        """Глубина паттерна = log2(энергия)"""
-        energy = np.sum(pattern**2)
-        return np.log2(max(energy, 1e-10))
-
-
-# ============================================================
-# Семантические паттерны
-# ============================================================
+    def L_pattern(pattern) -> float:
+        energy = sum(value * value for value in to_vector(pattern))
+        return math.log(max(energy, 1.0e-10), 2)
 
 
 @dataclass
 class EigenPattern:
-    """Один eigenpattern — главный семантический паттерн"""
+    """Один eigenpattern — главный семантический паттерн."""
 
-    vector: np.ndarray  # Паттерн (compressed)
-    singular_value: float  # Важность (L — глубина)
-    phase: float  # Фаза ( для кодирования)
-    capacity: float  # Сложность паттерна
+    vector: CoreVector
+    singular_value: float
+    phase: float
+    capacity: float
 
 
 class SemanticPatternExtractor:
-    """
-    Извлекает семантические паттерны из весов модели
-
-    Вместо значений храним структуру паттернов
-    """
+    """Извлекает семантические паттерны из весов модели."""
 
     def __init__(self, k_patterns: int = 32):
         self.k = k_patterns
         self.patterns: List[EigenPattern] = []
-        self.relationships: np.ndarray = None
+        self.relationships: CoreMatrix | None = None
 
-    def extract_from_weights(self, W: np.ndarray) -> List[EigenPattern]:
-        """
-        Извлекает eigenpatterns из весов
-
-        Метод: SVD разложение
-        - U: собственные вектора = паттерны
-        - S: сингулярные значения = важность паттернов
-        - Vt: правая проекция
-        """
-        U, S, Vt = np.linalg.svd(W, full_matrices=False)
-
-        patterns = []
-        for i in range(min(self.k, len(S))):
-            # Создаём паттерн
-            pattern = EigenPattern(
-                vector=U[:, i].astype(np.float16),
-                singular_value=S[i],
-                phase=np.angle(U[0, i] + 1j * U[1, i]),  # фаза в комплексной плоскости
-                capacity=self._compute_capacity(U[:, i]),
+    def extract_from_weights(self, W) -> List[EigenPattern]:
+        layer = compress_layer(W, self.k)
+        left = layer["U"]
+        singular = CoreVector(layer["S"])
+        patterns: list[EigenPattern] = []
+        for index in range(min(self.k, len(singular))):
+            vector = CoreVector(row[index] if index < len(row) else 0.0 for row in left)
+            phase = math.atan2(vector[1] if len(vector) > 1 else 0.0, vector[0] if vector else 0.0)
+            patterns.append(
+                EigenPattern(
+                    vector=vector,
+                    singular_value=float(singular[index]),
+                    phase=phase,
+                    capacity=self._compute_capacity(vector),
+                )
             )
-            patterns.append(pattern)
-
         self.patterns = patterns
         return patterns
 
-    def _compute_capacity(self, vector: np.ndarray) -> float:
-        """Вычисляет ёмкость паттерна (Information capacity per Essentials [30_Информация.md])"""
-        # Нормализация
-        p = np.abs(vector) ** 2
-        p = p / p.sum() + 1e-10
-        return -np.sum(p * np.log(p))
+    def _compute_capacity(self, vector) -> float:
+        values = [abs(value) ** 2 for value in to_vector(vector)]
+        total = sum(values) + 1.0e-10
+        probabilities = [value / total + 1.0e-10 for value in values]
+        return -sum(prob * math.log(prob) for prob in probabilities)
 
-    def extract_relationships(self) -> np.ndarray:
-        """
-        Извлекает relationships между паттернами
-
-        Это ключевое — хранит как паттерны связаны!
-        """
+    def extract_relationships(self) -> CoreMatrix:
         if not self.patterns:
-            return np.array([])
-
-        k = len(self.patterns)
-        relationships = np.zeros((k, k), dtype=np.float32)
-
-        # Cross-correlation между паттернами
-        for i in range(k):
-            for j in range(k):
-                vec_i = self.patterns[i].vector.astype(np.float32)
-                vec_j = self.patterns[j].vector.astype(np.float32)
-
-                # Косинусное сходство
-                sim = np.dot(vec_i, vec_j) / (np.linalg.norm(vec_i) * np.linalg.norm(vec_j) + 1e-10)
-                relationships[i, j] = sim
-
-        self.relationships = relationships
-        return relationships
+            self.relationships = CoreMatrix()
+            return self.relationships
+        size = len(self.patterns)
+        rows = []
+        for i in range(size):
+            rows.append([cosine_similarity(self.patterns[i].vector, self.patterns[j].vector) for j in range(size)])
+        self.relationships = CoreMatrix(rows)
+        return self.relationships
 
     def get_compressed_size(self) -> int:
-        """Размер в байтах для хранения паттернов"""
-        if not self.patterns:
-            return 0
-
         size = 0
-        for p in self.patterns:
-            size += p.vector.nbytes  # float16 vector
-            size += 4 + 4 + 4  # singular_value, phase, capacity (float32 each)
-
+        for pattern in self.patterns:
+            size += pattern.vector.nbytes + 12
         if self.relationships is not None:
             size += self.relationships.nbytes
-
         return size
 
 
-# ============================================================
-# Knowledge Graph — структура знаний
-# ============================================================
-
-
 class KnowledgeGraph:
-    """
-    Граф знаний модели
-
-    Узлы = семантические паттерны
-    Ребра = relationships между паттернами
-
-    Это хранит СЕМАНТИКУ модели, не веса!
-    """
+    """Граф знаний модели."""
 
     def __init__(self):
         self.nodes: List[EigenPattern] = []
-        self.edges: np.ndarray = None
+        self.edges: CoreMatrix | None = None
         self.layer_index: Dict[str, int] = {}
 
-    def build_from_model(self, model_weights: Dict[str, np.ndarray], k: int = 32):
-        """
-        Строит knowledge graph из весов модели
-
-        model_weights: {layer_name: weight_matrix}
-        """
-        all_patterns = []
-        all_relationships = []
-
-        for layer_name, W in model_weights.items():
-            # Извлекаем паттерны слоя
+    def build_from_model(self, model_weights: Dict[str, object], k: int = 32):
+        all_patterns: list[EigenPattern] = []
+        all_relationship_rows: list[list[float]] = []
+        for layer_name, weights in model_weights.items():
             extractor = SemanticPatternExtractor(k)
-            patterns = extractor.extract_from_weights(W)
+            patterns = extractor.extract_from_weights(weights)
             relationships = extractor.extract_relationships()
-
-            # Индексируем
             self.layer_index[layer_name] = len(all_patterns)
             all_patterns.extend(patterns)
-
-            if relationships is not None:
-                all_relationships.append(relationships)
-
+            all_relationship_rows.extend(relationships)
         self.nodes = all_patterns
-        self.edges = np.block(all_relationships) if all_relationships else np.array([])
-
+        self.edges = CoreMatrix(all_relationship_rows)
         return self
 
     def semantic_similarity(self, pattern_a: int, pattern_b: int) -> float:
-        """Семантическое сходство двух паттернов"""
         if pattern_b >= len(self.nodes) or pattern_a >= len(self.nodes):
             return 0.0
-
-        vec_a = self.nodes[pattern_a].vector.astype(np.float32)
-        vec_b = self.nodes[pattern_b].vector.astype(np.float32)
-
-        return np.dot(vec_a, vec_b) / (np.linalg.norm(vec_a) * np.linalg.norm(vec_b) + 1e-10)
+        return cosine_similarity(self.nodes[pattern_a].vector, self.nodes[pattern_b].vector)
 
     def find_related_patterns(self, pattern_idx: int, top_k: int = 5) -> List[Tuple[int, float]]:
-        """Находит семантически связанные паттерны"""
         if self.edges is None or pattern_idx >= len(self.edges):
             return []
-
         similarities = self.edges[pattern_idx]
-        top_indices = np.argsort(np.abs(similarities))[-top_k:][::-1]
-
-        return [(idx, similarities[idx]) for idx in top_indices]
+        ranked = sorted(range(len(similarities)), key=lambda index: abs(similarities[index]), reverse=True)
+        return [(index, similarities[index]) for index in ranked[:top_k]]
 
     def get_knowledge_structure(self) -> Dict:
-        """Возвращает структуру знаний модели"""
+        edge_count = self.edges.size if self.edges is not None else 0
         return {
             "n_patterns": len(self.nodes),
-            "n_relationships": len(self.edges) ** 2 if self.edges is not None else 0,
-            "total_capacity": sum(p.capacity for p in self.nodes),
+            "n_relationships": edge_count,
+            "total_capacity": sum(pattern.capacity for pattern in self.nodes),
             "layers": list(self.layer_index.keys()),
         }
 
 
-# ============================================================
-# Semantic Retrieval — поиск по семантике
-# ============================================================
-
-
 class SemanticRetrieval:
-    """
-    Семантический поиск в модели
-
-    Позволяет находить знания по смыслу, не по весам!
-    """
+    """Семантический поиск в модели."""
 
     def __init__(self, knowledge_graph: KnowledgeGraph):
         self.graph = knowledge_graph
 
-    def search_by_vector(self, query: np.ndarray, top_k: int = 5) -> List[Tuple[int, float, float]]:
-        """
-        Поиск по вектору запроса
-
-        Вместо decode всей модели — ищем по паттернам
-        """
+    def search_by_vector(self, query, top_k: int = 5) -> List[Tuple[int, float, float]]:
         scores = []
-
-        for i, pattern in enumerate(self.graph.nodes):
-            vec = pattern.vector.astype(np.float32)
-            score = np.dot(query, vec) / (np.linalg.norm(query) * np.linalg.norm(vec) + 1e-10)
-            importance = pattern.singular_value
-
-            # Комбинируем relevance и importance
-            final_score = score * np.log(importance + 1)
-            scores.append((i, final_score, pattern.capacity))
-
-        scores.sort(key=lambda x: x[1], reverse=True)
+        query_vector = CoreVector(to_vector(query))
+        for index, pattern in enumerate(self.graph.nodes):
+            score = cosine_similarity(query_vector, pattern.vector)
+            final_score = score * math.log(pattern.singular_value + 1.0)
+            scores.append((index, final_score, pattern.capacity))
+        scores.sort(key=lambda item: item[1], reverse=True)
         return scores[:top_k]
 
     def search_by_layer(self, layer_name: str, top_k: int = 5) -> List[int]:
-        """Поиск паттернов в конкретном слое"""
         if layer_name not in self.graph.layer_index:
             return []
-
         start_idx = self.graph.layer_index[layer_name]
-        # Assuming k patterns per layer
-        return list(range(start_idx, start_idx + top_k))
+        return list(range(start_idx, min(start_idx + top_k, len(self.graph.nodes))))
 
     def semantic_expand(self, pattern_idx: int) -> List[int]:
-        """Семантическое разворачивание — все связанные паттерны"""
-        related = self.graph.find_related_patterns(pattern_idx, top_k=10)
-        return [idx for idx, _ in related]
-
-
-# ============================================================
-# Runtime Reconstruction — восстановление для inference
-# ============================================================
+        return [index for index, _ in self.graph.find_related_patterns(pattern_idx, top_k=10)]
 
 
 class RuntimeReconstructor:
-    """
-    Восстановление весов из паттернов для inference
-
-    Работает в runtime с минимальной памятью
-    """
+    """Восстановление весов из паттернов для inference."""
 
     def __init__(self, knowledge_graph: KnowledgeGraph):
         self.graph = knowledge_graph
 
-    def reconstruct_layer(self, layer_name: str, d_model: int, d_out: int) -> np.ndarray:
-        """
-        Восстанавливает слой из паттернов
-
-        W = Σ pattern_i * importance_i * pattern_vector_i^T
-        """
+    def reconstruct_layer(self, layer_name: str, d_model: int, d_out: int) -> CoreMatrix:
         if layer_name not in self.graph.layer_index:
-            return np.zeros((d_model, d_out))
-
+            return zeros(d_model, d_out)
         start_idx = self.graph.layer_index[layer_name]
-        # k паттернов на слой
-        k = len(self.graph.nodes) // len(self.graph.layer_index)
-
-        W = np.zeros((d_model, d_out), dtype=np.float32)
-
-        for i in range(k):
-            pattern_idx = start_idx + i
+        layer_count = max(len(self.graph.layer_index), 1)
+        k = max(1, len(self.graph.nodes) // layer_count)
+        result = zeros(d_model, d_out)
+        for index in range(k):
+            pattern_idx = start_idx + index
             if pattern_idx >= len(self.graph.nodes):
                 break
-
             pattern = self.graph.nodes[pattern_idx]
-            vector = pattern.vector.astype(np.float32)
-            importance = pattern.singular_value
+            product = outer(pattern.vector[:d_model], pattern.vector[:d_out])
+            scaled = scalar_multiply(product, pattern.singular_value)
+            result = CoreMatrix(
+                [[left + right for left, right in zip(row_a, row_b)] for row_a, row_b in zip(result, scaled)]
+            )
+        return result
 
-            # Outer product pattern
-            W += importance * np.outer(vector, vector)
-
-        return W
-
-    def efficient_forward(self, layer_name: str, x: np.ndarray) -> np.ndarray:
-        """
-        Эффективный forward pass без восстановления всей матрицы
-
-        x -> pattern projection -> importance -> output
-
-        Это требует O(k*d) вместо O(d*d)!
-        """
-        # Get patterns for this layer
+    def efficient_forward(self, layer_name: str, x) -> CoreVector:
         start_idx = self.graph.layer_index.get(layer_name, 0)
-        k = 32  # number of patterns
-
-        # Project input to pattern space
-        patterns = []
-        for i in range(k):
-            if start_idx + i < len(self.graph.nodes):
-                patterns.append(self.graph.nodes[start_idx + i].vector.astype(np.float32))
-
-        # Project: x -> pattern space
-        pattern_matrix = np.column_stack(patterns)  # (d, k)
-        x_proj = pattern_matrix.T @ x  # (k,)
-
-        # Scale by importance
-        for i, p in enumerate(patterns):
-            if start_idx + i < len(self.graph.nodes):
-                x_proj[i] *= self.graph.nodes[start_idx + i].singular_value
-
-        # Reconstruct output
-        output = pattern_matrix @ x_proj
-
-        return output
-
-
-# ============================================================
-# Serialization / Deserialization
-# ============================================================
+        result = CoreVector(0.0 for _ in to_vector(x))
+        for pattern in self.graph.nodes[start_idx : start_idx + 32]:
+            activation = dot(x, pattern.vector) * pattern.singular_value
+            contribution = scalar_multiply(pattern.vector, activation)
+            result = CoreVector(left + right for left, right in zip(result, contribution))
+        return result
 
 
 class SemanticStorageFormat:
-    """
-    Формат хранения семантических знаний
-
-    Компактный бинарный формат:
-    - Header: метаинформация
-    - Patterns: eigenpatterns (compressed)
-    - Relationships: cross-pattern matrix
-    - Index: mapping layer -> patterns
-    """
+    """Компактный бинарный формат семантических знаний."""
 
     @staticmethod
     def serialize(graph: KnowledgeGraph) -> bytes:
-        """Сериализация графа знаний"""
-        data = b""
-
-        # Header
-        n_patterns = len(graph.nodes)
-        data += struct.pack("<I", n_patterns)
-
-        # Patterns
-        for p in graph.nodes:
-            data += struct.pack("<f", p.singular_value)
-            data += struct.pack("<f", p.phase)
-            data += struct.pack("<f", p.capacity)
-            data += p.vector.tobytes()
-
-        # Relationships
+        data = bytearray()
+        data += struct.pack("<I", len(graph.nodes))
+        for pattern in graph.nodes:
+            data += struct.pack("<I", len(pattern.vector))
+            data += struct.pack("<f", pattern.singular_value)
+            data += struct.pack("<f", pattern.phase)
+            data += struct.pack("<f", pattern.capacity)
+            for value in pattern.vector:
+                data += struct.pack("<f", float(value))
+        rows, cols = graph.edges.shape if graph.edges is not None else (0, 0)
+        data += struct.pack("<II", rows, cols)
         if graph.edges is not None:
-            data += struct.pack("<I", graph.edges.shape[0])
-            data += graph.edges.tobytes()
-        else:
-            data += struct.pack("<I", 0)
-
-        # Layer index
+            for row in graph.edges:
+                for value in row:
+                    data += struct.pack("<f", float(value))
         data += struct.pack("<I", len(graph.layer_index))
-        for layer, idx in graph.layer_index.items():
-            layer_bytes = layer.encode("utf-8")
-            data += struct.pack("<I", len(layer_bytes))
-            data += layer_bytes
-            data += struct.pack("<I", idx)
-
-        return data
+        for layer, index in graph.layer_index.items():
+            raw = layer.encode("utf-8")
+            data += struct.pack("<I", len(raw))
+            data += raw
+            data += struct.pack("<I", index)
+        return bytes(data)
 
     @staticmethod
     def deserialize(data: bytes) -> KnowledgeGraph:
-        """Десериализация графа"""
         graph = KnowledgeGraph()
         offset = 0
-
-        # Header
-        n_patterns = struct.unpack("<I", data[offset : offset + 4])[0]
+        pattern_count = struct.unpack("<I", data[offset : offset + 4])[0]
         offset += 4
-
-        # Patterns
-        for _ in range(n_patterns):
+        for _ in range(pattern_count):
+            vector_len = struct.unpack("<I", data[offset : offset + 4])[0]
+            offset += 4
             singular = struct.unpack("<f", data[offset : offset + 4])[0]
             offset += 4
             phase = struct.unpack("<f", data[offset : offset + 4])[0]
             offset += 4
             capacity = struct.unpack("<f", data[offset : offset + 4])[0]
             offset += 4
-
-            vec_len = 32  # Assuming k=32
-            vector = np.frombuffer(data[offset : offset + vec_len * 2], dtype=np.float16)
-            offset += vec_len * 2
-
-            graph.nodes.append(
-                EigenPattern(
-                    vector=vector,
-                    singular_value=singular,
-                    phase=phase,
-                    capacity=capacity,
-                )
-            )
-
-        # Relationships
-        rel_size = struct.unpack("<I", data[offset : offset + 4])[0]
+            vector = CoreVector()
+            for _ in range(vector_len):
+                vector.append(struct.unpack("<f", data[offset : offset + 4])[0])
+                offset += 4
+            graph.nodes.append(EigenPattern(vector, singular, phase, capacity))
+        rows, cols = struct.unpack("<II", data[offset : offset + 8])
+        offset += 8
+        edge_rows = []
+        for _ in range(rows):
+            row = []
+            for _ in range(cols):
+                row.append(struct.unpack("<f", data[offset : offset + 4])[0])
+                offset += 4
+            edge_rows.append(row)
+        graph.edges = CoreMatrix(edge_rows)
+        layer_count = struct.unpack("<I", data[offset : offset + 4])[0]
         offset += 4
-        if rel_size > 0:
-            graph.edges = np.frombuffer(
-                data[offset : offset + rel_size * 4], dtype=np.float32
-            ).reshape(rel_size, rel_size)
-
-        # Layer index
-        n_layers = struct.unpack("<I", data[offset : offset + 4])[0]
-        offset += 4
-
-        for _ in range(n_layers):
+        for _ in range(layer_count):
             layer_len = struct.unpack("<I", data[offset : offset + 4])[0]
             offset += 4
             layer = data[offset : offset + layer_len].decode("utf-8")
             offset += layer_len
-            idx = struct.unpack("<I", data[offset : offset + 4])[0]
+            index = struct.unpack("<I", data[offset : offset + 4])[0]
             offset += 4
-            graph.layer_index[layer] = idx
-
+            graph.layer_index[layer] = index
         return graph
 
 
-# ============================================================
-# Demo / Test
-# ============================================================
-
-
 def test_semantic_system():
-    """Тест семантической системы"""
-    print("=" * 60)
-    print("Semantic Knowledge Storage System")
-    print("=" * 60)
-
-    np.random.seed(42)
-
-    # Симулируем модель
-    model_weights = {
-        "attn_q": np.random.randn(4096, 4096).astype(np.float32),
-        "attn_k": np.random.randn(4096, 4096).astype(np.float32),
-        "attn_v": np.random.randn(4096, 4096).astype(np.float32),
-        "ffn_up": np.random.randn(4096, 16384).astype(np.float32),
-        "ffn_down": np.random.randn(16384, 4096).astype(np.float32),
-    }
-
-    original_size = sum(w.nbytes for w in model_weights.values())
-    print(f"\nОригинальные веса: {original_size / 1024**2:.1f} MB")
-
-    # Строим knowledge graph
-    print("\nИзвлечение семантических паттернов...")
-    kg = KnowledgeGraph()
-    kg.build_from_model(model_weights, k=32)
-
-    structure = kg.get_knowledge_structure()
-    print(f"Паттернов: {structure['n_patterns']}")
-    print(f"Связей: {structure['n_relationships']}")
-    print(f"Слоёв: {len(structure['layers'])}")
-
-    # Размер
-    extractor = SemanticPatternExtractor(k=32)
-    extractor.extract_from_weights(model_weights["attn_q"])
-    relationships = extractor.extract_relationships()
-
-    size_per_layer = extractor.get_compressed_size()
-    if relationships is not None:
-        size_per_layer += relationships.nbytes
-
-    total_size = size_per_layer * len(model_weights)
-
-    print(f"\nСжатый размер: {total_size / 1024**2:.2f} MB")
-    print(f"Ratio: {original_size / total_size:.0f}x")
-    print(f"111GB -> {111 * total_size / original_size:.2f}GB")
-
-    # Retrieval demo
-    print("\n" + "-" * 40)
-    print("Semantic Retrieval Demo:")
-
-    retrieval = SemanticRetrieval(kg)
-
-    # Случайный query vector
-    query = np.random.randn(4096).astype(np.float32)
-    results = retrieval.search_by_vector(query, top_k=3)
-
-    print("Query: случайный вектор")
-    print("Top 3 семантически связанных паттерна:")
-    for idx, score, capacity in results:
-        p = kg.nodes[idx]
-        print(
-            f"  Pattern {idx}: score={score:.3f}, capacity={capacity:.3f}, importance={p.singular_value:.2f}"
-        )
-
-    # Layer-specific search
-    print("\nПоиск в слое attn_q:")
-    attn_patterns = retrieval.search_by_layer("attn_q", top_k=5)
-    print(f"  Найдены паттерны: {attn_patterns}")
+    rng = random.Random(DEFAULT_RANDOM_SEED)
+    weights = {"attn_q": CoreMatrix([[rng.gauss(0.0, 1.0) for _ in range(32)] for _ in range(32)])}
+    graph = KnowledgeGraph().build_from_model(weights, k=8)
+    print(graph.get_knowledge_structure())
 
 
 if __name__ == "__main__":

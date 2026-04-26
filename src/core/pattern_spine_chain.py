@@ -1,25 +1,28 @@
-"""
-pattern_spine_chain — Ω→Π цепь паттерна.
+"""Build a compact Ω → Π spine chain for values."""
 
-This chain shows the relationship between the spine and fraction algebra:
-    - 0 = Ω (potential)
-    - 1 = Id (unity)
-    - 2 = D(Id) (first branching)
-    - ∞ = Π (completeness)
-    - 100% = Π (in percentages)
-"""
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
+from .L import L
+from .spine_value import spine_value
 
-from .chain import omega_to_pi_chain
 
+def pattern_spine_chain(values) -> list[dict]:
+    if isinstance(values, int):
+        iterable = range(max(values, 0))
+    elif isinstance(values, float):
+        iterable = [values]
+    else:
+        iterable = values
 
-def pattern_spine_chain(n_steps: int = 10) -> list[dict]:
-    """
-    Generate the Ω → Id → D(Id) → ... → Π chain for a pattern.
-
-    Args:
-        n_steps: Number of branching steps.
-
-    Returns:
-        List of dicts with step, symbol, value, spine_level, percentage.
-    """
-    return omega_to_pi_chain(n_steps)
+    return [
+        {"index": index, "value": float(value), "spine_level": L(float(value)), "spine": spine_value(L(float(value)))}
+        for index, value in enumerate(iterable)
+    ]

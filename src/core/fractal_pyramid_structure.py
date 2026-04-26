@@ -1,35 +1,36 @@
-"""
-fractal_pyramid_structure — Структура фрактальной пирамиды.
-
-Per Essentials: the pyramid has Ω (0) at the center of each level,
-with branching (right: 1, 2, 3, ...) and compression (left: 3, 2, 1)
-forming a bridge through potential.
-"""
-
-from .pyramid import fractal_pyramid_level, fractal_bridge_analysis
+"""Fractal pyramid structure for pattern diagnostics."""
 
 
-def fractal_pyramid_structure(max_level: int = 10) -> list[dict]:
-    """
-    Generate fractal pyramid structure as analysis-ready dicts.
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
+def fractal_pyramid_structure(values_or_levels, max_depth: int = 5) -> list[dict]:
+    if isinstance(values_or_levels, int):
+        values = list(range(max(values_or_levels, 0)))
+        depth_limit = max(values_or_levels, 0)
+    else:
+        values = list(values_or_levels)
+        depth_limit = max_depth
 
-    Args:
-        max_level: Maximum pyramid level.
-
-    Returns:
-        List of dicts with level, left, center, right, and analysis.
-    """
-    pyramid = []
-    for level in range(1, max_level + 1):
-        left, center, right = fractal_pyramid_level(level)
-        bridge = fractal_bridge_analysis(level)
-        pyramid.append(
+    result: list[dict] = []
+    for depth in range(1, depth_limit + 1):
+        size = min(max(len(values) // depth, 1), depth) if values else 1
+        sample = values[:size]
+        mean_value = sum(sample) / len(sample) if sample else 0.0
+        result.append(
             {
-                "level": level,
-                "left": left,
-                "center": center,
-                "right": right,
-                "bridge_analysis": bridge,
+                "depth": depth,
+                "size": size,
+                "values": sample,
+                "mean": mean_value,
+                "bridge_analysis": {"left_spine_level": float(depth - 1)},
             }
         )
-    return pyramid
+    return result
