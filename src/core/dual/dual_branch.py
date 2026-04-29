@@ -1,7 +1,18 @@
-"""Dual branching: (x+vε) : Ω = (2x) + (2v)ε."""
+"""Dual branching compatibility wrapper."""
 
-from .constants import D_ID
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
+from ..foundations.dual_number import dual_number
 
 
 def dual_branch(x, v):
-    return float(x) * D_ID, float(v) * D_ID
+    """Return components of ``D(x + vε)``."""
+    return dual_number(x, v).branch().as_tuple()

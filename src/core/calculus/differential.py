@@ -1,3 +1,19 @@
+"""
+Top-level documentation for the Differential Calculus module.
+
+This module implements fundamental rules for differential calculus using dual numbers 
+and custom algebraic operations defined in `u_algebra`. It provides tools for 
+calculating derivatives, chain rule applications, power rules, and basic 
+differential state tracking based on the formula f(x + v*e) = f(x) + f'(x)*v*e.
+
+Key functions include:
+- differential_state: Calculates the result of a function evaluated at a point 
+  offset by a velocity (epsilon).
+- derivative: Extracts the derivative function for a given point.
+- chain_derivative: Implements the chain rule for composite functions.
+- second_derivative: Calculates the second derivative.
+- add_derivative: Calculates the derivative of a sum of functions.
+"""
 """Differential calculus from Universe/Math/20_Дифференциальное_исчисление.md."""
 
 #  Copyright (c) 2026.

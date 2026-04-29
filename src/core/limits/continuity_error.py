@@ -1,4 +1,4 @@
-"""Numerical continuity error ``|f(lim xₙ) - lim f(xₙ)|``."""
+"""Continuity defect ``|f(lim xₙ) - lim f(xₙ)|`` for finite samples."""
 
 #  Copyright (c) 2026.
 #  ╔═══════════════════════════════════╗
@@ -12,18 +12,20 @@
 #  ╚═══════════════════════════════════╝
 from collections.abc import Callable, Iterable, Sequence
 
-from .vectorization import last_or_default
+from ..foundations.vectorization import last_or_default
+from ..metrics.euclidean_distance import euclidean_distance
 
 
 def continuity_error(
-    fn: Callable[[float], float],
+    fn: Callable[[float], object],
     x_sequence: Sequence[float] | Iterable[float],
     *,
     x_limit: float | None = None,
 ) -> float:
-    """Return the finite-sample continuity defect for a scalar operator."""
-
-    observed_limit = last_or_default(x_sequence, 0.0) if x_limit is None else float(x_limit)
-    transformed_sequence = [float(fn(value)) for value in x_sequence]
-    transformed_limit = last_or_default(transformed_sequence, float(fn(observed_limit)))
-    return abs(float(fn(observed_limit)) - transformed_limit)
+    """Return finite-sample defect for the continuity contract."""
+    observed_values = list(x_sequence)
+    observed_limit = last_or_default(observed_values, 0.0) if x_limit is None else float(x_limit)
+    transformed_sequence = [fn(value) for value in observed_values]
+    transformed_limit = last_or_default(transformed_sequence, fn(observed_limit))
+    expected_limit = fn(observed_limit)
+    return float(euclidean_distance([float(expected_limit)], [float(transformed_limit)]))

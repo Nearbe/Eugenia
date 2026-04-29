@@ -9,8 +9,8 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from .sqrt import sqrt
-from .vectorization import vector_delta
+from ..foundations.vectorization import vector_delta
+from ..transcendental.sqrt import sqrt
 
 
 def euclidean_distance(a, b):

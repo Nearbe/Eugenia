@@ -10,8 +10,8 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from .delta_field import delta_field
-from .linear_algebra import cosine_similarity
+from core.linear.linear_algebra import cosine_similarity
+from core.operators.delta_field import delta_field
 
 
 def pattern_similarity_from_delta(values_a, values_b) -> float:

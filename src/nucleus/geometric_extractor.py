@@ -18,10 +18,9 @@ from typing import Any
 
 import networkx as nx
 
-from core.compute_thresholds import compute_thresholds
-from core.D import D
-from core.gradient_magnitude import gradient_magnitude
-from core.safe_divide import safe_divide
+from core.foundations.safe_divide import safe_divide
+from core.operators.D import D
+from core.operators.gradient_magnitude import gradient_magnitude
 
 
 DEFAULT_PRIME = 2
@@ -72,7 +71,9 @@ class GeometricExtractor:
         s_curve_score = self._s_curve(density)
         gradient = gradient_magnitude(curvature, density)
         resistance = self._average_path_resistance(graph)
-        thresholds = compute_thresholds([curvature, density, delta_score, s_curve_score], prime=prime)
+        threshold_count = self._threshold_count(
+            (curvature, density, delta_score, s_curve_score), prime=prime
+        )
 
         return GeometricFeatures(
             curvature=curvature,
@@ -80,7 +81,7 @@ class GeometricExtractor:
             s_curve_score=s_curve_score,
             gradient=gradient,
             resistance=resistance,
-            threshold_count=len(thresholds),
+            threshold_count=threshold_count,
         )
 
     def distance(self, left: GeometricFeatures, right: GeometricFeatures) -> float:

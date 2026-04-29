@@ -9,9 +9,8 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from .constants import EPS
-from .vec_norm import vec_norm
-from .vectorization import to_vector, zip_vectors
+from ..linear.vec_norm import vec_norm
+from ..foundations.vectorization import to_vector, zip_vectors
 
 
 def similarity(a: list[float], b: list[float]) -> float:
@@ -20,6 +19,6 @@ def similarity(a: list[float], b: list[float]) -> float:
     dot = sum(left * right for left, right in zip_vectors(values_a, values_b, name="similarity"))
     norm_a = vec_norm(values_a)
     norm_b = vec_norm(values_b)
-    if norm_a < EPS or norm_b < EPS:
+    if norm_a == 0.0 or norm_b == 0.0:
         return 0.0
     return dot / (norm_a * norm_b)

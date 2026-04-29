@@ -139,39 +139,6 @@ class PatternSynthesizer:
             method=method,
         )
 
-    def synthesize_from_set(
-        self, patterns: List[SemanticPattern], method: str = "interpolation"
-    ) -> SynthesisResult:
-        """Синтез из набора паттернов."""
-        if not patterns:
-            raise ValueError("No patterns provided for synthesis")
-        if len(patterns) == 1:
-            return self.evolve(patterns[0])
-
-        if method == "interpolation":
-            total_weight = len(patterns)
-            res_d = dual_number(patterns[0].vector, patterns[0].singular).scale(1.0 / total_weight)
-            for i in range(1, len(patterns)):
-                res_d = res_d.add(
-                    dual_number(patterns[i].vector, patterns[i].singular).scale(1.0 / total_weight)
-                )
-            new_vec = CoreVector(cast(list[float], res_d.form))
-            new_velocity = float(cast(float, res_d.velocity))
-        elif method == "blending":
-            res_d = dual_number(patterns[0].vector, patterns[0].singular)
-            for i in range(1, len(patterns)):
-                res_d = res_d.multiply(dual_number(patterns[i].vector, patterns[i].singular))
-            new_vec = CoreVector(cast(list[float], res_d.form))
-            new_velocity = float(cast(float, res_d.velocity))
-        else:
-            raise ValueError(f"Unknown synthesis method: {method}")
-
-        return SynthesisResult(
-            pattern=self._create_pattern(new_vec, new_velocity, method),
-            velocity_magnitude=new_velocity,
-            method=method,
-        )
-
 
 if __name__ == "__main__":
     # Quick test

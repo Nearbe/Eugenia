@@ -12,7 +12,7 @@
 #  ╚═══════════════════════════════════╝
 from collections.abc import Iterable
 
-from .L import L
+from core.operators.L import L
 
 
 def pattern_pyramid_depth(values) -> float:

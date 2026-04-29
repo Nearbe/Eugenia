@@ -14,14 +14,11 @@
 from dataclasses import dataclass
 from typing import List, Tuple
 
-from core.linear_algebra import (
+from core.linear.linear_algebra import (
     CoreMatrix,
     CoreVector,
-    dot,
     mat_vec,
     mean,
-    scalar_multiply,
-    to_matrix,
     to_vector,
 )
 from nucleus.cross_layer_compressor import compress_layer, cross_layer_pattern
@@ -53,8 +50,7 @@ class DeterministicKnowledgeCore:
             layer = compress_layer(matrix, self.k)
             vector = layer["U"]
             singular = layer["S"]
-            first_col = [row[0] for row in vector if row]
-            phase = mean(first_col)
+            phase = mean(vector[0]) if vector and len(vector) > 0 and isinstance(vector[0], (list, tuple)) else mean(to_vector(vector))
             pattern = DeterministicPattern(vector=vector, singular=singular, phase=phase)
             all_patterns.append(pattern)
             if len(all_patterns) > 1:
@@ -93,6 +89,8 @@ class DeterministicKnowledgeCore:
         return f"d{self.d_model}_k{self.k}_sig{total_singular:.6f}_ph{phase:.4f}"
 
     def verify_determinism(self, x, n_tests: int = 10) -> Tuple[bool, float]:
+        if not self.patterns:
+            return True, 0.0
         first = self.forward(x)
         max_diff = 0.0
         for _ in range(max(n_tests - 1, 0)):

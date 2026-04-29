@@ -4,6 +4,16 @@
 rules from Universe/Math/10_Бесконечность.md and 12_Алгебра_процентов.md.
 """
 
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
 from __future__ import annotations
 
 from dataclasses import dataclass

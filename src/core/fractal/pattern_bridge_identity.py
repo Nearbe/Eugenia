@@ -12,8 +12,8 @@
 #  ╚═══════════════════════════════════╝
 from collections.abc import Iterable
 
-from .L import L
-from .linear_algebra import EPSILON, mean, to_vector, variance
+from ..linear.linear_algebra import mean, to_vector, variance
+from ..operators.L import L
 
 
 def pattern_bridge_identity(values) -> dict:
@@ -29,7 +29,7 @@ def pattern_bridge_identity(values) -> dict:
     levels = [L(float(value)) for value in vector]
     level_variance = float(variance(levels))
     return {
-        "bridge_identity": level_variance < EPSILON,
+        "bridge_identity": level_variance == 0.0,
         "variance": level_variance,
         "mean_spine_level": float(mean(levels)),
     }

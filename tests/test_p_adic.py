@@ -1,16 +1,26 @@
-import math
-
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
 import pytest
 
-from core import p_adic_distance, v2_adic_valuation
+from core.foundations.logarithmic_axis import LOG_POSITIVE_INFINITY
+from core.metrics.p_adic_distance import p_adic_distance
+from core.number_theory.v2_adic_valuation import v2_adic_valuation
 
 
 def test_v2_zero_has_infinite_valuation():
-    assert math.isinf(v2_adic_valuation(0)) and v2_adic_valuation(0) > 0
+    assert v2_adic_valuation(0) == LOG_POSITIVE_INFINITY
 
 
 @pytest.mark.parametrize(
-    (value, expected),
+    ("value", "expected"),
     [
         (1, 0.0),
         (2, 1.0),

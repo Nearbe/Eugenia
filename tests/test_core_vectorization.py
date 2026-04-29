@@ -10,8 +10,16 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core import D, delta_distance, euclidean_distance, vector_delta
-from core.vectorization import is_scalar, is_vector, map_scalar_or_vector, zip_vectors
+from core.foundations.vectorization import (
+    is_scalar,
+    is_vector,
+    map_scalar_or_vector,
+    vector_delta,
+    zip_vectors,
+)
+from core.metrics.delta_distance import delta_distance
+from core.metrics.euclidean_distance import euclidean_distance
+from core.operators.D import D
 
 
 def test_scalar_and_vector_contracts_are_explicit():

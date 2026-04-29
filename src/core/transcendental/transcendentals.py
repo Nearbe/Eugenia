@@ -1,5 +1,15 @@
 """Computed transcendental values used by numerical series."""
 
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
 PI_TERMS = 16
 E_TERMS = 24
 MACHIN_FIVE = 5.0

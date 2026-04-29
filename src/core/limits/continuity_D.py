@@ -11,7 +11,7 @@
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
 from .continuity_error import continuity_error
-from .D import D
+from ..operators.D import D
 
 
 def continuity_D(x_sequence, x_limit: float | None = None) -> float:

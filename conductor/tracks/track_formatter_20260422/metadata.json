@@ -1,8 +1,0 @@
-{
-  "track_id": "track_formatter_20260422",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-04-22T09:30:00Z",
-  "updated_at": "2026-04-22T09:30:00Z",
-  "description": "Создать Formatter для приведения Python-кода к inline-формату с детерминированными инструментами и чётким неймингом"
-}

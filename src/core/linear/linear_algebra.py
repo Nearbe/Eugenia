@@ -20,13 +20,10 @@ import random
 from collections.abc import Iterable
 from typing import TypeAlias
 
-from .constants import EPS
 from .mat_norm import mat_norm
 from .vec_norm import vec_norm
-from .vec_normalize import vec_normalize
 
 Number: TypeAlias = int | float
-EPSILON = EPS
 F32_BYTES = 4
 INT8_MIN = -128
 INT8_MAX = 127
@@ -119,7 +116,7 @@ class CoreMatrix(list):
     def shape(self) -> tuple[int, int]:
         row_count = len(self)
         col_count = len(self[0]) if row_count else 0
-        return (row_count, col_count)
+        return row_count, col_count
 
     @property
     def size(self) -> int:
@@ -231,7 +228,7 @@ def shape(values) -> tuple[int, ...]:
             if not isinstance(row, Iterable) or isinstance(row, (str, bytes)):
                 raise ValueError("matrix rows must be iterable")
             matrix_rows.append(list(row))
-        return (len(matrix_rows), _validate_rectangular_rows(matrix_rows))
+        return len(matrix_rows), _validate_rectangular_rows(matrix_rows)
     return (len(rows),)
 
 
@@ -278,13 +275,9 @@ def euclidean_distance(vector_a, vector_b) -> float:
 
 def cosine_similarity(vector_a, vector_b) -> float:
     denominator = norm(vector_a) * norm(vector_b)
-    if denominator < EPSILON:
+    if denominator == 0.0:
         return 0.0
     return dot(vector_a, vector_b) / denominator
-
-
-def normalize(vector) -> CoreVector:
-    return CoreVector(vec_normalize(to_vector(vector)))
 
 
 def linspace(start: Number, stop: Number, count: int) -> CoreVector:
@@ -387,7 +380,7 @@ def max_abs(values) -> float:
 
 def deterministic_vector(seed_text: str, size: int) -> CoreVector:
     rng = random.Random(seed_text)
-    return normalize(rng.random() for _ in range(size))
+    return CoreVector(rng.random() for _ in range(size))
 
 
 def deterministic_matrix(seed_text: str, rows: int, cols: int, scale: float = 1.0) -> CoreMatrix:
@@ -411,7 +404,7 @@ def matrix_norm(matrix) -> float:
 def quantize_int8(values, scale: float | None = None) -> bytes:
     vector = to_vector(values)
     actual_scale = scale if scale not in (None, 0.0) else max_abs(vector)
-    if actual_scale < EPSILON:
+    if actual_scale == 0.0:
         return bytes([0 for _ in vector])
     encoded = bytearray()
     for value in vector:

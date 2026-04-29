@@ -10,9 +10,9 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from .L import L
-from .linear_algebra import diff, linspace, mean, std, to_vector
-from .ridge_to_percentage import ridge_to_percentage
+from core.linear.linear_algebra import diff, linspace, mean, std, to_vector
+from core.operators.L import L
+from core.percentage.ridge_to_percentage import ridge_to_percentage
 
 PROFILE_SIZE = 64
 TOP_JUMP_COUNT = 5

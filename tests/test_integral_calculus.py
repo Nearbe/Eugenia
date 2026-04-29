@@ -41,7 +41,7 @@ def test_antiderivative_adds_constant_by_u_addition():
 
 
 def test_definite_integral_is_difference_of_antiderivative_states():
-    assert definite_integral(cubic_antiderivative, 1, 3) == pytest.approx(8.0)
+    assert definite_integral(cubic_antiderivative, 1, 3) == pytest.approx(26.0 / 3.0)
 
 
 def test_branched_integral_is_compressed_primitive_path():
@@ -57,4 +57,4 @@ def test_compressed_integral_is_branched_primitive_path():
 
 
 def test_integral_on_log_depth_weights_by_spine_state():
-    assert integral_on_log_depth(square, spine_level(3)) == pytest.approx(64.0)
+    assert integral_on_log_depth(square, spine_level(3)) == pytest.approx(512.0)

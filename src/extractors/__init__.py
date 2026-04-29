@@ -11,7 +11,7 @@ Usage:
     weights = extractor.extract_tensor("layer.weight")
 
     # Extract correlations (SVD + correlation analysis)
-    from src.extractors import CorrelationExtractor
+    from src.extractors imports CorrelationExtractor
     extractor = CorrelationExtractor("model.gguf")
     report = extractor.extract_all()
 

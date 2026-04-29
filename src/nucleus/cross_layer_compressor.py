@@ -13,7 +13,7 @@
 #  ╚═══════════════════════════════════╝
 import random
 
-from core.linear_algebra import CoreMatrix, CoreVector, matmul, to_matrix
+from core.linear.linear_algebra import CoreMatrix, CoreVector, matmul, to_matrix
 from nucleus.correlation_compressor import _compose, _core_decompose
 
 DEFAULT_RANDOM_SEED = 42

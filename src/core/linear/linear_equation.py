@@ -20,11 +20,11 @@ from ..foundations.u_algebra import add, branch, compress, divide, is_omega, mul
 
 
 class LinearEquationState(StrEnum):
-    """Possible states of a U-linear equation."""
+    """Possible states of a U-linear equation realization."""
 
     UNIQUE = "unique"
-    FREE = "free"
-    CONTRADICTION = "contradiction"
+    LIFE_PERSPECTIVE = "life_perspective"
+    IMPOSSIBLE_REALIZATION = "impossible_realization"
 
 
 @dataclass(frozen=True)
@@ -56,7 +56,7 @@ class LinearEquation:
         return add(add(id_part, branch_part), compress_part)
 
     def solve(self) -> LinearEquationSolution:
-        """Solve the equation according to the U-degeneration rule."""
+        """Solve the equation according to potential/realization alignment."""
         return solve_linear_equation(
             c_id=self.c_id,
             c_branch=self.c_branch,
@@ -81,6 +81,6 @@ def solve_linear_equation(
     coefficient = linear_coefficient(c_id, c_branch, c_compress)
     if is_omega(coefficient):
         if is_omega(target):
-            return LinearEquationSolution(LinearEquationState.FREE)
-        return LinearEquationSolution(LinearEquationState.CONTRADICTION)
+            return LinearEquationSolution(LinearEquationState.LIFE_PERSPECTIVE)
+        return LinearEquationSolution(LinearEquationState.IMPOSSIBLE_REALIZATION)
     return LinearEquationSolution(LinearEquationState.UNIQUE, divide(target, coefficient))

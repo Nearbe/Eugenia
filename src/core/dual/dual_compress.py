@@ -1,7 +1,18 @@
-"""Dual compression: (x+vε) : D(Id) = (x/2) + (v/2)ε."""
+"""Dual compression compatibility wrapper."""
 
-from .constants import D_ID
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
+from ..foundations.dual_number import dual_number
 
 
 def dual_compress(x, v):
-    return float(x) / D_ID, float(v) / D_ID
+    """Return components of ``H(x + vε)``."""
+    return dual_number(x, v).compress().as_tuple()

@@ -17,13 +17,12 @@ import struct
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
-from core.linear_algebra import (
+from core.linear.linear_algebra import (
     CoreMatrix,
     CoreVector,
     cosine_similarity,
     dot,
     mean,
-    norm,
     outer,
     scalar_multiply,
     to_vector,

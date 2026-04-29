@@ -17,9 +17,10 @@ import random
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
-from core.linear_algebra import CoreVector, cosine_similarity, euclidean_distance, linspace, mean, norm, std, to_vector
+from core.linear.linear_algebra import CoreVector, cosine_similarity, linspace, norm, to_vector
+from core.metrics.euclidean_distance import euclidean_distance
 
-EPSILON = 1.0e-10
+POTENTIAL_SPAN = 0.0
 DEFAULT_RANDOM_SEED = 42
 
 
@@ -48,10 +49,10 @@ class GeometricExtractor:
         min_value = min(flat)
         max_value = max(flat)
         span = max_value - min_value
-        if span > EPSILON:
+        if span != POTENTIAL_SPAN:
             flat = CoreVector((value - min_value) / span for value in flat)
         else:
-            flat = CoreVector(0.0 for _ in flat)
+            flat = CoreVector(POTENTIAL_SPAN for _ in flat)
 
         thresholds = linspace(0.0, 1.0, self.n_thresholds)
         binary_profiles: list[float] = []
@@ -78,7 +79,7 @@ class GeometricExtractor:
         betti_signature = CoreVector(b0_list + b1_list)
 
         total_abs = sum(abs(value) for value in flat)
-        capacity = max(abs(value) for value in flat) / (total_abs + EPSILON) if flat else 0.0
+        capacity = max(abs(value) for value in flat) / total_abs if flat and total_abs != POTENTIAL_SPAN else POTENTIAL_SPAN
         phase_signature = CoreVector(math.atan2(value, index + 1.0) for index, value in enumerate(flat[:10]))
 
         return GeometricProfile(
@@ -144,9 +145,18 @@ class UniversalGeometricClassifier:
     def _similarity(self, p1: GeometricProfile, p2: GeometricProfile) -> float:
         corr = cosine_similarity(p1.binary_histogram, p2.binary_histogram)
         jump_sim = 1.0 - min(abs(len(p1.jump_events) - len(p2.jump_events)), 10) / 10.0
-        betti_norm = norm(p1.betti_signature) + EPSILON
-        betti_sim = 1.0 - euclidean_distance(p1.betti_signature, p2.betti_signature) / betti_norm
-        cap_sim = 1.0 - abs(p1.capacity - p2.capacity) / (max(p1.capacity, p2.capacity) + EPSILON)
+        betti_norm = norm(p1.betti_signature)
+        betti_sim = (
+            1.0 - euclidean_distance(p1.betti_signature, p2.betti_signature) / betti_norm
+            if betti_norm != POTENTIAL_SPAN
+            else 1.0
+        )
+        cap_norm = max(p1.capacity, p2.capacity)
+        cap_sim = (
+            1.0 - abs(p1.capacity - p2.capacity) / cap_norm
+            if cap_norm != POTENTIAL_SPAN
+            else 1.0
+        )
         return 0.4 * corr + 0.2 * jump_sim + 0.3 * betti_sim + 0.1 * cap_sim
 
     def get_compressed_size(self) -> int:

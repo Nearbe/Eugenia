@@ -11,7 +11,7 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from .linear_algebra import to_vector
+from core.linear.linear_algebra import to_vector
 
 
 def solenoid_pattern_distance(pattern_a, pattern_b) -> float:

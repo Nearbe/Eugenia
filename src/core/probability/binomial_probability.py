@@ -1,4 +1,4 @@
-"""Binomial probability helper."""
+"""Compatibility wrapper for binomial branch probability."""
 
 #  Copyright (c) 2026.
 #  ╔═══════════════════════════════════╗
@@ -10,10 +10,9 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-import math
+from .branch_probability import binomial_probability as branch_binomial_probability
 
 
-def binomial_probability(k: int, n: int) -> float:
-    if k < 0 or n < 0 or k > n:
-        return 0.0
-    return math.comb(n, k) / (2 ** n)
+def binomial_probability(k: int, n: int) -> object:
+    """Return the numeric value of ``P(k)=C(n,k):Dⁿ(Id)``."""
+    return branch_binomial_probability(k, n).value

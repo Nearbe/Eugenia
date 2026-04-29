@@ -1,5 +1,4 @@
-"""Dual power: ``(x+vε)ⁿ = xⁿ + n·xⁿ⁻¹·v·ε``."""
-
+"""Dual power compatibility wrapper."""
 
 #  Copyright (c) 2026.
 #  ╔═══════════════════════════════════╗
@@ -11,8 +10,9 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
+from ..foundations.dual_number import dual_number
+
+
 def dual_power(x, v, n=2):
-    """Return the primal and ε coefficient of ``(x + vε) ** n``."""
-    exponent = float(n)
-    x_value = float(x)
-    return x_value**exponent, exponent * (x_value ** (exponent - 1.0)) * float(v)
+    """Return components of ``(x + vε) ** n``."""
+    return dual_number(x, v).power(n).as_tuple()

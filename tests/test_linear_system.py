@@ -52,4 +52,5 @@ def test_operator_matrix_combines_explicit_branch_and_base_maps():
         base_part=[[3, 4], [5, 6]],
     )
 
-    assert matrix == pytest.approx([[5.0, 4.0], [5.0, 10.0]])
+    assert matrix[0] == pytest.approx([5.0, 4.0])
+    assert matrix[1] == pytest.approx([5.0, 10.0])

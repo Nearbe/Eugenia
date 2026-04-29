@@ -10,14 +10,15 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from .vectorization import is_vector, zip_vectors
-from .v2_adic_valuation import v2_adic_valuation
+from ..foundations.logarithmic_axis import LOG_POSITIVE_INFINITY
+from ..foundations.vectorization import is_vector, zip_vectors
+from ..number_theory.v2_adic_valuation import v2_adic_valuation
 
 
 def _p_adic_scalar(a: float | int, b: float | int) -> float:
     """Return the 2-adic distance ``2**(-v₂(a-b))`` for scalar values."""
     valuation = v2_adic_valuation(float(a) - float(b))
-    if valuation == float("inf"):
+    if valuation == LOG_POSITIVE_INFINITY:
         return 0.0
     return 2.0 ** (-valuation)
 

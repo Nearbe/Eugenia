@@ -15,10 +15,9 @@
 #  ╚═══════════════════════════════════╝
 from collections.abc import Iterable
 
-from .constants import D_ID
-from .vectorization import map_scalar_or_vector
+from ..foundations.u_algebra import compress
 
 
-def H(x: float | int | Iterable[float]) -> float | list[float]:
+def H(x: float | int | Iterable[float]) -> object:
     """Return the U-system compression of ``x``."""
-    return map_scalar_or_vector(x, lambda value: value / D_ID, name="H input")
+    return compress(x)

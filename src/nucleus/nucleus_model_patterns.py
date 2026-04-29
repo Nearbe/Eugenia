@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from core.linear_algebra import CoreMatrix, CoreVector, mean, norm, to_matrix
+from core.linear.linear_algebra import CoreMatrix, CoreVector, to_matrix
 from nucleus.cross_layer_compressor import compress_layer, decompress_layer
 
 DEFAULT_RANDOM_SEED = 42

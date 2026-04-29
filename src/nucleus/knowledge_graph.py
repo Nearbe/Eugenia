@@ -13,11 +13,11 @@
 #  ╚═══════════════════════════════════╝
 import random
 
-from core.delta_distance import delta_distance
-from core.encode_solenoid_trajectory import encode_solenoid_trajectory
-from core.linear_algebra import CoreMatrix, CoreVector, cosine_similarity, mean, to_matrix
-from core.p_adic_distance import p_adic_distance
-from core.solenoid_distance import solenoid_distance
+from core.fractal.encode_solenoid_trajectory import encode_solenoid_trajectory
+from core.fractal.solenoid_distance import solenoid_distance
+from core.linear.linear_algebra import CoreMatrix, CoreVector, cosine_similarity, mean, to_matrix
+from core.metrics.delta_distance import delta_distance
+from core.metrics.p_adic_distance import p_adic_distance
 from nucleus.cross_layer_compressor import compress_layer
 
 DEFAULT_RANDOM_SEED = 42
@@ -56,17 +56,15 @@ class KnowledgeGraph:
         cos_sim = cosine_similarity(v1, v2)
 
         delta_dist = delta_distance(v1, v2)
-        if isinstance(delta_dist, list):
-            delta_dist = mean(delta_dist)
+        delta_val = mean(delta_dist) if isinstance(delta_dist, list) else float(delta_dist)
 
         p_adic_dist = p_adic_distance(v1, v2)
-        if isinstance(p_adic_dist, list):
-            p_adic_dist = mean(p_adic_dist)
+        p_adic_val = mean(p_adic_dist) if isinstance(p_adic_dist, list) else float(p_adic_dist)
 
         traj1 = encode_solenoid_trajectory(mean(v1), depth=30)
         traj2 = encode_solenoid_trajectory(mean(v2), depth=30)
         sol_dist = solenoid_distance(traj1, traj2)
-        return float(0.5 * cos_sim + 0.3 * (1.0 / (1.0 + delta_dist)) + 0.2 * sol_dist)
+        return float(0.5 * cos_sim + 0.3 * (1.0 / (1.0 + delta_val)) + 0.15 * sol_dist + 0.05 * (1.0 / (1.0 + p_adic_val)))
 
 
 def extract_knowledge_structure():

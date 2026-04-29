@@ -10,7 +10,7 @@
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
 from .continuity_error import continuity_error
-from .H import H
+from ..operators.H import H
 
 
 def continuity_H(x_sequence, x_limit: float | None = None) -> float:

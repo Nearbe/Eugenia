@@ -1,8 +1,16 @@
-import math
-
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
 import pytest
 
-from core.linear_algebra import CoreMatrix, dot, mat_vec, matmul, matrix_shape, norm, to_matrix
+from core.linear.linear_algebra import CoreMatrix, dot, mat_vec, matmul, matrix_shape, norm, to_matrix
 
 
 def test_vector_norm_and_dot():

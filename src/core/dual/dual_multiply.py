@@ -1,5 +1,18 @@
-"""Dual multiplication: (x₁+v₁ε) ⊗ (x₂+v₂ε) = (x₁x₂) + (x₁v₂+x₂v₁)ε."""
+"""Dual multiplication compatibility wrapper."""
+
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
+from ..foundations.dual_number import dual_number
 
 
 def dual_multiply(x1, v1, x2, v2):
-    return float(x1) * float(x2), float(x1) * float(v2) + float(x2) * float(v1)
+    """Return components of ``(x₁+v₁ε) ⊗ (x₂+v₂ε)``."""
+    return dual_number(x1, v1).multiply(dual_number(x2, v2)).as_tuple()

@@ -9,8 +9,8 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from .L import L
-from .vectorization import is_scalar, zip_vectors
+from ..foundations.vectorization import is_scalar, zip_vectors
+from ..operators.L import L
 
 
 def delta_distance(a, b):

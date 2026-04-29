@@ -19,6 +19,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from core.foundations.lo_shu import LoShuAddress
+
 from .encode_solenoid_trajectory import encode_solenoid_trajectory
 from .solenoid_distance import solenoid_distance
 from .solenoid_similarity import solenoid_similarity
@@ -95,3 +97,8 @@ class SolenoidPoint:
         if self.history == other.history:
             return 0.0
         return d_adic_norm_from_depth(self.shared_depth(other))
+
+
+def solenoid_seed_from_lo_shu(address: LoShuAddress) -> SolenoidPoint:
+    """Unfold a Lo Shu address into the first solenoid point."""
+    return SolenoidPoint(phase=address.phase, history=address.history)

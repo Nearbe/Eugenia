@@ -16,14 +16,13 @@ for compatibility with the existing core/nucleus code.
 #  ╚═══════════════════════════════════╝
 from collections.abc import Iterable
 
-from .constants import D_ID
-from .vectorization import map_scalar_or_vector
+from ..foundations.u_algebra import branch
 
 
-def D(x: float | int | Iterable[float]) -> float | list[float]:
+def D(x: float | int | Iterable[float]) -> object:
     """Return the U-system branching of ``x``.
 
     ``D`` is the linear scale operator from Universe/Math/13: ``D(a)=2a``.
     Vector inputs are lifted component-wise by the shared vectorization rule.
     """
-    return map_scalar_or_vector(x, lambda value: value * D_ID, name="D input")
+    return branch(x)

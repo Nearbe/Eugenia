@@ -1,4 +1,4 @@
-"""isinf — check if infinite."""
+"""isinf — check whether a value is algebraic Π/Fullness."""
 #  Copyright (c) 2026.
 #  ╔═══════════════════════════════════╗
 #  ║ Русский  ║ English    ║ Ελληνικά  ║
@@ -9,8 +9,8 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from .constants import PI_INFINITY
+from ..foundations.infinity import is_fullness
 
 
-def isinf(x: float) -> bool:
-    return x == PI_INFINITY or x == -PI_INFINITY
+def isinf(x: object) -> bool:
+    return is_fullness(x)

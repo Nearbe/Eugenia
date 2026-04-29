@@ -19,6 +19,8 @@ except non-zero values that round to zero are treated as valuation ``0``.
 #  ╚═══════════════════════════════════╝
 import math
 
+from ..foundations.logarithmic_axis import LOG_POSITIVE_INFINITY
+
 
 def _coerce_integer_delta(val: float | int) -> int:
     value = float(val)
@@ -30,11 +32,11 @@ def _coerce_integer_delta(val: float | int) -> int:
     return rounded if rounded != 0 else 1
 
 
-def v2_adic_valuation(val: float | int) -> float:
-    """Return ``v₂(val)`` with ``v₂(0) = +inf`` semantics."""
+def v2_adic_valuation(val: float | int) -> float | object:
+    """Return ``v₂(val)`` with ``v₂(0) = +∞`` on the U-logarithmic axis."""
     integer = _coerce_integer_delta(val)
     if integer == 0:
-        return float("inf")
+        return LOG_POSITIVE_INFINITY
     value = abs(integer)
     exponent = 0
     while value % 2 == 0:

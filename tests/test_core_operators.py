@@ -1,8 +1,20 @@
-import math
-
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
 import pytest
 
-from core import D, H, L, safe_divide
+from core.foundations.logarithmic_axis import LOG_NEGATIVE_INFINITY
+from core.foundations.safe_divide import safe_divide
+from core.operators.D import D
+from core.operators.H import H
+from core.operators.L import L
 
 
 def test_d_h_are_inverse_on_scalars():
@@ -22,7 +34,7 @@ def test_l_binary_depth_and_zero_sentinel():
     assert L(2) == pytest.approx(1.0)
     assert L(8) == pytest.approx(3.0)
     assert L(-4) == pytest.approx(2.0)
-    assert math.isinf(L(0)) and L(0) < 0
+    assert L(0) == LOG_NEGATIVE_INFINITY
     assert L([1, 2, 4]) == pytest.approx([0.0, 1.0, 2.0])
 
 

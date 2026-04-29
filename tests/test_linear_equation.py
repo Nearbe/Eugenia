@@ -32,15 +32,15 @@ def test_solve_linear_equation_uses_u_division_by_coefficient():
     assert equation.evaluate(solution.value) == pytest.approx(22.0)
 
 
-def test_zero_coefficient_and_zero_target_is_free_state():
+def test_potential_coefficient_and_potential_target_is_life_perspective():
     solution = solve_linear_equation(c_id=0, c_branch=0, c_compress=0, target=OMEGA)
 
-    assert solution.state == LinearEquationState.FREE
+    assert solution.state == LinearEquationState.LIFE_PERSPECTIVE
     assert solution.value is None
 
 
-def test_zero_coefficient_and_nonzero_target_is_contradiction():
+def test_potential_coefficient_and_fixed_target_is_impossible_realization():
     solution = solve_linear_equation(c_id=0, c_branch=0, c_compress=0, target=5)
 
-    assert solution.state == LinearEquationState.CONTRADICTION
+    assert solution.state == LinearEquationState.IMPOSSIBLE_REALIZATION
     assert solution.value is None

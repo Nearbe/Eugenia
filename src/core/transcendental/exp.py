@@ -9,7 +9,8 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from .constants import OMEGA, PI_INFINITY
+from ..foundations.constants import OMEGA
+from ..foundations.infinity import PI, is_fullness
 
 # Thresholds for exponential function to avoid overflow
 EXP_LARGE_POSITIVE_THRESHOLD = 700
@@ -18,18 +19,19 @@ EXP_LARGE_NEGATIVE_THRESHOLD = -700
 EXP_TAYLOR_TERMS = 50
 
 
-def exp(x: float) -> float:
-    if x == PI_INFINITY:
-        return PI_INFINITY
-    if x == OMEGA:
+def exp(x: object) -> object:
+    if is_fullness(x):
+        return PI
+    x_value = float(x)
+    if x_value == OMEGA:
         return 1.0
-    if x > EXP_LARGE_POSITIVE_THRESHOLD:
-        return PI_INFINITY
-    if x < EXP_LARGE_NEGATIVE_THRESHOLD:
+    if x_value > EXP_LARGE_POSITIVE_THRESHOLD:
+        return PI
+    if x_value < EXP_LARGE_NEGATIVE_THRESHOLD:
         return 0.0
     result = 1.0
     term = 1.0
     for i in range(1, EXP_TAYLOR_TERMS):
-        term *= x / i
+        term *= x_value / i
         result += term
     return result

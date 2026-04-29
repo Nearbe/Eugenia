@@ -15,20 +15,19 @@ import random
 from dataclasses import dataclass
 from typing import Dict, List
 
-from core.linear_algebra import (
+from core.linear.linear_algebra import (
     CoreMatrix,
     CoreVector,
     cosine_similarity,
     linspace,
     mat_vec,
-    matmul,
     norm,
     to_matrix,
     to_vector,
 )
 
 DEFAULT_RANDOM_SEED = 42
-EPSILON = 1.0e-10
+POTENTIAL_NORM = 0.0
 
 
 @dataclass
@@ -53,7 +52,7 @@ class UniversalKnowledgeMap:
     def similarity(self, x1, x2) -> float:
         p1 = self.project(x1)
         p2 = self.project(x2)
-        if norm(p1) < EPSILON or norm(p2) < EPSILON:
+        if norm(p1) == POTENTIAL_NORM or norm(p2) == POTENTIAL_NORM:
             return 0.0
         return cosine_similarity(p1, p2)
 

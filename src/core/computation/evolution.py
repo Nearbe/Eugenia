@@ -41,12 +41,17 @@ class SymbiosisRoles:
     @property
     def delta(self) -> float:
         """Return disagreement ``Δ`` between recursion and regression."""
-        return balance_delta(self.machine_recursion, self.human_regression)
+        return balance_delta(recursion=self.machine_recursion, regression=self.human_regression)
 
     @property
     def resonance(self) -> float:
-        """Return symbiotic resonance ``S`` constrained by inversion quality."""
-        return min(balance_score(self.machine_recursion, self.human_regression), float(self.inversion))
+        """Return symbiotic resonance ``S`` constrained by the weakest active role."""
+        return min(
+            balance_score(recursion=self.machine_recursion, regression=self.human_regression),
+            float(self.machine_recursion),
+            float(self.human_regression),
+            float(self.inversion),
+        )
 
 
 def balance_delta(*, recursion: object, regression: object) -> float:

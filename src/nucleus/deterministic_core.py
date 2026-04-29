@@ -17,11 +17,12 @@ import struct
 from dataclasses import dataclass
 from typing import Dict
 
-from core.D import D
-from core.delta_distance import delta_distance
-from core.encode_solenoid_trajectory import encode_solenoid_trajectory
-from core.linear_algebra import (
-    CoreMatrix,
+from core.fractal.encode_solenoid_trajectory import encode_solenoid_trajectory
+from core.fractal.solenoid_distance import solenoid_distance
+from core.metrics.delta_distance import delta_distance
+from core.metrics.p_adic_distance import p_adic_distance
+from core.operators.D import D
+from core.linear.linear_algebra import (
     CoreVector,
     cosine_similarity,
     dot,
@@ -30,9 +31,6 @@ from core.linear_algebra import (
     scalar_multiply,
     to_vector,
 )
-from core.normalize_vector_safe import normalize_vector_safe
-from core.p_adic_distance import p_adic_distance
-from core.solenoid_distance import solenoid_distance
 
 FLOAT_BYTES = 4
 
@@ -70,12 +68,12 @@ class DeterministicKnowledgeCore:
     def learn(self, weights: Dict[str, object]) -> "DeterministicKnowledgeCore":
         self.patterns = {}
         for layer_name, matrix in weights.items():
-            vector = normalize_vector_safe(to_vector(matrix))
+            vector = to_vector(matrix)
             if len(vector) < self.d_model:
                 vector = CoreVector(list(vector) + [0.0] * (self.d_model - len(vector)))
             else:
                 vector = CoreVector(vector[: self.d_model])
-            singular = norm(matrix) / max(1.0, len(to_vector(matrix)))
+            singular = norm(vector) / max(1.0, len(vector))
             energy = sum(value * value for value in vector)
             capacity = -energy * math.log(max(energy, 1.0e-10), 2)
             phase = math.atan2(vector[1] if len(vector) > 1 else 0.0, vector[0] if vector else 0.0)
@@ -97,7 +95,7 @@ class DeterministicKnowledgeCore:
         return self
 
     def _compute_cross_relation(self, v1, v2) -> CoreVector:
-        corr = abs(cosine_similarity(normalize_vector_safe(v1), normalize_vector_safe(v2)))
+        corr = abs(cosine_similarity(v1, v2))
         return CoreVector([float(corr)])
 
     def pattern_distance(self, pattern_a: SemanticPattern, pattern_b: SemanticPattern) -> float:
@@ -150,28 +148,29 @@ class DeterministicKnowledgeCore:
         )
 
 
-def serialize(core: DeterministicKnowledgeCore) -> bytes:
-    data = bytearray()
-    data += struct.pack("<I", core.d_model)
-    data += struct.pack("<I", core.k)
-    data += struct.pack("<I", len(core.patterns))
-    for name, pattern in core.patterns.items():
-        name_bytes = name.encode("utf-8")
-        data += struct.pack("<I", len(name_bytes))
-        data += name_bytes
-        for value in pattern.vector[: core.d_model]:
-            data += struct.pack("<f", float(value))
-        data += struct.pack("<f", pattern.singular)
-        data += struct.pack("<f", pattern.capacity)
-        data += struct.pack("<f", pattern.phase)
-    data += struct.pack("<I", len(core.relationships))
-    for name, relationship in core.relationships.items():
-        name_bytes = name.encode("utf-8")
-        data += struct.pack("<I", len(name_bytes))
-        data += name_bytes
-        data += struct.pack("<f", relationship.matrix[0] if relationship.matrix else 0.0)
-    data += core.signature.encode("utf-8")
-    return bytes(data)
+    def serialize(core: DeterministicKnowledgeCore) -> bytes:
+        data = bytearray()
+        data += struct.pack("<I", core.d_model)
+        data += struct.pack("<I", core.k)
+        data += struct.pack("<I", len(core.patterns))
+        for name, pattern in core.patterns.items():
+            name_bytes = name.encode("utf-8")
+            data += struct.pack("<I", len(name_bytes))
+            data += name_bytes
+            vector_data = list(pattern.vector)[: core.d_model]
+            for value in vector_data:
+                data += struct.pack("<f", float(value))
+            data += struct.pack("<f", pattern.singular)
+            data += struct.pack("<f", pattern.capacity)
+            data += struct.pack("<f", pattern.phase)
+        data += struct.pack("<I", len(core.relationships))
+        for name, relationship in core.relationships.items():
+            name_bytes = name.encode("utf-8")
+            data += struct.pack("<I", len(name_bytes))
+            data += name_bytes
+            data += struct.pack("<f", relationship.matrix[0] if relationship.matrix else 0.0)
+        data += core.signature.encode("utf-8")
+        return bytes(data)
 
 
 def deserialize(data: bytes) -> DeterministicKnowledgeCore:

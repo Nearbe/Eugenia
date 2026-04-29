@@ -1,4 +1,4 @@
-"""Base-2 logarithm helper."""
+"""Base-2 logarithm on the U-logarithmic axis."""
 
 #  Copyright (c) 2026.
 #  ╔═══════════════════════════════════╗
@@ -12,8 +12,18 @@
 #  ╚═══════════════════════════════════╝
 import math
 
+from ..foundations.constants import OMEGA
+from ..foundations.infinity import is_fullness
+from ..foundations.logarithmic_axis import LOG_NEGATIVE_INFINITY, LOG_POSITIVE_INFINITY
 
-def log2(x: float) -> float:
-    if x <= 0:
-        return float("-inf")
-    return math.log2(float(x))
+
+def log2(x: object) -> object:
+    """Return ``L`` in base 2 with algebraic boundaries for Ω and Π."""
+    if is_fullness(x):
+        return LOG_POSITIVE_INFINITY
+    if x == OMEGA:
+        return LOG_NEGATIVE_INFINITY
+    x_value = float(x)
+    if x_value <= OMEGA:
+        return LOG_NEGATIVE_INFINITY
+    return math.log2(x_value)

@@ -1,5 +1,18 @@
-"""Dual addition: (x₁+v₁ε) ⊕ (x₂+v₂ε) = (x₁+x₂) + (v₁+v₂)ε."""
+"""Dual addition compatibility wrapper."""
+
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
+from ..foundations.dual_number import dual_number
 
 
 def dual_add(x1, v1, x2, v2):
-    return float(x1) + float(x2), float(v1) + float(v2)
+    """Return components of ``(x₁+v₁ε) ⊕ (x₂+v₂ε)``."""
+    return dual_number(x1, v1).add(dual_number(x2, v2)).as_tuple()

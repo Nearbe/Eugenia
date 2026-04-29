@@ -13,6 +13,18 @@ DEEP ANALYSIS: LLM Problems through Universal Geometric Lens
 """
 
 
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
+
+
 # ============================================================
 # LLM ПРОБЛЕМЫ И ГЕОМЕТРИЧЕСКОЕ РЕШЕНИЕ
 # ============================================================
@@ -176,7 +188,7 @@ def new_architecture():
     │           GEOMETRIC LLM (G-LLM)                     │
     ├─────────────────────────────────────────────────────┤
     │                                                     │
-    │  Input → [Geometry Extractor] → Pattern Space      │
+    │  Input → [Geometry Extractor] → Pattern Space       │
     │           ↓                                         │
     │         [Universal Knowledge Map]                   │
     │           ↓                                         │
@@ -187,15 +199,15 @@ def new_architecture():
     │  Key differences from Transformer:                  │
     │                                                     │
     │  1. No tokenization! → Geometric profiles           │
-    │  2. No attention! → Geometry matching              │
-    │  3. No weights! → Pattern matrix (fixed)           │
-    │  4. Deterministic! → Same input → Same output      │
+    │  2. No attention! → Geometry matching               │
+    │  3. No weights! → Pattern matrix (fixed)            │
+    │  4. Deterministic! → Same input → Same output       │
     │                                                     │
     │  Properties:                                        │
     │  - 1000x compression of knowledge                   │
     │  - 100x faster inference                            │
     │  - Works on ANY modality                            │
-    │  - True geometric understanding                    │
+    │  - True geometric understanding                     │
     │                                                     │
     └─────────────────────────────────────────────────────┘
     """)

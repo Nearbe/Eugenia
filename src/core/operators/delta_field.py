@@ -21,10 +21,10 @@ log2 because the sweep configuration is based on the binary spine ``D^8``.
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from .bounds import clamp_pixel
-from .constants import DELTA_MAX, DELTA_MIN, PIXEL_MAX, PIXEL_MIN, PIXEL_SCALE
-from .log2 import log2
-from .vectorization import map_scalar_or_vector
+from ..foundations.bounds import clamp_pixel
+from ..foundations.constants import DELTA_MAX, DELTA_MIN, PIXEL_MAX, PIXEL_MIN, PIXEL_SCALE
+from ..foundations.vectorization import map_scalar_or_vector
+from ..transcendental.log2 import log2
 
 
 def _delta_field_scalar(x: float | int) -> float:

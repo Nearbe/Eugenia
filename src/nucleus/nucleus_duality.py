@@ -23,7 +23,7 @@ import math
 from dataclasses import dataclass
 from typing import Tuple
 
-from core.linear_algebra import EPSILON
+POTENTIAL_BALANCE = 0.0
 
 
 @dataclass
@@ -35,13 +35,13 @@ class DualState:
 
     @property
     def delta(self) -> float:
-        """Relative balance Δ = ln(|Π / Ω|) with potential handling."""
-        if abs(self.omega) < EPSILON and abs(self.pi) < EPSILON:
+        """Relative balance Δ = ln(|Π / Ω|) with exact potential handling."""
+        if self.omega == POTENTIAL_BALANCE and self.pi == POTENTIAL_BALANCE:
             return 0.0
-        if abs(self.omega) < EPSILON:
-            return float("inf") if self.pi >= 0.0 else float("-inf")
+        if self.omega == POTENTIAL_BALANCE:
+            return float("inf") if self.pi >= POTENTIAL_BALANCE else float("-inf")
         ratio = self.pi / self.omega
-        if abs(ratio) < EPSILON:
+        if ratio == POTENTIAL_BALANCE:
             return float("-inf")
         return math.log(abs(ratio))
 

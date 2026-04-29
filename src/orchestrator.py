@@ -1,3 +1,14 @@
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
+
 # ╔════════════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║─Документация модуля──────────────────────────────────────────────────────────────────────────────║
 # ║────────────────────────────────────────────────────────────────────────────────────────────────────║
@@ -25,7 +36,7 @@ from typing import Optional
 import torch
 from tqdm import tqdm
 
-from core.sweep import compute_sweep as compute_sweep_internal
+from core.sweep.compute_sweep import compute_sweep as compute_sweep_internal
 from data.loaders import load_cmyk_image, load_fashion_data, load_mnist_data, load_png_image
 from models.config import CONFIG
 from models.types import SweepResults, VisualizationData

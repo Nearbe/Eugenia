@@ -16,7 +16,7 @@ import struct
 from dataclasses import dataclass
 from typing import Dict, List
 
-from core.linear_algebra import CoreMatrix, CoreVector, cosine_similarity, mat_vec, to_vector
+from core.linear.linear_algebra import CoreMatrix, CoreVector, cosine_similarity, mat_vec, to_vector
 from nucleus.cross_layer_compressor import compress_layer
 
 FLOAT_BYTES = 4

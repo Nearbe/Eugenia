@@ -10,7 +10,8 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from .L import L
+from core.operators.L import L
+
 from .spine_value import spine_value
 
 

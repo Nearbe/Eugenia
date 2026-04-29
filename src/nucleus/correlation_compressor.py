@@ -15,7 +15,7 @@ import math
 import random
 from struct import pack
 
-from core.linear_algebra import (
+from core.linear.linear_algebra import (
     CoreMatrix,
     CoreVector,
     deterministic_matrix,
@@ -23,7 +23,6 @@ from core.linear_algebra import (
     max_abs,
     norm,
     quantize_int8,
-    scalar_multiply,
     subtract,
     to_matrix,
 )

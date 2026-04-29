@@ -1,9 +1,20 @@
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
 import math
 
 import pytest
 
-from core import delta_field, inverse_delta_field
-from core.delta_field import DELTA_MAX, DELTA_MIN, PIXEL_MAX, PIXEL_MIN
+from core.foundations.constants import DELTA_MAX, DELTA_MIN, PIXEL_MAX, PIXEL_MIN
+from core.operators.delta_field import delta_field
+from core.operators.inverse_delta_field import inverse_delta_field
 
 
 def test_delta_field_boundaries_are_finite_and_pinned():

@@ -18,15 +18,9 @@ Universe/Math/13, the public core contract is:
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from .constants import D_ID, EPS, OMEGA
+from .u_algebra import divide
 
 
-def safe_divide(a: float | int, b: float | int) -> float:
+def safe_divide(a: object, b: object) -> object:
     """Divide ``a`` by ``b`` under the U-system branching convention."""
-    denominator = float(b)
-    numerator = float(a)
-    if denominator == OMEGA:
-        return numerator * D_ID
-    if abs(denominator - D_ID) < EPS:
-        return numerator / D_ID
-    return numerator / denominator
+    return divide(a, b)

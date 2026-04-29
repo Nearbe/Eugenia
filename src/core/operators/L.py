@@ -1,9 +1,4 @@
-"""Binary spine depth ``L(x) = log2(|x|)``.
-
-The strict scalar domain is non-zero finite magnitude.  ``x == 0`` is kept as a
-compatibility sentinel for the U-system potential ``Ω`` and returns ``-inf``.
-Iterable inputs are mapped element-wise and return a plain list.
-"""
+"""Logarithmic spine depth ``L`` from Universe/Math/08."""
 #  Copyright (c) 2026.
 #  ╔═══════════════════════════════════╗
 #  ║ Русский  ║ English    ║ Ελληνικά  ║
@@ -14,18 +9,27 @@ Iterable inputs are mapped element-wise and return a plain list.
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from collections.abc import Iterable
 
-from .log2 import log2
-from .vectorization import map_scalar_or_vector
+from ..foundations.constants import OMEGA
+from ..foundations.infinity import is_fullness
+from ..foundations.logarithmic_axis import LOG_NEGATIVE_INFINITY, LOG_POSITIVE_INFINITY
+from ..foundations.spine import SpineLevel
+from ..foundations.vectorization import map_scalar_or_vector
+from ..transcendental.log2 import log2
 
 
-def _L_scalar(x: float | int) -> float:
-    if x == 0:
-        return float("-inf")
+def _L_scalar(x: float | int) -> object:
+    if float(x) == OMEGA:
+        return LOG_NEGATIVE_INFINITY
     return log2(abs(float(x)))
 
 
-def L(x: float | int | Iterable[float]) -> float | list[float]:
-    """Return the binary depth for a scalar or list-like vector."""
+def L(x: object) -> object:
+    """Return the U-logarithmic depth for scalar, vector, spine, Ω or Π."""
+    if isinstance(x, SpineLevel):
+        return float(x.level())
+    if is_fullness(x):
+        return LOG_POSITIVE_INFINITY
+    if x == OMEGA:
+        return LOG_NEGATIVE_INFINITY
     return map_scalar_or_vector(x, _L_scalar, name="L input")

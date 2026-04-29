@@ -10,8 +10,8 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from .complex_delta_field import complex_delta_field
-from .linear_algebra import cosine_similarity
+from core.linear.linear_algebra import cosine_similarity
+from core.operators.complex_delta_field import complex_delta_field
 
 
 def pattern_similarity_from_complex(values_a, values_b) -> float:
