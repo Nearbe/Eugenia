@@ -25,7 +25,12 @@ htmlcov/
 
 # IDE and editor files
 .vscode/
-.idea/
+.idea/*
+!.idea/copyright/
+!.idea/modules.xml
+!.idea/Eugenia.iml
+!.idea/vcs.xml
+!.idea/misc.xml
 *.swp
 *.swo
 *.tmp
@@ -54,3 +59,4 @@ wheels/
 /output/
 /data/
 /actions-runner/
+.gitnexus
