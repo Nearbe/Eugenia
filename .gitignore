@@ -31,6 +31,7 @@ htmlcov/
 !.idea/Eugenia.iml
 !.idea/vcs.xml
 !.idea/misc.xml
+!.idea/inspectionProfiles/
 *.swp
 *.swo
 *.tmp
