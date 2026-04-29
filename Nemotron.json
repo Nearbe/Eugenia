@@ -1,0 +1,61 @@
+{
+  "identifier": "@local:nematron",
+  "name": "Nematron",
+  "changed": true,
+  "operation": {
+    "fields": [
+      {
+        "key": "ext.virtualModel.customField.nvidia.nemotron3Super.lowEffort",
+        "value": false
+      },
+      {
+        "key": "llm.prediction.llama.cpuThreads",
+        "value": 16
+      },
+      {
+        "key": "llm.prediction.temperature",
+        "value": 1
+      },
+      {
+        "key": "llm.prediction.contextOverflowPolicy",
+        "value": "rollingWindow"
+      },
+      {
+        "key": "ext.virtualModel.customField.nvidia.nemotron3Super.truncateThinkingHistory",
+        "value": true
+      },
+      {
+        "key": "llm.prediction.minPSampling",
+        "value": {
+          "checked": true,
+          "value": 0
+        }
+      },
+      {
+        "key": "llm.prediction.topPSampling",
+        "value": {
+          "checked": true,
+          "value": 1
+        }
+      },
+      {
+        "key": "llm.prediction.topKSampling",
+        "value": 1
+      },
+      {
+        "key": "llm.prediction.llama.presencePenalty",
+        "value": {
+          "checked": true,
+          "value": 0
+        }
+      },
+      {
+        "key": "llm.prediction.systemPrompt",
+        "value": "Russian Language. Русский язык."
+      }
+    ]
+  },
+  "load": {
+    "fields": []
+  }
+}

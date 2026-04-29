@@ -1,0 +1,19 @@
+<component name="CopyrightManager">
+  <settings default="Εὐγένιος">
+    <module2copyright>
+      <element module="All" copyright="Εὐγένιος" />
+    </module2copyright>
+    <LanguageOptions name="Python">
+      <option name="addBlankAfter" value="false" />
+      <option name="block" value="false" />
+      <option name="lenBefore" value="100" />
+      <option name="lenAfter" value="100" />
+    </LanguageOptions>
+    <LanguageOptions name="__TEMPLATE__">
+      <option name="addBlankAfter" value="false" />
+      <option name="block" value="false" />
+      <option name="lenBefore" value="10" />
+      <option name="lenAfter" value="10" />
+    </LanguageOptions>
+  </settings>
+</component>

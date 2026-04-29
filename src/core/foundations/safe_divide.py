@@ -1,0 +1,32 @@
+"""Safe division with the documented U-system zero contract.
+
+``a : Ω`` is not treated as IEEE division by zero here.  Following
+Universe/Math/13, the public core contract is:
+
+* ``safe_divide(a, 0) == D(a) == 2a``;
+* ``safe_divide(a, D(Id)) == H(a) == a/2``;
+* otherwise use ordinary real division.
+"""
+
+#  Copyright (c) 2026.
+#  ╔═══════════════════════════════════╗
+#  ║ Русский  ║ English    ║ Ελληνικά  ║
+#  ║══════════║════════════║═══════════║
+#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
+#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
+#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
+#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
+#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
+#  ╚═══════════════════════════════════╝
+from .constants import D_ID, EPS, OMEGA
+
+
+def safe_divide(a: float | int, b: float | int) -> float:
+    """Divide ``a`` by ``b`` under the U-system branching convention."""
+    denominator = float(b)
+    numerator = float(a)
+    if denominator == OMEGA:
+        return numerator * D_ID
+    if abs(denominator - D_ID) < EPS:
+        return numerator / D_ID
+    return numerator / denominator

@@ -1,0 +1,1 @@
+"""Solenoid core modules."""
