@@ -10,7 +10,7 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core.foundations.complex_plane import ComplexState
+from core.states.complex_plane import ComplexState
 from core.geometry.u_geometry import (
     Ball,
     Circle,

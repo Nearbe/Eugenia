@@ -16,7 +16,7 @@ for compatibility with the existing core/nucleus code.
 #  ╚═══════════════════════════════════╝
 from collections.abc import Iterable
 
-from ..foundations.u_algebra import branch
+from ..algebra import branch
 
 
 def D(x: float | int | Iterable[float]) -> object:

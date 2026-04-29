@@ -12,7 +12,7 @@ import math
 
 import pytest
 
-from core.foundations.constants import DELTA_MAX, DELTA_MIN, PIXEL_MAX, PIXEL_MIN
+from core.constants.constants import DELTA_MAX, DELTA_MIN, PIXEL_MAX, PIXEL_MIN
 from core.operators.delta_field import delta_field
 from core.operators.inverse_delta_field import inverse_delta_field
 

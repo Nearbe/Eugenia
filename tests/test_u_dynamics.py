@@ -10,7 +10,7 @@
 #  ╚═══════════════════════════════════╝
 from pytest import approx
 
-from core.dynamics.u_dynamics import (
+from core.dynamics import (
     DynamicStep,
     invariant_measure_holds,
     lyapunov_exponent,
@@ -18,7 +18,7 @@ from core.dynamics.u_dynamics import (
     oscillation,
     period_cycle,
 )
-from core.foundations.spine import spine_level
+from core.states.spine import spine_level
 
 
 def test_orbit_applies_d_and_h_word_in_order():

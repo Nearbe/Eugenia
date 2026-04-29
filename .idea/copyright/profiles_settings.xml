@@ -3,5 +3,9 @@
     <module2copyright>
       <element module="All" copyright="Εὐγένιος" />
     </module2copyright>
+    <LanguageOptions name="__TEMPLATE__">
+      <option name="addBlankAfter" value="false" />
+      <option name="block" value="false" />
+    </LanguageOptions>
   </settings>
 </component>

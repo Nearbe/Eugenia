@@ -8,7 +8,7 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from core.foundations.lo_shu import (
+from core.utils.lo_shu import (
     Direction,
     active_principles,
     compute_equations,

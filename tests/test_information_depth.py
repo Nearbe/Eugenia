@@ -9,11 +9,11 @@
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
 
-from core.combinatorics.branching import BranchingLevel
-from core.foundations.constants import OMEGA
-from core.foundations.infinity import PI
-from core.foundations.logarithmic_axis import LOG_POSITIVE_INFINITY
-from core.foundations.spine import spine_level
+from core.combinatorics import BranchingLevel
+from core.constants.constants import OMEGA
+from core.infinity.infinity import PI
+from core.utils.logarithmic_axis import LOG_POSITIVE_INFINITY
+from core.states.spine import spine_level
 from core.information.information_depth import (
     address_cost,
     address_state,

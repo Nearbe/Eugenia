@@ -1,5 +1,3 @@
-"""Limit of compression: ``lim (a : Dⁿ(Id)) = Ω``."""
-
 #  Copyright (c) 2026.
 #  ╔═══════════════════════════════════╗
 #  ║ Русский  ║ English    ║ Ελληνικά  ║
@@ -10,20 +8,19 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from ..foundations.constants import OMEGA
-from ..foundations.u_algebra import divide
+
+from core.constants.constants import OMEGA
+from core.algebra import compress
 
 
-def compression_term(value: object, depth: int) -> object:
-    """Return finite compression term ``value : Dⁿ(Id)``."""
-    if depth < 0:
-        raise ValueError("compression depth must be non-negative")
-    result = value
-    for _ in range(depth):
-        result = divide(result, 2.0)
-    return result
+def compression_term(a: float, n: int) -> float:
+    """Return Hⁿ(a)."""
+    value = a
+    for _ in range(n):
+        value = float(compress(value))
+    return value
 
 
-def limit_compression(value: object) -> float:
-    """Return the algebraic attractor of infinite compression: Ω."""
+def limit_compression(a: float) -> float:
+    """Return lim Hⁿ(a) = Ω."""
     return OMEGA

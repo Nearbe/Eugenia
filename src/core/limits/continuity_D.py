@@ -1,5 +1,3 @@
-"""Continuity check for D operator."""
-
 #  Copyright (c) 2026.
 #  ╔═══════════════════════════════════╗
 #  ║ Русский  ║ English    ║ Ελληνικά  ║
@@ -10,9 +8,13 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
+
+from core.algebra import branch
 from .continuity_error import continuity_error
-from ..operators.D import D
 
 
-def continuity_D(x_sequence, x_limit: float | None = None) -> float:
-    return continuity_error(D, x_sequence, x_limit=x_limit)
+def continuity_D(sequence: list[float]) -> float:
+    """Return continuity error for branching D."""
+    if not sequence:
+        return 0.0
+    return continuity_error(branch, sequence, sequence[-1])

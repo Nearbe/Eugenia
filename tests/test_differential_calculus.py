@@ -10,7 +10,7 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core.calculus.differential import (
+from core.calculus import (
     branched_derivative,
     branching_growth_velocity,
     chain_derivative,
@@ -20,8 +20,8 @@ from core.calculus.differential import (
     power_derivative,
     second_derivative,
 )
-from core.foundations.dual_number import DualNumber
-from core.foundations.u_algebra import branch, compress, power
+from core.states.dual_number import DualNumber
+from core.algebra import branch, compress, power
 
 
 def square(value: object) -> object:
@@ -41,12 +41,16 @@ def test_derivative_is_extracted_from_dual_hidden_component():
 
 def test_branching_derivative_scales_by_branch_class():
     assert branched_derivative(square_derivative, 3) == pytest.approx(24.0)
-    assert branched_derivative(square_derivative, 3) == pytest.approx(2.0 * square_derivative(branch(3)))
+    assert branched_derivative(square_derivative, 3) == pytest.approx(
+        2.0 * square_derivative(branch(3))
+    )
 
 
 def test_compressed_derivative_scales_by_inverse_branch_class():
     assert compressed_derivative(square_derivative, 8) == pytest.approx(4.0)
-    assert compressed_derivative(square_derivative, 8) == pytest.approx(square_derivative(compress(8)) / 2.0)
+    assert compressed_derivative(square_derivative, 8) == pytest.approx(
+        square_derivative(compress(8)) / 2.0
+    )
 
 
 def test_chain_rule_multiplies_outer_and_inner_speeds():

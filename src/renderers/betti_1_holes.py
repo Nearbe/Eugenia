@@ -78,11 +78,12 @@ about topological changes in the image structure.
 """
 
 import matplotlib
-import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from scipy import ndimage
+
+from core.linear.linear_algebra import linspace
+from core.topology.label_2d import label_2d
 from utils.viz_utils import save_visualization, get_symbol_label
 
 
@@ -100,7 +101,7 @@ def render(data, sweep, out_dir):
     number_of_classes = data.number_of_classes
 
     # Generate thresholds for topology analysis
-    topology_thresholds = np.linspace(
+    topology_thresholds = linspace(
         configuration["topology_threshold_min"],
         configuration["topology_threshold_max"],
         configuration["topology_num_thresholds"],
@@ -109,44 +110,58 @@ def render(data, sweep, out_dir):
     # Compute holes for each class and threshold
     plt.figure(figsize=configuration["figure_betti"])
 
-    # Pre-convert symbols to numpy to avoid redundant .cpu().numpy() calls
-    symbol_numpy = [s.cpu().numpy() for s in symbols]
-
     for class_id in range(number_of_classes):
-        symbol = symbol_numpy[class_id]
+        symbol = symbols[class_id]
         holes_counts = []
 
         for threshold_value in topology_thresholds:
-            binary_mask = (symbol > threshold_value).astype(np.uint8)
+            # Create binary mask: 1 where value > threshold, else 0
+            binary_mask = [
+                [1 if float(pixel) > float(threshold_value) else 0 for pixel in row]
+                for row in symbol
+            ]
 
             # Pad to detect holes (regions not connected to boundary)
-            padded_mask = np.pad(binary_mask, configuration["topology_padding"], mode="constant")
+            padding = configuration.get("topology_padding", 1)
+            padded_mask = (
+                [[0] * (len(binary_mask[0]) + 2 * padding)]
+                + [[0] * padding + row + [0] * padding for row in binary_mask]
+                + [[0] * (len(binary_mask[0]) + 2 * padding)]
+            )
 
             # Invert and label connected components
             # Padded background is 0, becomes 1 in inverted_mask
             # All background regions (including holes) are now 1s
-            inverted_mask = 1 - padded_mask
-            labeled_background, num_regions = ndimage.label(inverted_mask)
+            inverted_mask = [[1 - pixel for pixel in row] for row in padded_mask]
+            labeled_background = label_2d(inverted_mask)
 
             # Find regions that touch the boundary (these are not holes)
-            boundary_labels = (
-                set(labeled_background[0, :])
-                | set(labeled_background[-1, :])
-                | set(labeled_background[:, 0])
-                | set(labeled_background[:, -1])
-            )
+            boundary_labels = set()
+            # Top and bottom rows
+            for label in labeled_background[0]:
+                boundary_labels.add(label)
+            for label in labeled_background[-1]:
+                boundary_labels.add(label)
+            # Left and right columns
+            for row in labeled_background:
+                boundary_labels.add(row[0])
+                boundary_labels.add(row[-1])
 
             # 0 is the foreground label, discard it
             boundary_labels.discard(0)
 
-            # Total background regions - boundary regions = internal holes
-            actual_holes = max(
-                configuration["topology_holes_min"], num_regions - len(boundary_labels)
-            )
+            # Count unique labels (excluding 0 and boundary)
+            unique_labels = set()
+            for row in labeled_background:
+                for label in row:
+                    if label > 0 and label not in boundary_labels:
+                        unique_labels.add(label)
+
+            actual_holes = max(configuration.get("topology_holes_min", 0), len(unique_labels))
             holes_counts.append(actual_holes)
 
         plt.plot(
-            topology_thresholds,
+            list(topology_thresholds),
             holes_counts,
             "s-",
             ms=configuration.get("marker_size", 2),

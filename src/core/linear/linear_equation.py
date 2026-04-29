@@ -15,8 +15,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
-from ..foundations.constants import OMEGA
-from ..foundations.u_algebra import add, branch, compress, divide, is_omega, multiply
+from ..constants.constants import OMEGA
+from ..algebra import add, branch, compress, divide, is_omega, multiply
 
 
 class LinearEquationState(StrEnum):

@@ -10,7 +10,7 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core.computation.evolution import (
+from core.computation import (
     EvolutionCycle,
     SymbiosisRoles,
     balance_delta,

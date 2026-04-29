@@ -18,7 +18,7 @@ from typing import Any
 
 import networkx as nx
 
-from core.foundations.safe_divide import safe_divide
+from core import safe_divide
 from core.operators.D import D
 from core.operators.gradient_magnitude import gradient_magnitude
 

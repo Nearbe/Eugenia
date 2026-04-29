@@ -1,5 +1,3 @@
-"""Limit of branching: ``lim Dⁿ(Id) = Π``."""
-
 #  Copyright (c) 2026.
 #  ╔═══════════════════════════════════╗
 #  ║ Русский  ║ English    ║ Ελληνικά  ║
@@ -10,20 +8,20 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from ..foundations.infinity import PI
-from ..foundations.u_algebra import branch
+
+from core.constants.constants import OMEGA
+from core.infinity.infinity import PI
+from core.algebra import branch
 
 
-def branching_term(depth: int) -> object:
-    """Return finite branch term ``Dⁿ(Id)``."""
-    if depth < 0:
-        raise ValueError("branching depth must be non-negative")
-    result: object = 1.0
-    for _ in range(depth):
-        result = branch(result)
-    return result
+def branching_term(n: int) -> float:
+    """Return Dⁿ(Id)."""
+    value = 1.0
+    for _ in range(n):
+        value = float(branch(value))
+    return value
 
 
-def limit_branching() -> object:
-    """Return the algebraic attractor of infinite branching: Π."""
+def limit_branching() -> float:
+    """Return lim Dⁿ(Id) = Π."""
     return PI

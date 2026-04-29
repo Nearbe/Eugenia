@@ -1,5 +1,5 @@
 """Spine value: D^n(Id) = 2^n."""
-from core.foundations.logarithmic_axis import LogInfinity
+from core import LogInfinity
 
 
 def spine_value(n):

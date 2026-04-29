@@ -10,9 +10,9 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core.foundations.constants import D_ID, OMEGA
-from core.foundations.spine import SpineLevel, root, spine_level
-from core.foundations.u_algebra import IDENTITY, branch, compress, divide, power
+from core.constants.constants import D_ID, OMEGA
+from core.states.spine import SpineLevel, root, spine_level
+from core.algebra import IDENTITY, branch, compress, divide, power
 from core.operators.L import L
 
 

@@ -1,18 +1,17 @@
-#  Copyright (c) 2026.
-#  ╔═══════════════════════════════════╗
+#  Copyright (c)2026.
+#  ╔═══════════════════════════════╗
 #  ║ Русский  ║ English    ║ Ελληνικά  ║
-#  ║══════════║════════════║═══════════║
+#  ║═════════║═══════════║═══════════║
 #  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
 #  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
 #  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
-#  ╚═══════════════════════════════════╝
+#  ╚═══════════════════════════════╝
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
 
-import numpy as np
-import torch
+from core.linear.linear_algebra import CoreMatrix, CoreVector
 
 
 @dataclass
@@ -22,15 +21,15 @@ class VisualizationData:
     Используется дата класс вместо словаря для лучшей типизации.
     """
 
-    device: torch.device
-    original_data: torch.Tensor
-    delta_field: torch.Tensor
-    labels: torch.Tensor
+    device: str
+    original_data: CoreMatrix
+    delta_field: CoreMatrix
+    labels: CoreVector
     height: int
     width: int
     channels: int
     number_of_classes: int
-    symbol_delta_fields: List[torch.Tensor]
+    symbol_delta_fields: List[CoreMatrix]
     is_color: bool
     color_space: str
     symbol_names: Optional[List[str]]
@@ -57,11 +56,11 @@ class VisualizationData:
 @dataclass
 class SweepResults:
     """
-    Контейнер для результатов алгоритма развертки.
+    Контейнер для результатов алгоритма развёртки.
     """
 
-    thresholds: np.ndarray
-    occupancy_rates: torch.Tensor
+    thresholds: CoreVector
+    occupancy_rates: CoreMatrix
     jump_events: List[Any]
     jump_count: int
 

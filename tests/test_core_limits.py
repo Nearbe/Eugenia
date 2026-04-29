@@ -10,9 +10,9 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core.foundations.constants import OMEGA
-from core.foundations.dual_number import EPSILON_SQUARED
-from core.foundations.infinity import PI
+from core.constants.constants import OMEGA
+from core.states.dual_number import EPSILON_SQUARED
+from core.infinity.infinity import PI
 from core.limits.continuity_D import continuity_D
 from core.limits.continuity_H import continuity_H
 from core.limits.continuity_error import continuity_error

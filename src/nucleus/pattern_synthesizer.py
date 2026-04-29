@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import List, cast
 
 from core.linear.linear_algebra import CoreVector
-from core.foundations.dual_number import dual_number
+from core import dual_number
 from core.transcendental.ln import ln
 from core.transcendental.transcendentals import _arctan_inverse, pi
 from nucleus.deterministic_core import SemanticPattern

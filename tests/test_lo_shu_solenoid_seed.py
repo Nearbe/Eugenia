@@ -8,7 +8,7 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from core.foundations.lo_shu import LoShuOperation, digit_address, operation_address
+from core.utils.lo_shu import LoShuOperation, digit_address, operation_address
 from core.fractal.solenoid_point import solenoid_seed_from_lo_shu
 from nucleus.nucleus_seed_system import deterministic_vector, lo_shu_seed_from_tokens
 

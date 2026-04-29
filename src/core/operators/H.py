@@ -15,7 +15,7 @@
 #  ╚═══════════════════════════════════╝
 from collections.abc import Iterable
 
-from ..foundations.u_algebra import compress
+from ..algebra import compress
 
 
 def H(x: float | int | Iterable[float]) -> object:

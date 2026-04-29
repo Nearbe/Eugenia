@@ -10,9 +10,9 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from ..foundations.bounds import clamp_pixel
-from ..foundations.complex_plane import complex_state, is_complex_fullness
-from ..foundations.constants import PIXEL_MAX, PIXEL_MIN
+from ..constants.bounds import clamp_pixel
+from ..states.complex_plane import complex_state, is_complex_fullness
+from ..constants.constants import PIXEL_MAX, PIXEL_MIN
 
 
 def inverse_complex_delta_field(z) -> float:

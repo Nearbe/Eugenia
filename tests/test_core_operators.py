@@ -10,8 +10,8 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core.foundations.logarithmic_axis import LOG_NEGATIVE_INFINITY
-from core.foundations.safe_divide import safe_divide
+from core.utils.logarithmic_axis import LOG_NEGATIVE_INFINITY
+from core.utils.safe_divide import safe_divide
 from core.operators.D import D
 from core.operators.H import H
 from core.operators.L import L

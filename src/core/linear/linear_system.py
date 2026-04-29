@@ -15,8 +15,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
-from ..foundations.constants import OMEGA
-from ..foundations.u_algebra import add, branch, compress, is_omega
+from ..constants.constants import OMEGA
+from ..algebra import add, branch, compress, is_omega
 from .linear_algebra import CoreMatrix, CoreVector, mat_vec, to_matrix, to_vector
 
 

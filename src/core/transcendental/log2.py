@@ -12,9 +12,9 @@
 #  ╚═══════════════════════════════════╝
 import math
 
-from ..foundations.constants import OMEGA
-from ..foundations.infinity import is_fullness
-from ..foundations.logarithmic_axis import LOG_NEGATIVE_INFINITY, LOG_POSITIVE_INFINITY
+from ..constants.constants import OMEGA
+from ..infinity.infinity import is_fullness
+from ..utils.logarithmic_axis import LOG_NEGATIVE_INFINITY, LOG_POSITIVE_INFINITY
 
 
 def log2(x: object) -> object:

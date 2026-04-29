@@ -19,7 +19,7 @@ except non-zero values that round to zero are treated as valuation ``0``.
 #  ╚═══════════════════════════════════╝
 import math
 
-from ..foundations.logarithmic_axis import LOG_POSITIVE_INFINITY
+from ..utils.logarithmic_axis import LOG_POSITIVE_INFINITY
 
 
 def _coerce_integer_delta(val: float | int) -> int:

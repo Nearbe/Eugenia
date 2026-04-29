@@ -9,7 +9,7 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from ..foundations.vectorization import is_scalar, zip_vectors
+from ..utils.vectorization import is_scalar, zip_vectors
 from ..operators.L import L
 
 

@@ -1,0 +1,15 @@
+# Refactoring plan for math implementation
+
+## Current state (from findings.md)
+- src/core/algebra implements U-algebra but not fully aligned with Universe axioms
+- Constants: OMEGA = 0.0, D_ID = 2.0 (may need change)
+
+## Reflection points
+1. Id ≠ Ω currently - needs alignment
+2. Dual numbers use standard ε²=Ω instead of new Ω ≠ 0
+3. Operations don't match mathematical definitions
+
+## Tasks for subagent:
+- Read constants to see current values
+- Compare with Universe foundations
+- Identify specific changes needed

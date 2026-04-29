@@ -10,10 +10,10 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core.foundations.constants import D_ID, OMEGA
-from core.foundations.fullness_share import FullnessShare, fullness_share
-from core.foundations.infinity import PI
-from core.foundations.u_algebra import IDENTITY, add, branch, compress, divide, multiply
+from core.constants.constants import D_ID, OMEGA
+from core.states.fullness_share import FullnessShare, fullness_share
+from core.infinity.infinity import PI
+from core.algebra import IDENTITY, add, branch, compress, divide, multiply
 
 
 def test_absolute_fullness_stays_full_under_direct_compression():

@@ -10,7 +10,7 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from ..foundations.dual_number import dual_number
+from ..states.dual_number import dual_number
 
 
 def dual_branch(x, v):

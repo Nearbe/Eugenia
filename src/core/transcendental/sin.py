@@ -1,4 +1,5 @@
 """sin — sine via Taylor series."""
+
 #  Copyright (c) 2026.
 #  ╔═══════════════════════════════════╗
 #  ║ Русский  ║ English    ║ Ελληνικά  ║
@@ -9,10 +10,13 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
+from __future__ import annotations
+
 from .transcendentals import half_pi, pi, two_pi
 
 
-def sin(x):
+def sin(x: float) -> float:
+    """Return sine of x."""
     pi_value = pi()
     half_pi_value = half_pi()
     two_pi_value = two_pi()

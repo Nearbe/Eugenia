@@ -10,7 +10,7 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core.foundations.logarithmic_axis import LOG_POSITIVE_INFINITY
+from core.utils.logarithmic_axis import LOG_POSITIVE_INFINITY
 from core.metrics.p_adic_distance import p_adic_distance
 from core.number_theory.v2_adic_valuation import v2_adic_valuation
 

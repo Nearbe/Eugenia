@@ -10,7 +10,7 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core.foundations.fullness_share import FullnessShare
+from core.states.fullness_share import FullnessShare
 from core.probability.binomial_probability import binomial_probability as legacy_binomial_probability
 from core.probability.branch_probability import (
     branch_probability,

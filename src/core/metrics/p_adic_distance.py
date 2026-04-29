@@ -10,8 +10,8 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from ..foundations.logarithmic_axis import LOG_POSITIVE_INFINITY
-from ..foundations.vectorization import is_vector, zip_vectors
+from ..utils.logarithmic_axis import LOG_POSITIVE_INFINITY
+from ..utils.vectorization import is_vector, zip_vectors
 from ..number_theory.v2_adic_valuation import v2_adic_valuation
 
 

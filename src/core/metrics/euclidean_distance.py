@@ -9,7 +9,7 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from ..foundations.vectorization import vector_delta
+from ..utils.vectorization import vector_delta
 from ..transcendental.sqrt import sqrt
 
 

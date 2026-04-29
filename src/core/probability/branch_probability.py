@@ -15,9 +15,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
 
-from ..combinatorics.branching import binomial_coefficient, paths_count
-from ..foundations.fullness_share import FullnessShare, fullness_share
-from ..foundations.u_algebra import divide
+from ..combinatorics import binomial_coefficient, paths_count
+from ..states.fullness_share import FullnessShare, fullness_share
+from ..algebra import divide
 
 NO_BRANCHES: Final[int] = 0
 CERTAINTY: Final[float] = 1.0

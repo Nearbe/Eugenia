@@ -10,7 +10,7 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from ..foundations.infinity import PI
+from ..infinity.infinity import PI
 from .isinf import isinf
 
 

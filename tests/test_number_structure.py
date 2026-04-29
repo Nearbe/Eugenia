@@ -8,7 +8,7 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from core.foundations.spine import spine_level
+from core.states.spine import spine_level
 from core.number_theory.number_structure import (
     binary_address,
     branched_spine_gcd,

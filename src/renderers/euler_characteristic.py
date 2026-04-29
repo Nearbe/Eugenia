@@ -69,12 +69,13 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import numpy as np
-from scipy import ndimage
+
+from core.linear.linear_algebra import linspace, zeros
+from core.topology.label_2d import label_2d
 from utils.viz_utils import save_visualization
 
 
-def compute_topology(binary_mask: np.ndarray, padding: int = 1) -> tuple:
+def compute_topology(binary_mask, padding: int = 1) -> tuple:
     """
     Compute Betti-0 and Betti-1 for a binary mask.
 
@@ -82,25 +83,56 @@ def compute_topology(binary_mask: np.ndarray, padding: int = 1) -> tuple:
         (betti_0, betti_1)
     """
     # Betti-0: Connected components
-    _, b0 = ndimage.label(binary_mask)
+    labeled = label_2d(binary_mask)
+    b0 = len(set(label for row in labeled for label in row if label > 0))
 
     # Betti-1: Holes
-    padded = np.pad(binary_mask, padding, mode="constant")
-    inverted = 1 - padded
-    labeled_bg, num_bg = ndimage.label(inverted)
-
-    # Boundary labels are not holes
-    boundary_labels = (
-        set(labeled_bg[0, :])
-        | set(labeled_bg[-1, :])
-        | set(labeled_bg[:, 0])
-        | set(labeled_bg[:, -1])
+    # Pad the mask
+    padded = (
+        [[0] * (len(binary_mask[0]) + 2 * padding)]
+        + [[0] * padding + row + [0] * padding for row in binary_mask]
+        + [[0] * (len(binary_mask[0]) + 2 * padding)]
     )
+
+    # Invert and label connected components
+    inverted = [[1 - pixel for pixel in row] for row in padded]
+    labeled_bg = label_2d(inverted)
+
+    # Find regions that touch the boundary (these are not holes)
+    boundary_labels = set()
+    for label in labeled_bg[0]:
+        boundary_labels.add(label)
+    for label in labeled_bg[-1]:
+        boundary_labels.add(label)
+    for row in labeled_bg:
+        boundary_labels.add(row[0])
+        boundary_labels.add(row[-1])
+
     boundary_labels.discard(0)
 
-    b1 = max(0, num_bg - len(boundary_labels))
+    # Count unique internal labels (holes)
+    internal_labels = set()
+    for row in labeled_bg:
+        for label in row:
+            if label > 0 and label not in boundary_labels:
+                internal_labels.add(label)
+
+    b1 = len(internal_labels)
 
     return b0, b1
+
+
+def gradient(values) -> list:
+    """Compute gradient (derivative) of a list of values."""
+    result = []
+    for i in range(len(values)):
+        if i == 0:
+            result.append(values[1] - values[0] if len(values) > 1 else 0.0)
+        elif i == len(values) - 1:
+            result.append(values[-1] - values[-2])
+        else:
+            result.append((values[i + 1] - values[i - 1]) / 2.0)
+    return result
 
 
 def render(data, sweep, out_dir):
@@ -117,35 +149,37 @@ def render(data, sweep, out_dir):
     number_of_classes = data.number_of_classes
 
     # Generate thresholds for topology analysis
-    analysis_thresholds = np.linspace(
-        configuration["topology_threshold_min"],
-        configuration["topology_threshold_max"],
-        configuration["topology_num_thresholds"],
+    analysis_thresholds = list(
+        linspace(
+            configuration["topology_threshold_min"],
+            configuration["topology_threshold_max"],
+            configuration["topology_num_thresholds"],
+        )
     )
 
     # Accumulators for average metrics
-    avg_euler = np.zeros(len(analysis_thresholds))
-    avg_b0 = np.zeros(len(analysis_thresholds))
-    avg_b1 = np.zeros(len(analysis_thresholds))
-
-    # Pre-convert symbols to numpy to avoid redundant .cpu().numpy() calls
-    symbol_numpy = [s.cpu().numpy() for s in symbols]
+    avg_euler = [0.0] * len(analysis_thresholds)
+    avg_b0 = [0.0] * len(analysis_thresholds)
+    avg_b1 = [0.0] * len(analysis_thresholds)
 
     for t_idx, t_val in enumerate(analysis_thresholds):
         for class_id in range(number_of_classes):
-            symbol = symbol_numpy[class_id]
-            binary_mask = (symbol > t_val).astype(np.uint8)
+            symbol = symbols[class_id]
+            # Create binary mask
+            binary_mask = [
+                [1 if float(pixel) > float(t_val) else 0 for pixel in row] for row in symbol
+            ]
 
             b0, b1 = compute_topology(binary_mask, configuration["topology_padding"])
-
             avg_b0[t_idx] += b0
             avg_b1[t_idx] += b1
             avg_euler[t_idx] += b0 - b1
 
     # Average across all classes
-    avg_euler /= number_of_classes
-    avg_b0 /= number_of_classes
-    avg_b1 /= number_of_classes
+    n = float(number_of_classes)
+    avg_euler = [v / n for v in avg_euler]
+    avg_b0 = [v / n for v in avg_b0]
+    avg_b1 = [v / n for v in avg_b1]
 
     # Create figure with three panels
     plt.figure(figsize=configuration["figure_euler"])
@@ -172,7 +206,7 @@ def render(data, sweep, out_dir):
 
     # Panel 3: Topological Flux (|dchi/dDelta|)
     plt.subplot(1, 3, 3)
-    chi_derivative = np.abs(np.gradient(avg_euler, analysis_thresholds))
+    chi_derivative = [abs(v) for v in gradient(avg_euler)]
     plt.plot(analysis_thresholds, chi_derivative, color="darkorange", lw=2)
     plt.title("Topological Flux |d\u03c7/d\u0394|", fontsize=10)
     plt.xlabel("Threshold (Delta)")

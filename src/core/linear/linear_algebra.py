@@ -17,8 +17,8 @@ The formulas follow Universe/Essentials/Vectorization.md:
 from __future__ import annotations
 
 import random
-from collections.abc import Iterable
-from typing import TypeAlias
+from collections.abc import Iterable, Sequence
+from typing import TypeAlias, Any
 
 from .mat_norm import mat_norm
 from .vec_norm import vec_norm
@@ -29,7 +29,7 @@ INT8_MIN = -128
 INT8_MAX = 127
 
 
-def _validate_rectangular_rows(rows: list[list[object]]) -> int:
+def _validate_rectangular_rows(rows: Sequence[Sequence[object]]) -> int:
     """Return the common column count or raise on ragged matrices."""
     if not rows:
         return 0
@@ -43,10 +43,27 @@ def _validate_rectangular_rows(rows: list[list[object]]) -> int:
     return col_count
 
 
-class CoreVector(list):
+class CoreVector:
     """List-backed vector used by core/nucleus code."""
 
     dtype = float
+
+    def __init__(self, values=()):
+        self._data = [float(v) for v in values]
+
+    def __len__(self):
+        return len(self._data)
+
+    def __getitem__(self, item):
+        if isinstance(item, slice):
+            return CoreVector(self._data[item])
+        return self._data[item]
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __repr__(self):
+        return f"CoreVector({self._data})"
 
     @property
     def shape(self) -> tuple[int]:
@@ -60,62 +77,117 @@ class CoreVector(list):
     def nbytes(self) -> int:
         return len(self) * F32_BYTES
 
-    def __getitem__(self, item):
-        result = super().__getitem__(item)
-        return CoreVector(result) if isinstance(item, slice) else result
-
     def _compare(self, other, predicate) -> "CoreVector":
         other_values = to_vector(other)
         if not other_values:
             return CoreVector()
         if len(other_values) == 1 and len(self) != 1:
             pivot = other_values[0]
-            return CoreVector(1.0 if predicate(value, pivot) else 0.0 for value in self)
-        return CoreVector(1.0 if predicate(left, right) else 0.0 for left, right in zip(self, other_values))
+            return CoreVector(
+                1.0 if predicate(value, pivot) else 0.0 for value in self._data
+            )
+        return CoreVector(
+            1.0 if predicate(left, right) else 0.0
+            for left, right in zip(self._data, other_values)
+        )
 
-    def __ge__(self, other) -> "CoreVector":
+    def __ge__(self, other) -> Any:
         return self._compare(other, lambda left, right: left >= right)
 
-    def __gt__(self, other) -> "CoreVector":
+    def __gt__(self, other) -> Any:
         return self._compare(other, lambda left, right: left > right)
 
-    def __le__(self, other) -> "CoreVector":
+    def __le__(self, other) -> Any:
         return self._compare(other, lambda left, right: left <= right)
 
-    def __lt__(self, other) -> "CoreVector":
+    def __lt__(self, other) -> Any:
         return self._compare(other, lambda left, right: left < right)
 
+    def __sub__(self, other) -> "CoreVector":
+        other_values = to_vector(other)
+        if len(other_values) == 1:
+            pivot = float(other_values[0])
+            return CoreVector(v - pivot for v in self._data)
+        return CoreVector(float(l) - float(r) for l, r in zip(self._data, other_values))
+
     def tolist(self) -> list[float]:
-        return list(self)
+        return list(self._data)
 
     def copy(self) -> "CoreVector":
-        return CoreVector(self)
+        return CoreVector(self._data)
 
     def astype(self, _dtype) -> "CoreVector":
-        return CoreVector(float(value) for value in self)
+        return CoreVector(float(value) for value in self._data)
+
+    def flatten(self) -> "CoreVector":
+        """Return self (already 1D)."""
+        return self.copy()
+
+    def cpu(self) -> "CoreVector":
+        """Compatibility method - returns self since we're not using GPU."""
+        return self
+
+    def numpy(self) -> list:
+        """Compatibility method - returns the underlying list structure."""
+        return self.tolist()
+
+    def __eq__(self, other):
+        if hasattr(other, "tolist"):
+            return self.tolist() == other.tolist()
+        return self.tolist() == other
 
 
-class CoreMatrix(list):
+class CoreMatrix:
     """List-backed rectangular matrix used by core/nucleus code."""
 
     dtype = float
 
     def __init__(self, values=()):
-        rows: list[list[object]] = []
+        rows = []
         for row in values:
             if hasattr(row, "tolist"):
                 row = row.tolist()
             if isinstance(row, Iterable) and not isinstance(row, (str, bytes)):
-                rows.append(list(row))
+                rows.append([float(v) for v in row])
             else:
-                rows.append([row])
+                rows.append([float(row)])
         _validate_rectangular_rows(rows)
-        super().__init__(rows)
+        self._data = rows
+
+    def __len__(self):
+        return len(self._data)
+
+    def __getitem__(self, item):
+        if not isinstance(item, tuple):
+            result = self._data[item]
+            if isinstance(item, slice):
+                return CoreMatrix(result)
+            return result
+
+        row_selector, col_selector = item
+        selected_rows = self._data[row_selector]
+        row_is_scalar = isinstance(row_selector, int)
+        col_is_scalar = isinstance(col_selector, int)
+
+        if isinstance(row_selector, slice):
+            rows = selected_rows
+        else:
+            rows = [selected_rows]
+
+        if col_is_scalar:
+            column = CoreVector(row[col_selector] for row in rows)
+            return column[0] if row_is_scalar else column
+
+        sliced_rows = CoreMatrix([row[col_selector] for row in rows])
+        return sliced_rows[0] if row_is_scalar else sliced_rows
+
+    def __iter__(self):
+        return iter(self._data)
 
     @property
     def shape(self) -> tuple[int, int]:
-        row_count = len(self)
-        col_count = len(self[0]) if row_count else 0
+        row_count = len(self._data)
+        col_count = len(self._data[0]) if row_count else 0
         return row_count, col_count
 
     @property
@@ -131,49 +203,48 @@ class CoreMatrix(list):
     def T(self) -> "CoreMatrix":
         return transpose(self)
 
-    def __getitem__(self, item):
-        if not isinstance(item, tuple):
-            result = super().__getitem__(item)
-            return CoreMatrix([list(row) for row in result]) if isinstance(item, slice) else result
-
-        row_selector, col_selector = item
-        selected_rows = super().__getitem__(row_selector)
-        row_is_scalar = isinstance(row_selector, int)
-        col_is_scalar = isinstance(col_selector, int)
-        rows = [selected_rows] if row_is_scalar else list(selected_rows)
-
-        if col_is_scalar:
-            column = CoreVector(row[col_selector] for row in rows)
-            return column[0] if row_is_scalar else column
-
-        sliced_rows = CoreMatrix([list(row[col_selector]) for row in rows])
-        return CoreVector(sliced_rows[0]) if row_is_scalar else sliced_rows
-
     def tolist(self) -> list[list[float]]:
-        return [list(row) for row in self]
+        return [list(row) for row in self._data]
 
     def copy(self) -> "CoreMatrix":
-        return CoreMatrix([list(row) for row in self])
+        return CoreMatrix([list(row) for row in self._data])
 
     def astype(self, _dtype) -> "CoreMatrix":
-        return CoreMatrix([[float(value) for value in row] for row in self])
+        return CoreMatrix([[float(value) for value in row] for row in self._data])
+
+    def flatten(self) -> CoreVector:
+        """Flatten matrix to a 1D vector."""
+        return CoreVector(value for row in self._data for value in row)
+
+    def cpu(self) -> "CoreMatrix":
+        """Compatibility method - returns self since we're not using GPU."""
+        return self
+
+    def numpy(self) -> list:
+        """Compatibility method - returns the underlying list structure."""
+        return self.tolist()
+
+    def __eq__(self, other):
+        if hasattr(other, "tolist"):
+            return self.tolist() == other.tolist()
+        return self.tolist() == other
 
 
 def is_scalar(value) -> bool:
+
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
 def to_vector(values) -> CoreVector:
     """Flatten scalar/list/array-like values into CoreVector."""
-
     if values is None:
         return CoreVector()
     if is_scalar(values):
         return CoreVector([float(values)])
     if isinstance(values, str):
-        return CoreVector([float(ord(c)) for c in values])
+        return CoreVector(float(ord(c)) for c in values)
     if isinstance(values, bytes):
-        return CoreVector([float(b) for b in values])
+        return CoreVector(float(b) for b in values)
     if hasattr(values, "tolist"):
         values = values.tolist()
 
@@ -190,7 +261,6 @@ def to_vector(values) -> CoreVector:
 
 def to_matrix(values) -> CoreMatrix:
     """Convert scalar/vector/matrix-like values into a rectangular CoreMatrix."""
-
     if values is None:
         return CoreMatrix()
     if hasattr(values, "tolist"):
@@ -291,7 +361,9 @@ def linspace(start: Number, stop: Number, count: int) -> CoreVector:
 
 def diff(values) -> CoreVector:
     vector = to_vector(values)
-    return CoreVector(vector[index + 1] - vector[index] for index in range(len(vector) - 1))
+    return CoreVector(
+        vector[index + 1] - vector[index] for index in range(len(vector) - 1)
+    )
 
 
 def matrix_shape(matrix) -> tuple[int, int]:
@@ -311,7 +383,9 @@ def ones(rows: int, cols: int | None = None) -> CoreVector | CoreMatrix:
 
 
 def identity(size: int) -> CoreMatrix:
-    return CoreMatrix([[1.0 if row == col else 0.0 for col in range(size)] for row in range(size)])
+    return CoreMatrix(
+        [[1.0 if row == col else 0.0 for col in range(size)] for row in range(size)]
+    )
 
 
 def transpose(matrix) -> CoreMatrix:
@@ -337,8 +411,7 @@ def matmul(matrix_a, matrix_b) -> CoreMatrix:
     right_rows, _right_cols = right.shape
     if left_rows and right_rows and left_cols != right_rows:
         raise ValueError(
-            "matrix multiplication shape mismatch: "
-            f"left is {left.shape}, right is {right.shape}"
+            f"matrix multiplication shape mismatch: left is {left.shape}, right is {right.shape}"
         )
     matrix_b_t = transpose(right)
     return CoreMatrix([[dot(row, col) for col in matrix_b_t] for row in left])
@@ -353,24 +426,39 @@ def outer(vector_a, vector_b) -> CoreMatrix:
 def scalar_multiply(values, factor: Number):
     factor_value = float(factor)
     if len(shape(values)) == 2:
-        return CoreMatrix([[float(value) * factor_value for value in row] for row in to_matrix(values)])
+        return CoreMatrix(
+            [
+                [float(value) * factor_value for value in row]
+                for row in to_matrix(values)
+            ]
+        )
     return CoreVector(float(value) * factor_value for value in to_vector(values))
 
 
 def add(values_a, values_b):
     if len(shape(values_a)) == 2 or len(shape(values_b)) == 2:
         return CoreMatrix(
-            [[left + right for left, right in zip(row_a, row_b)] for row_a, row_b in zip(to_matrix(values_a), to_matrix(values_b))]
+            [
+                [float(l) + float(r) for l, r in zip(row_a, row_b)]
+                for row_a, row_b in zip(to_matrix(values_a), to_matrix(values_b))
+            ]
         )
-    return CoreVector(left + right for left, right in zip(to_vector(values_a), to_vector(values_b)))
+    return CoreVector(
+        float(l) + float(r) for l, r in zip(to_vector(values_a), to_vector(values_b))
+    )
 
 
 def subtract(values_a, values_b):
     if len(shape(values_a)) == 2 or len(shape(values_b)) == 2:
         return CoreMatrix(
-            [[left - right for left, right in zip(row_a, row_b)] for row_a, row_b in zip(to_matrix(values_a), to_matrix(values_b))]
+            [
+                [float(l) - float(r) for l, r in zip(row_a, row_b)]
+                for row_a, row_b in zip(to_matrix(values_a), to_matrix(values_b))
+            ]
         )
-    return CoreVector(left - right for left, right in zip(to_vector(values_a), to_vector(values_b)))
+    return CoreVector(
+        float(l) - float(r) for l, r in zip(to_vector(values_a), to_vector(values_b))
+    )
 
 
 def max_abs(values) -> float:
@@ -383,9 +471,13 @@ def deterministic_vector(seed_text: str, size: int) -> CoreVector:
     return CoreVector(rng.random() for _ in range(size))
 
 
-def deterministic_matrix(seed_text: str, rows: int, cols: int, scale: float = 1.0) -> CoreMatrix:
+def deterministic_matrix(
+    seed_text: str, rows: int, cols: int, scale: float = 1.0
+) -> CoreMatrix:
     rng = random.Random(seed_text)
-    return CoreMatrix([[rng.gauss(0.0, 1.0) * scale for _ in range(cols)] for _ in range(rows)])
+    return CoreMatrix(
+        [[rng.gauss(0.0, 1.0) * scale for _ in range(cols)] for _ in range(rows)]
+    )
 
 
 def sign(value: Number) -> int:

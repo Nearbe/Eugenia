@@ -10,9 +10,9 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core.foundations.constants import D_ID, OMEGA
-from core.foundations.dual_number import DualNumber, EPSILON_SQUARED, dual_number, natural_velocity
-from core.foundations.u_algebra import add, branch, compress, divide, multiply, power
+from core.constants.constants import D_ID, OMEGA
+from core.states.dual_number import DualNumber, EPSILON_SQUARED, dual_number, natural_velocity
+from core.algebra import add, branch, compress, divide, multiply, power
 
 
 def test_dual_epsilon_square_is_potential():

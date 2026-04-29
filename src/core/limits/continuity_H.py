@@ -1,17 +1,9 @@
-"""Continuity check for H operator."""
-#  Copyright (c) 2026.
-#  ╔═══════════════════════════════════╗
-#  ║ Русский  ║ English    ║ Ελληνικά  ║
-#  ║══════════║════════════║═══════════║
-#  ║ Евгений  ║ Eugene     ║ Εὐγένιος  ║
-#  ║ Евгения  ║ Eugenia    ║ Εὐγενία   ║
-#  ║ Евгеника ║ Eugenics   ║ Εὐγενική  ║
-#  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
-#  ║ Женя     ║ Zhenya     ║ Ζένια     ║
-#  ╚═══════════════════════════════════╝
+from core.algebra import compress
 from .continuity_error import continuity_error
-from ..operators.H import H
 
 
-def continuity_H(x_sequence, x_limit: float | None = None) -> float:
-    return continuity_error(H, x_sequence, x_limit=x_limit)
+def continuity_H(sequence: list[float]) -> float:
+    """Return continuity error for compression H."""
+    if not sequence:
+        return 0.0
+    return continuity_error(compress, sequence, sequence[-1])

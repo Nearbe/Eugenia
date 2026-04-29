@@ -15,9 +15,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
-from ..foundations.complex_plane import ComplexState
-from ..foundations.constants import D_ID, OMEGA
-from ..foundations.u_algebra import branch, divide, multiply, power
+from ..states.complex_plane import ComplexState
+from ..constants.constants import D_ID, OMEGA
+from ..algebra import branch, divide, multiply, power
 
 FOUR_FACTOR = 4.0
 NEGATIVE_UNIT = -1.0

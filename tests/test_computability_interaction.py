@@ -8,7 +8,7 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from core.computation.interaction import (
+from core.computation import (
     ComputabilityState,
     analyze_halting_by_regression,
     interaction_cycle,

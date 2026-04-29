@@ -10,9 +10,9 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core.foundations.complex_plane import ComplexState
-from core.foundations.u_algebra import branch
-from core.foundations.u_function import (
+from core.states.complex_plane import ComplexState
+from core.algebra import branch
+from core import (
     branching_function,
     compose,
     logarithmic_function,

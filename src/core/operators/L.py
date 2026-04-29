@@ -10,11 +10,11 @@
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
 
-from ..foundations.constants import OMEGA
-from ..foundations.infinity import is_fullness
-from ..foundations.logarithmic_axis import LOG_NEGATIVE_INFINITY, LOG_POSITIVE_INFINITY
-from ..foundations.spine import SpineLevel
-from ..foundations.vectorization import map_scalar_or_vector
+from ..constants.constants import OMEGA
+from ..infinity.infinity import is_fullness
+from ..utils.logarithmic_axis import LOG_NEGATIVE_INFINITY, LOG_POSITIVE_INFINITY
+from ..states.spine import SpineLevel
+from ..utils.vectorization import map_scalar_or_vector
 from ..transcendental.log2 import log2
 
 

@@ -53,9 +53,9 @@ topology changes with scale.
 CONNECTED COMPONENTS ALGORITHM
 ========================================
 
-scipy.ndimage.label() implements Union-Find:
+Union-Find implementation in core/topology/label_2d.py:
 1. Each pixel starts as its own component
-2. For each pixel, check neighbors (4-connected or 8-connected)
+2. For each pixel, check neighbors (4-connected)
 3. If neighbor exists, merge components
 4. Return total count
 
@@ -66,11 +66,12 @@ For image analysis, 4-connected is standard.
 """
 
 import matplotlib
-import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from scipy import ndimage
+
+from core.linear.linear_algebra import linspace
+from core.topology.label_2d import label_2d
 from utils.viz_utils import save_visualization, get_symbol_label
 
 
@@ -89,8 +90,8 @@ def render(data, sweep, out_dir):
 
     # Генерация набора пороговых значений для топологического анализа.
     # Мы используем разреженную сетку (меньше точек, чем в основной развертке),
-    # так как алгоритм поиска связных компонент (ndimage.label) вычислительно сложен.
-    topology_thresholds = np.linspace(
+    # так как алгоритм поиска связных компонент вычислительно сложен.
+    topology_thresholds = linspace(
         configuration["topology_threshold_min"],
         configuration["topology_threshold_max"],
         configuration["topology_num_thresholds"],
@@ -99,21 +100,27 @@ def render(data, sweep, out_dir):
     # Compute connected components for each class and threshold
     plt.figure(figsize=configuration["figure_betti"])
 
-    # Перенос данных в numpy один раз перед циклом значительно ускоряет выполнение,
-    # так как исключает накладные расходы на копирование данных из PyTorch в каждом шаге.
-    symbol_numpy = [s.cpu().numpy() for s in symbols]
-
     for class_id in range(number_of_classes):
-        symbol = symbol_numpy[class_id]
+        symbol = symbols[class_id]
         component_counts = []
 
         for threshold_value in topology_thresholds:
-            binary_mask = (symbol > threshold_value).astype(np.uint8)
-            _, count = ndimage.label(binary_mask)
-            component_counts.append(count)
+            # Создание бинарной маски: 1 где значение > порога, иначе 0
+            binary_mask = [
+                [1 if float(pixel) > float(threshold_value) else 0 for pixel in row]
+                for row in symbol
+            ]
+            labeled = label_2d(binary_mask)
+            # Подсчет уникальных компонент (исключая 0 - фон)
+            unique_labels = set()
+            for row in labeled:
+                for label in row:
+                    if label > 0:
+                        unique_labels.add(label)
+            component_counts.append(len(unique_labels))
 
         plt.plot(
-            topology_thresholds,
+            list(topology_thresholds),
             component_counts,
             "o-",
             ms=configuration.get("marker_size", 2),

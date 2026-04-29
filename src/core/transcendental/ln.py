@@ -1,4 +1,5 @@
 """ln — natural logarithm with U-axis boundaries."""
+
 #  Copyright (c) 2026.
 #  ╔═══════════════════════════════════╗
 #  ║ Русский  ║ English    ║ Ελληνικά  ║
@@ -9,9 +10,9 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from ..foundations.constants import OMEGA
-from ..foundations.infinity import is_fullness
-from ..foundations.logarithmic_axis import LOG_NEGATIVE_INFINITY, LOG_POSITIVE_INFINITY
+from ..constants.constants import OMEGA
+from ..infinity.infinity import is_fullness
+from ..utils.logarithmic_axis import LOG_NEGATIVE_INFINITY, LOG_POSITIVE_INFINITY
 from .transcendentals import e
 
 SERIES_STOP = 50

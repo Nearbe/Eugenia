@@ -10,9 +10,9 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from ..foundations.bounds import clamp_delta, clamp_pixel
-from ..foundations.constants import PIXEL_SCALE
-from ..foundations.vectorization import map_scalar_or_vector
+from ..constants.bounds import clamp_delta, clamp_pixel
+from ..constants.constants import PIXEL_SCALE
+from ..utils.vectorization import map_scalar_or_vector
 
 
 def _inverse_delta_field_scalar(d: float | int) -> float:

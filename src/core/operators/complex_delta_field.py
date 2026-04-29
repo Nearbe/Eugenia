@@ -10,10 +10,10 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from ..foundations.bounds import clamp_pixel
-from ..foundations.complex_plane import ComplexState
-from ..foundations.constants import PIXEL_MAX
-from ..foundations.vectorization import map_scalar_or_vector
+from ..constants.bounds import clamp_pixel
+from ..states.complex_plane import ComplexState
+from ..constants.constants import PIXEL_MAX
+from ..utils.vectorization import map_scalar_or_vector
 
 
 def _complex_delta_scalar(x: float | int) -> ComplexState:

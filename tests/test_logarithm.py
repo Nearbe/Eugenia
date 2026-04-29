@@ -10,15 +10,15 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core.foundations.constants import OMEGA
-from core.foundations.infinity import PI
-from core.foundations.logarithmic_axis import (
+from core.constants.constants import OMEGA
+from core.infinity.infinity import PI
+from core.utils.logarithmic_axis import (
     LOG_NEGATIVE_INFINITY,
     LOG_POSITIVE_INFINITY,
     depth_add,
     depth_scale,
 )
-from core.foundations.spine import spine_level
+from core.states.spine import spine_level
 from core.operators.L import L
 from core.transcendental.ln import ln
 from core.transcendental.log2 import log2

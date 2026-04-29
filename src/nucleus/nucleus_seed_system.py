@@ -18,7 +18,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from core.foundations.lo_shu import (
+from core import (
+    LO_SHU_CENTER_VALUE,
+    LO_SHU_DECIMAL_CYCLE,
     LoShuAddress,
     LoShuOperation,
     address_path,
@@ -45,13 +47,13 @@ class NucleusSeed:
 
 def _address_token(token: str) -> LoShuAddress:
     if token.isdigit():
-        digit = int(token) % 10
-        return digit_address(5 if digit == 0 else digit)
+        digit = int(token) % LO_SHU_DECIMAL_CYCLE
+        return digit_address(LO_SHU_CENTER_VALUE if digit == 0 else digit)
     if token in {operation.value for operation in LoShuOperation}:
         return operation_address(token)
     code = sum(ord(char) for char in token)
-    digit = code % 10
-    return digit_address(5 if digit == 0 else digit)
+    digit = code % LO_SHU_DECIMAL_CYCLE
+    return digit_address(LO_SHU_CENTER_VALUE if digit == 0 else digit)
 
 
 def _tokenize(value: object) -> tuple[str, ...]:
@@ -64,7 +66,9 @@ def _tokenize(value: object) -> tuple[str, ...]:
 def lo_shu_seed_from_tokens(tokens: list[str] | tuple[str, ...]) -> NucleusSeed:
     """Build a nucleus seed from explicit digits/operations/text tokens."""
     token_tuple = tuple(tokens)
-    addresses = tuple(_address_token(token) for token in token_tuple) or (digit_address(5),)
+    addresses = tuple(_address_token(token) for token in token_tuple) or (
+        digit_address(LO_SHU_CENTER_VALUE),
+    )
     head = solenoid_seed_from_lo_shu(addresses[0])
     history = address_path(addresses)
     solenoid = SolenoidPoint(phase=head.phase, history=history)

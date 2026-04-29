@@ -10,8 +10,8 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core.foundations.complex_plane import ComplexState
-from core.foundations.constants import OMEGA
+from core.states.complex_plane import ComplexState
+from core.constants.constants import OMEGA
 from core.nonlinear.quadratic_equation import (
     QuadraticRootState,
     discriminant,

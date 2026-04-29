@@ -1,3 +1,4 @@
+from __future__ import annotations
 #!/usr/bin/env python3
 """Deterministic Knowledge Core on Eugenia core math."""
 

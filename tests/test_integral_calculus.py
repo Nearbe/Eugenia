@@ -10,7 +10,7 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core.calculus.integral import (
+from core.calculus import (
     antiderivative,
     branched_integral,
     compressed_integral,
@@ -18,8 +18,8 @@ from core.calculus.integral import (
     integral_on_log_depth,
     power_antiderivative,
 )
-from core.foundations.spine import spine_level
-from core.foundations.u_algebra import branch, compress, power
+from core.states.spine import spine_level
+from core.algebra import branch, compress, power
 
 
 def square(value: object) -> object:

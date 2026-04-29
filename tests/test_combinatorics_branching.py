@@ -8,7 +8,7 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from core.combinatorics.branching import (
+from core.combinatorics import (
     BranchingLevel,
     binomial_coefficient,
     boolean_capacity,
@@ -17,7 +17,7 @@ from core.combinatorics.branching import (
     paths_count,
     routes,
 )
-from core.foundations.spine import spine_level
+from core.states.spine import spine_level
 
 
 def test_paths_count_is_d_power_capacity():

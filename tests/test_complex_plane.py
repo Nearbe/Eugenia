@@ -10,9 +10,9 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core.foundations.complex_plane import I, PI_Z, ComplexState, conjugate, norm_squared
-from core.foundations.constants import D_ID, OMEGA
-from core.foundations.u_algebra import add, branch, compress, divide, multiply
+from core.states.complex_plane import I, PI_Z, ComplexState, conjugate, norm_squared
+from core.constants.constants import D_ID, OMEGA
+from core.algebra import add, branch, compress, divide, multiply
 
 
 def test_imaginary_unit_squares_to_negative_identity():

@@ -10,7 +10,7 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core.foundations.constants import OMEGA
+from core.constants.constants import OMEGA
 from core.linear.linear_system import (
     LinearSystem,
     LinearSystemState,

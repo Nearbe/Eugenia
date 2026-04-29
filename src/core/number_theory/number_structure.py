@@ -12,14 +12,12 @@
 #  ╚═══════════════════════════════════╝
 from __future__ import annotations
 
-from ..foundations.constants import D_ID
-from ..foundations.spine import SpineLevel, spine_level
-from ..foundations.u_algebra import branch
+from ..constants.constants import D_ID
+from ..states.spine import SpineLevel, spine_level
+from ..algebra import branch
 
 ATOM_DEPTH = 1.0
 BINARY_BASE = int(D_ID)
-BIT_ZERO = 0
-BIT_ONE = 1
 
 
 def system_atom() -> SpineLevel:
@@ -91,6 +89,6 @@ def binary_address(value: int, *, depth: int) -> tuple[int, ...]:
     modulus = modulus_from_depth(depth)
     residue = int(value) % modulus
     bits = tuple(int(bit) for bit in format(residue, f"0{depth}b"))
-    if any(bit not in (BIT_ZERO, BIT_ONE) for bit in bits):
-        raise ValueError("binary address produced non-binary digit")
+    if any(bit not in (0, 1) for bit in bits):
+        raise ValueError("binary address produced a non-binary digit")
     return bits

@@ -8,11 +8,11 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-import pytest
+from pytest import approx
 
-from core.foundations.constants import D_ID, OMEGA
-from core.foundations.infinity import PI
-from core.foundations.u_algebra import (
+from core.constants.constants import D_ID, OMEGA
+from core.infinity.infinity import PI
+from core.algebra import (
     IDENTITY,
     add,
     branch,
@@ -26,15 +26,15 @@ from core.foundations.u_algebra import (
 
 
 def test_basic_u_algebra_uses_ordinary_arithmetic_away_from_omega():
-    assert add(2, 3) == pytest.approx(5.0)
-    assert multiply(2, 3) == pytest.approx(6.0)
-    assert divide(6, 3) == pytest.approx(2.0)
-    assert power(3, 2) == pytest.approx(9.0)
+    assert add(2, 3) == approx(5.0)
+    assert multiply(2, 3) == approx(6.0)
+    assert divide(6, 3) == approx(2.0)
+    assert power(3, 2) == approx(9.0)
 
 
 def test_division_by_omega_branches_finite_values():
-    assert divide(7, OMEGA) == pytest.approx(14.0)
-    assert divide([1, 2, -3], OMEGA) == pytest.approx([2.0, 4.0, -6.0])
+    assert divide(7, OMEGA) == approx(14.0)
+    assert divide([1, 2, -3], OMEGA) == approx([2.0, 4.0, -6.0])
 
 
 def test_omega_division_rules_keep_potential_closed():
@@ -44,9 +44,9 @@ def test_omega_division_rules_keep_potential_closed():
 
 
 def test_branch_and_compress_are_inverse_scale_steps():
-    assert compress(branch(9)) == pytest.approx(9.0)
-    assert branch(compress(9)) == pytest.approx(9.0)
-    assert divide(9, D_ID) == pytest.approx(4.5)
+    assert compress(branch(9)) == approx(9.0)
+    assert branch(compress(9)) == approx(9.0)
+    assert divide(9, D_ID) == approx(4.5)
 
 
 def test_fullness_is_closed_under_core_operations():

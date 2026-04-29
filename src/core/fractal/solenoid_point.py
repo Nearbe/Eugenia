@@ -19,22 +19,21 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from core.foundations.lo_shu import LoShuAddress
+from core import LoShuAddress
+from core.number_theory.number_structure import BINARY_BASE
 
 from .encode_solenoid_trajectory import encode_solenoid_trajectory
 from .solenoid_distance import solenoid_distance
 from .solenoid_similarity import solenoid_similarity
 
 CIRCLE_PERIOD = 1.0
-BIT_ZERO = 0
-BIT_ONE = 1
 FIRST_BIT_INDEX = 0
 
 
 def validate_history(history: object) -> tuple[int, ...]:
     """Return a strict binary solenoid history."""
     bits = tuple(int(bit) for bit in history)  # type: ignore[arg-type]
-    if any(bit not in (BIT_ZERO, BIT_ONE) for bit in bits):
+    if any(bit not in (0, 1) for bit in bits):
         raise ValueError("solenoid history must contain only 0/1 bits")
     return bits
 

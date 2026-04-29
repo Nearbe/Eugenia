@@ -10,7 +10,7 @@
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
 from ..linear.vec_norm import vec_norm
-from ..foundations.vectorization import to_vector, zip_vectors
+from ..utils.vectorization import to_vector, zip_vectors
 
 
 def similarity(a: list[float], b: list[float]) -> float:

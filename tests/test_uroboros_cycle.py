@@ -11,9 +11,9 @@
 
 import pytest
 
-from core.foundations.constants import OMEGA
-from core.foundations.infinity import PI
-from core.foundations.uroboros import (
+from core.constants.constants import OMEGA
+from core.infinity.infinity import PI
+from core.infinity.uroboros import (
     CENTER_DIGIT,
     CYCLE_LENGTH,
     UroborosState,

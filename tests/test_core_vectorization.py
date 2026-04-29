@@ -10,7 +10,7 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core.foundations.vectorization import (
+from core.utils.vectorization import (
     is_scalar,
     is_vector,
     map_scalar_or_vector,

@@ -10,9 +10,9 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core.foundations.branching_operator import branching_operator
-from core.foundations.constants import D_ID, OMEGA
-from core.foundations.u_algebra import add, branch, compress
+from core.algebra.branching_operator import branching_operator
+from core.constants.constants import D_ID, OMEGA
+from core.algebra import add, branch, compress
 
 
 def test_branching_operator_is_linear():

@@ -10,9 +10,9 @@
 #  ╚═══════════════════════════════════╝
 import pytest
 
-from core.foundations.constants import D_ID, OMEGA
-from core.foundations.rational import ParticipationRatio, participation_ratio
-from core.foundations.u_algebra import divide, multiply
+from core.constants.constants import D_ID, OMEGA
+from core.states.rational import ParticipationRatio, participation_ratio
+from core.algebra import divide, multiply
 
 
 def test_participation_ratio_rejects_omega_denominator():

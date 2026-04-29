@@ -1,4 +1,5 @@
 """exp — exponential function."""
+
 #  Copyright (c) 2026.
 #  ╔═══════════════════════════════════╗
 #  ║ Русский  ║ English    ║ Ελληνικά  ║
@@ -9,8 +10,8 @@
 #  ║ Евгениос ║ Eugenius   ║ Εὐγένιος  ║
 #  ║ Женя     ║ Zhenya     ║ Ζένια     ║
 #  ╚═══════════════════════════════════╝
-from ..foundations.constants import OMEGA
-from ..foundations.infinity import PI, is_fullness
+from ..constants.constants import OMEGA
+from ..infinity.infinity import PI, is_fullness
 
 # Thresholds for exponential function to avoid overflow
 EXP_LARGE_POSITIVE_THRESHOLD = 700
